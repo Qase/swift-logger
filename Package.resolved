@@ -1,0 +1,70 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CombineExt",
+        "repositoryURL": "https://github.com/CombineCommunity/CombineExt.git",
+        "state": {
+          "branch": null,
+          "revision": "fc3e405ea46ee748649bd8b71587b2a9c37e1422",
+          "version": "1.5.0"
+        }
+      },
+      {
+        "package": "swift-case-paths",
+        "repositoryURL": "https://github.com/pointfreeco/swift-case-paths",
+        "state": {
+          "branch": null,
+          "revision": "d226d167bd4a68b51e352af5655c92bce8ee0463",
+          "version": "0.7.0"
+        }
+      },
+      {
+        "package": "core",
+        "repositoryURL": "https://github.com/Qase/swift-core.git",
+        "state": {
+          "branch": "master",
+          "revision": "c677f1618b058966094af6d31fd928a3e5b70d81",
+          "version": null
+        }
+      },
+      {
+        "package": "core-networking",
+        "repositoryURL": "https://github.com/Qase/swift-core-networking.git",
+        "state": {
+          "branch": "master",
+          "revision": "6cffc32e8956ff29286c88311a18c33408e85a3e",
+          "version": null
+        }
+      },
+      {
+        "package": "Overture",
+        "repositoryURL": "https://github.com/pointfreeco/swift-overture.git",
+        "state": {
+          "branch": null,
+          "revision": "7977acd7597f413717058acc1e080731249a1d7e",
+          "version": "0.5.0"
+        }
+      },
+      {
+        "package": "overture-operators",
+        "repositoryURL": "https://github.com/Qase/swift-overture-operators.git",
+        "state": {
+          "branch": "master",
+          "revision": "33cab87d56c14fcd0f9876f1e0936a8263431733",
+          "version": null
+        }
+      },
+      {
+        "package": "Zip",
+        "repositoryURL": "https://github.com/marmelroy/Zip.git",
+        "state": {
+          "branch": null,
+          "revision": "bd19d974e8a38cc8d3a88c90c8a107386c3b8ccf",
+          "version": "2.1.1"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

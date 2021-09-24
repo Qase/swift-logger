@@ -1,0 +1,64 @@
+included:
+  - Sources
+
+disabled_rules:
+  - opening_brace
+  - nesting
+  - type_contents_order
+
+opt_in_rules:
+  - array_init
+  - attributes
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - extension_access_modifier
+  - fatal_error_message
+  - force_unwrapping
+  - first_where
+  - flatmap_over_map_reduce
+  - implicitly_unwrapped_optional
+  - implicit_return
+  - joined_default_parameter
+  - let_var_whitespace
+  - literal_expression_end_indentation
+  - multiline_arguments
+  - multiline_function_chains
+  - multiline_literal_brackets
+  - multiline_parameters
+  - number_separator
+  - operator_usage_whitespace
+  - pattern_matching_keywords
+  - prefer_zero_over_explicit_init
+  - private_subject
+  - reduce_into
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - sorted_imports
+  - switch_case_on_newline
+  - toggle_bool
+  - type_contents_order
+  - unneeded_parentheses_in_closure_argument
+  - unowned_variable_capture
+  - unused_declaration
+  - unused_import
+  - vertical_parameter_alignment_on_call
+  - yoda_condition
+
+identifier_name:
+  excluded:
+    - id
+
+cyclomatic_complexity: 10
+file_length: 200
+function_body_length: 50
+closure_body_length: 30
+function_parameter_count: 5
+line_length: 140
