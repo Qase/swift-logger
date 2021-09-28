@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  FileLoggerManager.swift
 //  
 //
 //  Created by Martin Troup on 24.09.2021.
@@ -29,6 +29,23 @@ class FileLoggerManager {
             return nil
         }
     }()
+
+    var logFilesRecords: [LogFileRecord] {
+        guard let logDirUrl = logDirUrl else {
+            return []
+        }
+
+        return (0..<numOfLogFiles).reduce(into: [LogFileRecord]()) { result, index in
+            let logFileNumber = (currentLogFileNumber + index) % numOfLogFiles
+            let logFileUrl = logDirUrl.appendingPathComponent("\(logFileNumber)").appendingPathExtension("log")
+
+            guard let logFileRecords = gettingRecordsFromLogFile(at: logFileUrl) else {
+                return
+            }
+
+            result.append(contentsOf: logFileRecords)
+        }
+    }
 
     private(set) var currentLogFileNumber: Int = 0 {
         didSet {
@@ -341,12 +358,12 @@ class FileLoggerManager {
                 .prefix(while: { $0 != "]"})
                 .dropFirst()
 
-            let header = headerTrimmed.asString() + "]"
+            let header = headerTrimmed.string + "]"
 
             let body = logFileRecordInString
                 .suffix(from: headerTrimmed.endIndex)
                 .dropFirst(2)
-                .asString()
+                .string
 
             return LogFileRecord(header: header, body: body)
         }
@@ -358,7 +375,7 @@ class FileLoggerManager {
 // MARK: - Substring + helpers
 
 private extension Substring {
-    func asString() -> String {
+    var string: String {
         String(self)
     }
 }

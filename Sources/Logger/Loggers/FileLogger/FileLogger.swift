@@ -35,6 +35,10 @@ public class FileLogger: Logging {
 
     public init() {}
 
+    public var logFilesRecords: [LogFileRecord] {
+        fileLoggerManager.logFilesRecords
+    }
+
     public func log(_ message: String, onLevel level: Level) {
         fileLoggerManager.writeToLogFile(message: message, withMessageHeader: messageHeader(forLevel: level), onLevel: level)
     }

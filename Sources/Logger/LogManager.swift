@@ -172,7 +172,7 @@ public class LogManager {
         serialLoggingQueue.sync {
             dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
 
-            guard self.loggers.count > 0 else {
+            guard !loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
                 return
             }
@@ -212,17 +212,18 @@ public class LogManager {
         serialLoggingQueue.sync {
             dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
 
-            guard loggers.count > 0 else {
+            guard !loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
                 return
             }
-            self.loggers
+
+            loggers
                 .filter { $0.doesLog(forLevel: level) }
-                .forEach({ (logger) in
+                .forEach { logger in
                     concurrentLoggingQueue.async {
                         logger.log(message, onLevel: level)
                     }
-                })
+                }
         }
     }
 
