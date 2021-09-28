@@ -20,11 +20,7 @@ public enum ApplicationCallbackType: String, CaseIterable {
     case willEnterForeground
     case significantTimeChange
     case userDidTakeScreenshot
-    case didChangeStatusBarFrame
     case didReceiveMemoryWarning
-    case willChangeStatusBarFrame
-    case didChangeStatusBarOrientation
-    case willChangeStatusBarOrientation
     case protectedDataDidBecomeAvailable
     case backroundRefreshStatusDidChange
     case protectedDataWillBecomeUnavailable
@@ -47,16 +43,8 @@ public enum ApplicationCallbackType: String, CaseIterable {
             return UIApplication.significantTimeChangeNotification
         case .userDidTakeScreenshot:
             return UIApplication.userDidTakeScreenshotNotification
-        case .didChangeStatusBarFrame:
-            return UIApplication.didChangeStatusBarFrameNotification
         case .didReceiveMemoryWarning:
             return UIApplication.didReceiveMemoryWarningNotification
-        case .willChangeStatusBarFrame:
-            return UIApplication.willChangeStatusBarFrameNotification
-        case .didChangeStatusBarOrientation:
-            return UIApplication.didChangeStatusBarOrientationNotification
-        case .willChangeStatusBarOrientation:
-            return UIApplication.willChangeStatusBarOrientationNotification
         case .protectedDataDidBecomeAvailable:
             return UIApplication.protectedDataDidBecomeAvailableNotification
         case .backroundRefreshStatusDidChange:
