@@ -42,19 +42,19 @@ class MetaInformationLogger {
     weak var delegate: MetaInformationLoggerDelegate?
 
     private var upTimeUSec: Int32 {
-        var _upTime = timeval()
+        var upTime = timeval()
         var size = MemoryLayout<timeval>.stride
-        sysctlbyname("kern.boottime", &_upTime, &size, nil, 0)
-        return _upTime.tv_usec
+        sysctlbyname("kern.boottime", &upTime, &size, nil, 0)
+        return upTime.tv_usec
     }
 
     private var modelType: String {
         var systemInfo = utsname()
         uname(&systemInfo)
         let machineMirror = Mirror(reflecting: systemInfo.machine)
-        return machineMirror.children.reduce("") { identifier, element in
-            guard let value = element.value as? Int8, value != 0 else { return identifier }
-            return identifier + String(UnicodeScalar(UInt8(value)))
+        return machineMirror.children.reduce(into: "") { identifier, element in
+            guard let value = element.value as? Int8, value != 0 else { return }
+            identifier += String(UnicodeScalar(UInt8(value)))
         }
     }
 
@@ -77,20 +77,20 @@ class MetaInformationLogger {
 
         var data = [String: String]()
 
-        if dataToLog.contains(.identifier), let _value = bundle.infoDictionary?[MetaInformationType.identifier.rawValue] as? String {
-            data[MetaInformationType.identifier.rawValue] = _value
+        if dataToLog.contains(.identifier), let value = bundle.infoDictionary?[MetaInformationType.identifier.rawValue] as? String {
+            data[MetaInformationType.identifier.rawValue] = value
         }
 
-        if dataToLog.contains(.compiler), let _value = bundle.infoDictionary?[MetaInformationType.compiler.rawValue] as? String {
-            data[MetaInformationType.compiler.rawValue] = _value
+        if dataToLog.contains(.compiler), let value = bundle.infoDictionary?[MetaInformationType.compiler.rawValue] as? String {
+            data[MetaInformationType.compiler.rawValue] = value
         }
 
-        if dataToLog.contains(.version), let _value = bundle.infoDictionary?[MetaInformationType.version.rawValue] as? String {
-            data[MetaInformationType.version.rawValue] = _value
+        if dataToLog.contains(.version), let value = bundle.infoDictionary?[MetaInformationType.version.rawValue] as? String {
+            data[MetaInformationType.version.rawValue] = value
         }
 
-        if dataToLog.contains(.buildNumber), let _value = bundle.infoDictionary?[MetaInformationType.buildNumber.rawValue] as? String {
-            data[MetaInformationType.buildNumber.rawValue] = _value
+        if dataToLog.contains(.buildNumber), let value = bundle.infoDictionary?[MetaInformationType.buildNumber.rawValue] as? String {
+            data[MetaInformationType.buildNumber.rawValue] = value
         }
 
         if dataToLog.contains(.modelType) {
@@ -105,17 +105,16 @@ class MetaInformationLogger {
             data[MetaInformationType.upTime.rawValue] = "\(upTimeUSec) microseconds"
         }
 
-        if dataToLog.contains(.language), let _value = language {
-            data[MetaInformationType.language.rawValue] = _value
+        if dataToLog.contains(.language), let value = language {
+            data[MetaInformationType.language.rawValue] = value
         }
 
         return data
     }
 
     func log(_ dataToLog: [MetaInformationType], onLevel level: Level) {
-        let _dataToLog = dataToLog.count == 0 ? MetaInformationType.allValues : dataToLog
+        let dataToLog = dataToLog.isEmpty ? MetaInformationType.allValues : dataToLog
 
-        delegate?.logMetaInformation("Meta information: \(values(for: _dataToLog))", onLevel: level)
+        delegate?.logMetaInformation("Meta information: \(values(for: dataToLog))", onLevel: level)
     }
 }
-

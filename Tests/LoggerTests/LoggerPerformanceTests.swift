@@ -5,9 +5,8 @@
 //  Created by Martin Troup on 24.09.2021.
 //
 
-
-import XCTest
 @testable import Logger
+import XCTest
 
 // Custom logger for performance testing
 class PerformanceLogger: Logger.Logging {
@@ -64,7 +63,6 @@ class LoggerPerformanceTests: XCTestCase {
 
         LogManager.shared.waitForLogingJobsToFinish()
     }
-
 
     func test_thousand_run_NSLog() {
         let performanceLogger = PerformanceLogger()
@@ -181,5 +179,4 @@ class LoggerPerformanceTests: XCTestCase {
             }
         }
     }
-
 }

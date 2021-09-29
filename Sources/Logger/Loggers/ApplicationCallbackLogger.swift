@@ -119,11 +119,11 @@ class ApplicationCallbackLogger {
 
     var callbacks: [ApplicationCallbackType]? = [] {
         didSet {
-            let _oldValue = oldValue?.count == 0 ? ApplicationCallbackType.allCases : oldValue
-            let _callbacks = callbacks?.count == 0 ? ApplicationCallbackType.allCases : callbacks
+            let oldValue = (oldValue?.isEmpty ?? false) ? ApplicationCallbackType.allCases : oldValue
+            let callbacks = (callbacks?.isEmpty ?? false) ? ApplicationCallbackType.allCases : callbacks
 
-            removeNotifications(for: getCallbacksToRemove(from: _oldValue, basedOn: _callbacks))
-            addNotifications(for: getCallbacksToAdd(from: _callbacks, basedOn: _oldValue))
+            removeNotifications(for: getCallbacksToRemove(from: oldValue, basedOn: callbacks))
+            addNotifications(for: getCallbacksToAdd(from: callbacks, basedOn: oldValue))
         }
     }
 
@@ -140,7 +140,10 @@ class ApplicationCallbackLogger {
     ///   - oldCallbacks: old array of callbacks
     ///   - newCallbacks: new array of callbacks
     /// - Returns: array of callbacks to be removed
-    private func getCallbacksToRemove(from oldCallbacks: [ApplicationCallbackType]?, basedOn newCallbacks: [ApplicationCallbackType]?) -> [ApplicationCallbackType] {
+    private func getCallbacksToRemove(
+        from oldCallbacks: [ApplicationCallbackType]?,
+        basedOn newCallbacks: [ApplicationCallbackType]?
+    ) -> [ApplicationCallbackType] {
         oldCallbacks?.filter { !(newCallbacks?.contains($0) ?? false) } ?? []
     }
 
@@ -151,7 +154,10 @@ class ApplicationCallbackLogger {
     ///   - newCallbacks: new array of callbacks
     ///   - oldCallbacks: old array of callbacks
     /// - Returns: array of callbacks to be added
-    private func getCallbacksToAdd(from newCallbacks: [ApplicationCallbackType]?, basedOn oldCallbacks: [ApplicationCallbackType]?) -> [ApplicationCallbackType] {
+    private func getCallbacksToAdd(
+        from newCallbacks: [ApplicationCallbackType]?,
+        basedOn oldCallbacks: [ApplicationCallbackType]?
+    ) -> [ApplicationCallbackType] {
         newCallbacks?.filter { !(oldCallbacks?.contains($0) ?? false) } ?? []
     }
 
@@ -159,7 +165,7 @@ class ApplicationCallbackLogger {
     ///
     /// - Parameter callbacks: callbacks to be removed
     private func removeNotifications(`for` callbacks: [ApplicationCallbackType]) {
-        callbacks.forEach { (callback) in
+        callbacks.forEach { callback in
             NotificationCenter.default.removeObserver(self, name: callback.notificationName, object: nil)
         }
     }
@@ -169,7 +175,7 @@ class ApplicationCallbackLogger {
     /// - Parameter callbacks: callbacks to be added
     private func addNotifications(`for` callbacks: [ApplicationCallbackType]) {
 
-        callbacks.forEach { (callback) in
+        callbacks.forEach { callback in
             #if canImport(UIKit)
             let selector = Selector(callback.rawValue)
             #elseif os(OSX)
@@ -187,72 +193,89 @@ extension ApplicationCallbackLogger {
     }
 
     #if canImport(UIKit)
-    @objc fileprivate func willTerminate() {
+    @objc
+    fileprivate func willTerminate() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func didBecomeActive() {
+    @objc
+    fileprivate func didBecomeActive() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func willResignActive() {
+    @objc
+    fileprivate func willResignActive() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func didEnterBackground() {
+    @objc
+    fileprivate func didEnterBackground() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func didFinishLaunching() {
+    @objc
+    fileprivate func didFinishLaunching() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func willEnterForeground() {
+    @objc
+    fileprivate func willEnterForeground() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func significantTimeChange() {
+    @objc
+    fileprivate func significantTimeChange() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func userDidTakeScreenshot() {
+    @objc
+    fileprivate func userDidTakeScreenshot() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func didChangeStatusBarFrame() {
+    @objc
+    fileprivate func didChangeStatusBarFrame() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func didReceiveMemoryWarning() {
+    @objc
+    fileprivate func didReceiveMemoryWarning() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func willChangeStatusBarFrame() {
+    @objc
+    fileprivate func willChangeStatusBarFrame() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func didChangeStatusBarOrientation() {
+    @objc
+    fileprivate func didChangeStatusBarOrientation() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func willChangeStatusBarOrientation() {
+    @objc
+    fileprivate func willChangeStatusBarOrientation() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func protectedDataDidBecomeAvailable() {
+    @objc
+    fileprivate func protectedDataDidBecomeAvailable() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func backroundRefreshStatusDidChange() {
+    @objc
+    fileprivate func backroundRefreshStatusDidChange() {
         log("\(#function)", onLevel: level)
     }
 
-    @objc fileprivate func protectedDataWillBecomeUnavailable() {
+    @objc
+    fileprivate func protectedDataWillBecomeUnavailable() {
         log("\(#function)", onLevel: level)
     }
 
     #elseif os(OSX)
-    @objc fileprivate func logNotification(_ notification: NSNotification) {
+    @objc
+    fileprivate func logNotification(_ notification: NSNotification) {
 
         let notificationName = notification.name.rawValue
             .replacingOccurrences(of: "NSApplication", with: "NSApplication: ")

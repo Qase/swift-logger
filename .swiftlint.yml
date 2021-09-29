@@ -1,5 +1,6 @@
 included:
   - Sources
+  - SwiftLoggerSampleApp
 
 disabled_rules:
   - opening_brace
@@ -33,7 +34,6 @@ opt_in_rules:
   - multiline_function_chains
   - multiline_literal_brackets
   - multiline_parameters
-  - number_separator
   - operator_usage_whitespace
   - pattern_matching_keywords
   - prefer_zero_over_explicit_init
@@ -53,12 +53,17 @@ opt_in_rules:
   - yoda_condition
 
 identifier_name:
+  min_length:
+    error: 2
+    warning: 3
   excluded:
     - id
 
 cyclomatic_complexity: 10
-file_length: 200
+file_length: 400
 function_body_length: 50
 closure_body_length: 30
 function_parameter_count: 5
-line_length: 140
+line_length:
+  warning: 140
+  ignores_comments: true

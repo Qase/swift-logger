@@ -16,5 +16,4 @@ public class ConsoleLogger: Logging {
     public func log(_ message: String, onLevel level: Level) {
         print("\(messageHeader(forLevel: level)) \(message)")
     }
-
 }

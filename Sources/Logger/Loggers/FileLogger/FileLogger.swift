@@ -46,5 +46,4 @@ public class FileLogger: Logging {
     public func deleteAllLogFiles() {
         fileLoggerManager.deleteAllLogFiles()
     }
-
 }
