@@ -40,11 +40,16 @@ Enables logging to a file. Each log file relates to a single day data. Another d
 
 #### `WebLogger`
 
-Enables logging via REST API to a target server. To reduce the traffic, logs are grouped into so-called batches when sent. A user can set the size of such batches and also a time interval between individual batches being sent. 
+Enables logging via REST API to a target server. To reduce the traffic, logs are grouped into so-called batches when sent. A user can set the max size of such batches and also a max time interval between individual batches being sent. 
+
+
+The integrator is responsible for the creation of `URLRequest` with the log batches & firing the request.
+Target server that receives logs is independent on the `WebLogger`. Thus the integrator is responsible for the implementation of a target server. The target server is to receive / parse / display the incoming log batches. If the does not wish to implement a customized server, we also provide [a simple server solution](https://github.com/Qase/LoggingServer/) written in Node.js.
 
 Here is an example of log batch in JSON:
 ```
-[{"severity": "VERBOSE",
+[
+ {"severity": "VERBOSE",
   "sessionName": "E598B4C1-2B08-4563-81C0-2A77E5CE0C3C",
   "message":"/some/path/LoggerTests.swift - testWebLogger() - line 165: Test verbose",
   "timestamp": 1529668897318.845},
@@ -55,18 +60,14 @@ Here is an example of log batch in JSON:
  {"severity":"INFO",
   "sessionName":"E598B4C1-2B08-4563-81C0-2A77E5CE0C3C",
   "message":"/some/path/LoggerTests.swift - testWebLogger() - line 167: Test process",
-  "timestamp":1529668897319.6959
-}]
+  "timestamp":1529668897319.6959}
+]
 ```
 
 
 Here is the set of properties a user can customize:
-  - `serverUrl` target server's url
-  - `sessionName` name of a session to log in
-  - `sizeOfBatch` size of a log batch
-  - `timeSpan` time interval between individual batches being sent
-  
-Target server that receives logs is independent on the WebLogger. Therefore a user can implement a customized server that displays logs in a prefered way. If one does not wish to implement a customized server, we also provide [a simple server solution](https://github.com/Qase/LoggingServer/) written in Node.js.
+  - `sessionID` which can be used on a server to filter logs for a specific application instance
+  - `batchConfiguration` max batch size & time interval of batches
 
 #### `ApplicationCallbackLogger`
 

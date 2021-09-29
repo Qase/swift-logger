@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Logger",
+    name: "logger",
     platforms: [
         .iOS(.v14),
 //        .macOS(.v10_15)
@@ -17,14 +17,12 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/marmelroy/Zip.git", .upToNextMinor(from: "2.1.0")),
-        .package(name: "core-networking", url: "https://github.com/Qase/swift-core-networking.git", .branch("master")),
     ],
     targets: [
         .target(
             name: "Logger",
             dependencies: [
                 "Zip",
-                .product(name: "CoreNetworking", package: "core-networking"),
             ]
         ),
         .testTarget(

@@ -5,114 +5,97 @@
 //  Created by Martin Troup on 24.09.2021.
 //
 
-// TODO: Refactor using Combine instead of RxSwift
+// TODO: Cover with unit tests
 
 import Foundation
-//import RxSwift
-//
-//struct LogEntry: JSONSerializable {
-//    let level: Level
-//    let timestamp: Double
-//    let message: String
-//    let sessionName: String
-//
-//    var jsonRepresentation: AnyObject {
-//        [
-//            "severity": serverLevelName(for: level),
-//            "timestamp": timestamp,
-//            "message": message,
-//            "sessionName": sessionName
-//        ] as AnyObject
-//    }
-//
-//    private func serverLevelName(for level: Level) -> String {
-//        switch level {
-//        case .warn:
-//            return "WARNING"
-//        case .system, .process:
-//            return "INFO"
-//        default:
-//            return level.rawValue.uppercased()
-//        }
-//    }
-//}
-//
-//struct LogEntryBatch: JSONSerializable {
-//    private var logs: [LogEntry]
-//
-//    init(logs: [LogEntry] = []) {
-//        self.logs = logs
-//    }
-//
-//    mutating func add(log: LogEntry) {
-//        logs.append(log)
-//    }
-//
-//    mutating func clearLogs() {
-//        logs = []
-//    }
-//
-//    var jsonRepresentation: AnyObject {
-//        logs.jsonRepresentation
-//    }
-//
-//}
-//
-//public class WebLogger: Logging {
-//    // Default value is UUID which is same until someone reinstal the application
-//    private let sessionName: String
-//
-//    // Size of batch which is send to server API
-//    // In other word, lengt of array whith LogEntries
-//    private let sizeOfBatch: Int
-//
-//    // After this time interval LogEntries are send to server API, regardless of their amount
-//    private let timeSpan: RxTimeInterval
-//
-//    public static let defaultServerUrl = "http://localhost:3000/api/v1"
-//
-//    private let api: WebLoggerApi?
-//
-//    private let logSubject = ReplaySubject<LogEntry>.create(bufferSize: 10)
-//
-//    private let bag = DisposeBag()
-//
-//    public init(serverUrl: String = WebLogger.defaultServerUrl,
-//                apiPath: String = "/api/v1",
-//                sessionName: String = UUID().uuidString,
-//                sizeOfBatch: Int = 5,
-//                timeSpan: RxTimeInterval = .seconds(4)) {
-//
-//        let serverUrlHasScheme = serverUrl.starts(with: "http://") || serverUrl.starts(with: "https://")
-//        self.api = WebLoggerApi(url: (serverUrlHasScheme ? "" : "http://") + serverUrl + apiPath)
-//        self.sessionName = sessionName
-//        self.sizeOfBatch = sizeOfBatch
-//        self.timeSpan = timeSpan
-//    }
-//
-//    open func configure() {
-//        logSubject
-//            .buffer(timeSpan: timeSpan, count: sizeOfBatch, scheduler: MainScheduler.instance)
-//            .filter { $0.count > 0 }
-//            .map { LogEntryBatch(logs: $0) }
-//            .flatMap { logBatch -> Completable in
-//                guard let _api = self.api else {
-//                    return Completable.error(WebLoggerApiError.invalidUrl)
-//                }
-//
-//                return _api.send(logBatch)
-//            }
-//            .subscribe()
-//            .disposed(by: bag)
-//
-//    }
-//
-//    public var levels: [Level] = [.info]
-//
-//    open func log(_ message: String, onLevel level: Level) {
-//        //do some fancy logging
-//
-//        let entry = LogEntry(level: level, timestamp: Date().timeIntervalSince1970 * 1000, message: message, sessionName: sessionName)
-//        logSubject.onNext(entry)
-//    }
-//}
+import Combine
+
+public struct BatchConfiguration {
+    // Maximum size of a batch (a bag of logs) which is sent to a server
+    let maxSize: Int
+    // Maximum time window after which a batch (a bag of logs) is sent to a server
+    let timeWindow: DispatchQueue.SchedulerTimeType.Stride
+    // Queue on which batches (bags of logs) are being collected
+    let queue: DispatchQueue
+
+    public init(
+        maxSize: Int,
+        timeWindow: DispatchQueue.SchedulerTimeType.Stride,
+        queue: DispatchQueue
+    ) {
+        self.maxSize = maxSize
+        self.timeWindow = timeWindow
+        self.queue = queue
+    }
+}
+
+public class WebLogger: Logging {
+
+    // `sessionID` is used on a server to filter logs for a specific application instance.
+    // - each application may provide or is provided with a `sessionID`
+    // - `sessionID` may be persisted or renewed after each application run (implementation responsibility of `WebLogger` integrator)
+    private let sessionID: UUID
+    // Configuration for batching individual logs (time, size & queue on which the batching happens).
+    private let batchConfiguration: BatchConfiguration
+    // A function that is handling the log batch server sending.
+    // - passed is the log batch as an `Encodable` instance
+    // - returning `Void` if the request happens successfully, an instance of `Error` otherwise
+    // - the caller is responsible for creating & firing an instance of `URLRequest`. The `URLRequest` needs to attach
+    // the log batch (`Decodable` instance) passed in as a parameter
+    private let requestPerformer: (Encodable) -> AnyPublisher<Void, Error>
+
+    private let logSubject = PassthroughSubject<LogEntry, Never>()
+    private var subscriptions = Set<AnyCancellable>()
+
+    public var levels: [Level] = [.info]
+
+    /// `WebLogger` enables to configure and send logs to a specific server.
+    /// The integrator is responsible for providing a running server, that is able to receive the log batch and present it.
+    /// - Parameters:
+    ///   - sessionID: can be used on a server to filter logs for a specific application instance
+    ///   - batchConfiguration: configuration for batching individual logs
+    ///   - requestPerformer: a function that is handling the log batch server sending
+    public init(
+        sessionID: UUID = UUID(),
+        batchConfiguration: BatchConfiguration = .init(maxSize: 5, timeWindow: 4, queue: .global(qos: .utility)),
+        requestPerformer: @escaping (Encodable) -> AnyPublisher<Void, Error>
+    ) {
+        self.sessionID = sessionID
+        self.batchConfiguration = batchConfiguration
+        self.requestPerformer = requestPerformer
+    }
+
+    public func configure() {
+        logSubject
+            .collect(.byTimeOrCount(batchConfiguration.queue, batchConfiguration.timeWindow, batchConfiguration.maxSize))
+            .filter { $0.count > 0 }
+            .flatMap { [weak self] logsBatch -> AnyPublisher<Void, Never> in
+                guard let self = self else {
+                    print("WebLogger is nil while trying to reach it within a closure!")
+
+                    return Empty<Void, Never>().eraseToAnyPublisher()
+                }
+
+                return self.requestPerformer(logsBatch)
+                    .catch { error -> Empty<Void, Never> in
+                        print("[WebLogger] Failing to send logs to a server with error: \(error)!")
+
+                        return Empty<Void, Never>()
+                    }
+                    .eraseToAnyPublisher()
+            }
+            .sink(receiveValue: { _ in })
+            .store(in: &subscriptions)
+    }
+
+    public func log(_ message: String, onLevel level: Level) {
+        let entry = LogEntry(
+            level: level,
+            timestamp: Date().timeIntervalSince1970 * 1000,
+            message: message,
+            sessionID: sessionID
+        )
+
+        logSubject.send(entry)
+    }
+}
