@@ -37,7 +37,7 @@ class LoggerPerformanceTests: XCTestCase {
         super.tearDown()
     }
 
-    func testDirectLog() {
+    func test_direct_log() {
 
         let performanceLogger = PerformanceLogger()
         _ = LogManager.shared.add(performanceLogger)
@@ -50,7 +50,7 @@ class LoggerPerformanceTests: XCTestCase {
         }
     }
 
-    func testOuterLog() {
+    func test_outer_log() {
 
         let performanceLogger = PerformanceLogger()
         _ = LogManager.shared.add(performanceLogger)
@@ -66,7 +66,7 @@ class LoggerPerformanceTests: XCTestCase {
     }
 
 
-    func testThousandRunNSLog() {
+    func test_thousand_run_NSLog() {
         let performanceLogger = PerformanceLogger()
         _ = LogManager.shared.add(performanceLogger)
 
@@ -77,7 +77,7 @@ class LoggerPerformanceTests: XCTestCase {
         }
     }
 
-    func testThousandRunPrint() {
+    func test_thousand_run_print() {
         let performanceLogger = PerformanceLogger()
         _ = LogManager.shared.add(performanceLogger)
 
@@ -88,7 +88,7 @@ class LoggerPerformanceTests: XCTestCase {
         }
     }
 
-    func testThousandRunQLogConsoleAsync() {
+    func test_thousand_run_Log_console_async() {
         let consoleLogger = ConsoleLogger()
         consoleLogger.levels = [.info]
         _ = LogManager.shared.add(consoleLogger)
@@ -102,7 +102,7 @@ class LoggerPerformanceTests: XCTestCase {
         LogManager.shared.waitForLogingJobsToFinish()
     }
 
-    func testThousandRunQLogFileAsync() {
+    func test_thousand_run_Log_file_async() {
         let fileLogger = FileLogger()
         fileLogger.levels = [.info]
         _ = LogManager.shared.add(fileLogger)
@@ -116,7 +116,7 @@ class LoggerPerformanceTests: XCTestCase {
         LogManager.shared.waitForLogingJobsToFinish()
     }
 
-    func testThousandRunQLogBothAsync() {
+    func test_thousand_run_Log_both_async() {
         LogManager.shared.loggingConcurrencyMode = .asyncSerial
 
         let fileLogger = FileLogger()
@@ -136,7 +136,7 @@ class LoggerPerformanceTests: XCTestCase {
         LogManager.shared.waitForLogingJobsToFinish()
     }
 
-    func testThousandRunQLogConsoleSync() {
+    func test_thousand_run_Log_console_sync() {
         LogManager.shared.loggingConcurrencyMode = .syncSerial
 
         let consoleLogger = ConsoleLogger()
@@ -150,7 +150,7 @@ class LoggerPerformanceTests: XCTestCase {
         }
     }
 
-    func testThousandRunQLogFileSync() {
+    func test_thousand_run_Log_file_sync() {
         LogManager.shared.loggingConcurrencyMode = .syncSerial
 
         let fileLogger = FileLogger()
@@ -164,7 +164,7 @@ class LoggerPerformanceTests: XCTestCase {
         }
     }
 
-    func testThousandRunQLogBothSync() {
+    func test_thousand_run_Log_both_sync() {
         LogManager.shared.loggingConcurrencyMode = .syncSerial
 
         let fileLogger = FileLogger()

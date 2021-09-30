@@ -1,14 +1,14 @@
 //
-//  PerformanceLogger.swift
+//  FileLoggerTests.swift
+//  
 //
-//
-//  Created by Martin Troup on 24.09.2021.
+//  Created by Martin Troup on 30.09.2021.
 //
 
-import XCTest
 @testable import Logger
+import XCTest
 
-class LoggerTests: XCTestCase {
+class FileLoggerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
@@ -16,30 +16,7 @@ class LoggerTests: XCTestCase {
         LogManager.shared.removeAllLoggers()
     }
 
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
-    }
-
-    func testLogManager() {
-        let consoleLogger = ConsoleLogger()
-        let fileLogger = FileLogger()
-
-        _ = LogManager.shared.add(consoleLogger)
-        _ = LogManager.shared.add(fileLogger)
-
-        let retrievedConsoleLogger: ConsoleLogger? = LogManager.shared.logger()
-        XCTAssertNotNil(retrievedConsoleLogger)
-
-        LogManager.shared.remove(consoleLogger)
-        let againRetrievedConsoleLogger: ConsoleLogger? = LogManager.shared.logger()
-        XCTAssertNil(againRetrievedConsoleLogger)
-
-        let retrievedFileLogger: FileLogger? = LogManager.shared.logger()
-        XCTAssertNotNil(retrievedFileLogger)
-    }
-
-    func testInicializationOfFileLogger() {
+    func test_inicialization_of_FileLogger() {
         // Set default values for all Logger properties and store them to UserDefaults
         let fileLoggerManager = FileLoggerManager.shared
         fileLoggerManager.resetPropertiesToDefaultValues()
@@ -63,7 +40,7 @@ class LoggerTests: XCTestCase {
         }
     }
 
-    func testLogger() {
+    func test_FileLogger() {
         let fileLoggerManager = FileLoggerManager.shared
         fileLoggerManager.resetPropertiesToDefaultValues()
 
@@ -127,7 +104,7 @@ class LoggerTests: XCTestCase {
         fileLoggerManager.deleteLogFile(at: _currentLogFileUrl)
     }
 
-    func testParsingOfLogFile() {
+    func test_parsing_of_log_file() {
         let fileLoggerManager = FileLoggerManager.shared
         fileLoggerManager.resetPropertiesToDefaultValues()
 

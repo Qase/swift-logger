@@ -10,18 +10,18 @@
 import Foundation
 import Combine
 
-public struct BatchConfiguration {
+public struct BatchConfiguration<S: Scheduler> {
     // Maximum size of a batch (a bag of logs) which is sent to a server
     let maxSize: Int
     // Maximum time window after which a batch (a bag of logs) is sent to a server
-    let timeWindow: DispatchQueue.SchedulerTimeType.Stride
+    let timeWindow: S.SchedulerTimeType.Stride
     // Queue on which batches (bags of logs) are being collected
-    let queue: DispatchQueue
+    let queue: S
 
     public init(
         maxSize: Int,
-        timeWindow: DispatchQueue.SchedulerTimeType.Stride,
-        queue: DispatchQueue
+        timeWindow: S.SchedulerTimeType.Stride,
+        queue: S
     ) {
         self.maxSize = maxSize
         self.timeWindow = timeWindow
@@ -29,20 +29,20 @@ public struct BatchConfiguration {
     }
 }
 
-public class WebLogger: Logging {
+public class WebLogger<S: Scheduler>: Logging {
 
     // `sessionID` is used on a server to filter logs for a specific application instance.
     // - each application may provide or is provided with a `sessionID`
     // - `sessionID` may be persisted or renewed after each application run (implementation responsibility of `WebLogger` integrator)
-    private let sessionID: UUID
+    let sessionID: UUID
     // Configuration for batching individual logs (time, size & queue on which the batching happens).
-    private let batchConfiguration: BatchConfiguration
+    let batchConfiguration: BatchConfiguration<S>
     // A function that is handling the log batch server sending.
     // - passed is the log batch as an `Encodable` instance
     // - returning `Void` if the request happens successfully, an instance of `Error` otherwise
     // - the caller is responsible for creating & firing an instance of `URLRequest`. The `URLRequest` needs to attach
     // the log batch (`Decodable` instance) passed in as a parameter
-    private let requestPerformer: (Encodable) -> AnyPublisher<Void, Error>
+    let requestPerformer: (Encodable) -> AnyPublisher<Void, Error>
 
     private let logSubject = PassthroughSubject<LogEntry, Never>()
     private var subscriptions = Set<AnyCancellable>()
@@ -57,7 +57,7 @@ public class WebLogger: Logging {
     ///   - requestPerformer: a function that is handling the log batch server sending
     public init(
         sessionID: UUID = UUID(),
-        batchConfiguration: BatchConfiguration = .init(maxSize: 5, timeWindow: 4, queue: .global(qos: .utility)),
+        batchConfiguration: BatchConfiguration<S>,
         requestPerformer: @escaping (Encodable) -> AnyPublisher<Void, Error>
     ) {
         self.sessionID = sessionID
@@ -97,5 +97,20 @@ public class WebLogger: Logging {
         )
 
         logSubject.send(entry)
+    }
+}
+
+// MARK: - Default init for `WebLogger<DispatchQueue>`
+
+extension WebLogger where S == DispatchQueue {
+    public convenience init(
+        sessionID: UUID = UUID(),
+        requestPerformer: @escaping (Encodable) -> AnyPublisher<Void, Error>
+    ) {
+        self.init(
+            sessionID: sessionID,
+            batchConfiguration: .init(maxSize: 5, timeWindow: 4, queue: .global(qos: .utility)),
+            requestPerformer: requestPerformer
+        )
     }
 }

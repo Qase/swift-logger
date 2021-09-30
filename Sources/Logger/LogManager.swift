@@ -98,7 +98,7 @@ public class LogManager {
         loggers = [Logging]()
     }
 
-    /// Method to handle logging, it is called internaly via global method QLog(_, _) and thus its not visible outside
+    /// Method to handle logging, it is called internaly via global method Log(_, _) and thus its not visible outside
     /// of the module.
     ///
     /// - Parameters:
