@@ -6,8 +6,8 @@
 //
 
 #if canImport(SwiftUI)
-import SwiftUI
 import MessageUI
+import SwiftUI
 
 public typealias MailViewCallback = ((Result<MFMailComposeResult, Error>) -> Void)?
 
@@ -59,17 +59,17 @@ public struct SendMailView: UIViewControllerRepresentable {
     }
 
     public func makeUIViewController(context: UIViewControllerRepresentableContext<SendMailView>) -> MFMailComposeViewController {
-        let vc = MFMailComposeViewController()
-        vc.mailComposeDelegate = context.coordinator
-        vc.setSubject(data.subject)
-        vc.setToRecipients(data.recipients)
-        vc.setMessageBody(data.message, isHTML: false)
+        let viewController = MFMailComposeViewController()
+        viewController.mailComposeDelegate = context.coordinator
+        viewController.setSubject(data.subject)
+        viewController.setToRecipients(data.recipients)
+        viewController.setMessageBody(data.message, isHTML: false)
         data.attachments?.forEach {
-            vc.addAttachmentData($0.data, mimeType: $0.mimeType, fileName: $0.fileName)
+            viewController.addAttachmentData($0.data, mimeType: $0.mimeType, fileName: $0.fileName)
         }
-        vc.accessibilityElementDidLoseFocus()
+        viewController.accessibilityElementDidLoseFocus()
 
-        return vc
+        return viewController
     }
 
     public func updateUIViewController(

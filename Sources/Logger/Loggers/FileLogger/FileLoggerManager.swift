@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  FileLoggerManager.swift
 //  
 //
 //  Created by Martin Troup on 24.09.2021.
@@ -17,18 +17,35 @@ class FileLoggerManager {
         do {
             let fileManager = FileManager.default
             let documentDirUrl = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            let _logDirUrl = documentDirUrl.appendingPathComponent("logs")
-            if !fileManager.fileExists(atPath: _logDirUrl.path) {
-                try fileManager.createDirectory(at: _logDirUrl, withIntermediateDirectories: true, attributes: nil)
+            let logDirUrl = documentDirUrl.appendingPathComponent("logs")
+            if !fileManager.fileExists(atPath: logDirUrl.path) {
+                try fileManager.createDirectory(at: logDirUrl, withIntermediateDirectories: true, attributes: nil)
             }
-            print("File log directory: \(_logDirUrl).")
+            print("File log directory: \(logDirUrl).")
 
-            return _logDirUrl
+            return logDirUrl
         } catch let error {
             assertionFailure("Failed to create log directory within init() with error: \(error).")
             return nil
         }
     }()
+
+    var logFilesRecords: [LogFileRecord] {
+        guard let logDirUrl = logDirUrl else {
+            return []
+        }
+
+        return (0..<numOfLogFiles).reduce(into: [LogFileRecord]()) { result, index in
+            let logFileNumber = (currentLogFileNumber + index) % numOfLogFiles
+            let logFileUrl = logDirUrl.appendingPathComponent("\(logFileNumber)").appendingPathExtension("log")
+
+            guard let logFileRecords = gettingRecordsFromLogFile(at: logFileUrl) else {
+                return
+            }
+
+            result.append(contentsOf: logFileRecords)
+        }
+    }
 
     private(set) var currentLogFileNumber: Int = 0 {
         didSet {
@@ -42,13 +59,13 @@ class FileLoggerManager {
             UserDefaults.standard.set(currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
 
             // Check if new currentLogFileUrl is available (only a safety check, because its part - logDirUrl is Optional
-            guard let _currentLogFileUrl = currentLogFileUrl else {
+            guard let currentLogFileUrl = currentLogFileUrl else {
                 assertionFailure("New currentLogFileUrl not available while trying to open appropriate currentWritableFileHandler.")
                 return
             }
 
             // Delete the file that is about to be used (it is overriden in a file cycle)
-            deleteLogFile(at: _currentLogFileUrl)
+            deleteLogFile(at: currentLogFileUrl)
 
             // Open new fileHandle and assign it to currentWritableFileHandle
             assignNewFileHandle()
@@ -135,7 +152,7 @@ class FileLoggerManager {
 //        }
 
         // Get all log files to the archive
-        guard let allLogFiles = gettingAllLogFiles(), allLogFiles.count > 0 else {
+        guard let allLogFiles = gettingAllLogFiles(), !allLogFiles.isEmpty else {
             print("\(#function) - no log files.")
             return nil
         }
@@ -163,20 +180,20 @@ class FileLoggerManager {
     }
 
     private init() {
-        if let _dateOfLastLog = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date {
-            dateOfLastLog = _dateOfLastLog
+        if let dateOfLastLog = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date {
+            self.dateOfLastLog = dateOfLastLog
         } else {
             UserDefaults.standard.set(dateOfLastLog, forKey: Constants.UserDefaultsKeys.dateOfLastLog)
         }
 
-        if let _currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
-            currentLogFileNumber = _currentLogFileNumber
+        if let currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
+            self.currentLogFileNumber = currentLogFileNumber
         } else {
             UserDefaults.standard.set(currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
         }
 
-        if let _numOfLogFiles = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.numOfLogFiles) as? Int {
-            numOfLogFiles = _numOfLogFiles
+        if let numOfLogFiles = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.numOfLogFiles) as? Int {
+            self.numOfLogFiles = numOfLogFiles
         } else {
             UserDefaults.standard.set(numOfLogFiles, forKey: Constants.UserDefaultsKeys.numOfLogFiles)
         }
@@ -197,7 +214,7 @@ class FileLoggerManager {
     func deleteAllLogFiles() {
         guard let aLogFiles = gettingAllLogFiles() else { return }
 
-        aLogFiles.forEach { (aLogFileUrl) in
+        aLogFiles.forEach { aLogFileUrl in
             deleteLogFile(at: aLogFileUrl)
         }
 
@@ -236,17 +253,17 @@ class FileLoggerManager {
     ///
     /// - Parameter fileUrl: fileName of the log file to open file descriptor on
     private func assignNewFileHandle() {
-        guard let _currentLogFileUrl = currentLogFileUrl else {
+        guard let currentLogFileUrl = currentLogFileUrl else {
             assertionFailure("Unavailable currentLogFileUrl while trying to assign new currentWritableFileHandle.")
             return
         }
 
         // Create the file that is about to be used and open its FileHandle (assign it to current WritableFileHandle) if not exists yet.
-        createLogFile(at: _currentLogFileUrl)
+        createLogFile(at: currentLogFileUrl)
 
         // Open new file descriptor (FileHandle)
         do {
-            currentWritableFileHandle = try FileHandle(forWritingTo: _currentLogFileUrl)
+            currentWritableFileHandle = try FileHandle(forWritingTo: currentLogFileUrl)
         } catch let error {
             assertionFailure("Failed to get FileHandle instance (writable file descriptor) for currentLogFileUrl with error: \(error).")
         }
@@ -256,11 +273,11 @@ class FileLoggerManager {
     ///
     /// - Returns: Array of log file names
     func gettingAllLogFiles() -> [URL]? {
-        guard let _logDirUrl = logDirUrl else { return nil }
+        guard let logDirUrl = logDirUrl else { return nil }
 
         do {
-            let directoryContent = try FileManager.default.contentsOfDirectory(at: _logDirUrl, includingPropertiesForKeys: nil, options: [])
-            let logFiles = directoryContent.filter({ (file) -> Bool in
+            let directoryContent = try FileManager.default.contentsOfDirectory(at: logDirUrl, includingPropertiesForKeys: nil, options: [])
+            let logFiles = directoryContent.filter({ file -> Bool in
                 file.pathExtension == "log"
             })
             return logFiles
@@ -288,8 +305,8 @@ class FileLoggerManager {
         let contentToAppend = "\(Constants.FileLogger.logFileRecordSeparator) \(messageHeader) \(message)\n"
 
         currentWritableFileHandle?.seekToEndOfFile()
-        if let _contentToAppend = contentToAppend.data(using: .utf8) {
-            currentWritableFileHandle?.write(_contentToAppend)
+        if let contentToAppend = contentToAppend.data(using: .utf8) {
+            currentWritableFileHandle?.write(contentToAppend)
         }
     }
 
@@ -331,22 +348,22 @@ class FileLoggerManager {
     /// - Returns: array of LogFileRecord instances
     func gettingRecordsFromLogFile(at fileUrlToRead: URL) -> [LogFileRecord]? {
         let logFileContent = readingContentFromLogFile(at: fileUrlToRead)
-        guard let _logFileContent = logFileContent else { return nil }
+        guard let logFileContent = logFileContent else { return nil }
 
-        var arrayOflogFileRecords = _logFileContent.components(separatedBy: Constants.FileLogger.logFileRecordSeparator)
+        var arrayOflogFileRecords = logFileContent.components(separatedBy: Constants.FileLogger.logFileRecordSeparator)
         arrayOflogFileRecords.remove(at: 0)
-        let logFileRecords = arrayOflogFileRecords.map { (logFileRecordInString) -> LogFileRecord in
+        let logFileRecords = arrayOflogFileRecords.map { logFileRecordInString -> LogFileRecord in
 
             let headerTrimmed = logFileRecordInString
-                .prefix(while: { $0 != "]"})
+                .prefix(while: { $0 != "]" })
                 .dropFirst()
 
-            let header = headerTrimmed.asString() + "]"
+            let header = headerTrimmed.string + "]"
 
             let body = logFileRecordInString
                 .suffix(from: headerTrimmed.endIndex)
                 .dropFirst(2)
-                .asString()
+                .string
 
             return LogFileRecord(header: header, body: body)
         }
@@ -358,8 +375,7 @@ class FileLoggerManager {
 // MARK: - Substring + helpers
 
 private extension Substring {
-    func asString() -> String {
+    var string: String {
         String(self)
     }
 }
-

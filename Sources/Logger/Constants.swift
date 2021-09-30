@@ -12,7 +12,6 @@ public struct Constants {
     struct UserDefaultsKeys {
         static let logDirUrl = "logDirUrl"
         static let currentLogFileNumber = "currentLogFileNumber"
-        static let currentLogFileNumber2 = "currentLogFileNumbercurrentLogFileNumbercurrentLogFileNumbercurrentLogFileNumbercurrentLogFileNumbercurrentLogFileNumber"
         static let dateOfLastLog = "dateOfLastLog"
         static let numOfLogFiles = "numOfLogFiles"
     }

@@ -8,6 +8,6 @@
 import Foundation
 
 public struct LogFileRecord {
-    let header: String
-    let body: String
+    public let header: String
+    public let body: String
 }

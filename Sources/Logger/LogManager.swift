@@ -13,6 +13,7 @@ import Foundation
 /// - Parameters:
 ///   - message: String logging message
 ///   - level: Level of the logging message
+//   swiftlint:disable:next identifier_name
 public func Log(
     _ message: String,
     onLevel level: Level,
@@ -172,14 +173,14 @@ public class LogManager {
         serialLoggingQueue.sync {
             dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
 
-            guard self.loggers.count > 0 else {
+            guard !loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
                 return
             }
 
             self.loggers
                 .filter { $0.doesLog(forLevel: level) }
-                .forEach { $0.log(message, onLevel: level)}
+                .forEach { $0.log(message, onLevel: level) }
         }
     }
 
@@ -192,14 +193,14 @@ public class LogManager {
         serialLoggingQueue.async {
             dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
 
-            guard self.loggers.count > 0 else {
+            guard !self.loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
                 return
             }
 
             self.loggers
                 .filter { $0.doesLog(forLevel: level) }
-                .forEach { $0.log(message, onLevel: level)}
+                .forEach { $0.log(message, onLevel: level) }
         }
     }
 
@@ -212,17 +213,18 @@ public class LogManager {
         serialLoggingQueue.sync {
             dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
 
-            guard loggers.count > 0 else {
+            guard !loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
                 return
             }
-            self.loggers
+
+            loggers
                 .filter { $0.doesLog(forLevel: level) }
-                .forEach({ (logger) in
+                .forEach { logger in
                     concurrentLoggingQueue.async {
                         logger.log(message, onLevel: level)
                     }
-                })
+                }
         }
     }
 

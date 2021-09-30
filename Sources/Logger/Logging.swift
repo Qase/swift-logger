@@ -7,10 +7,9 @@
 
 import Foundation
 
-import Foundation
-
 public protocol Logging {
     var levels: [Level] { get set }
+
     func configure()
     func log(_ message: String, onLevel level: Level)
 }

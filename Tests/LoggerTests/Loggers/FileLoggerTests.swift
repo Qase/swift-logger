@@ -21,20 +21,20 @@ class FileLoggerTests: XCTestCase {
         let fileLoggerManager = FileLoggerManager.shared
         fileLoggerManager.resetPropertiesToDefaultValues()
 
-        if let _currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
-            XCTAssertEqual(0, _currentLogFileNumber)
+        if let currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
+            XCTAssertEqual(0, currentLogFileNumber)
         } else {
             XCTFail()
         }
 
-        if let _dateTimeOfLastLog = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date {
-            XCTAssertNotNil(_dateTimeOfLastLog.toFullDateString().range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression))
+        if let dateTimeOfLastLog = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date {
+            XCTAssertNotNil(dateTimeOfLastLog.toFullDateString().range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression))
         } else {
             XCTFail()
         }
 
-        if let _numOfLogFiles = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.numOfLogFiles) as? Int {
-            XCTAssertEqual(4, _numOfLogFiles)
+        if let numOfLogFiles = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.numOfLogFiles) as? Int {
+            XCTAssertEqual(4, numOfLogFiles)
         } else {
             XCTFail()
         }
@@ -44,7 +44,7 @@ class FileLoggerTests: XCTestCase {
         let fileLoggerManager = FileLoggerManager.shared
         fileLoggerManager.resetPropertiesToDefaultValues()
 
-        guard fileLoggerManager.logDirUrl != nil, let _currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
+        guard fileLoggerManager.logDirUrl != nil, let currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
             XCTFail("Failed to set log directory or current log file")
             return
         }
@@ -88,27 +88,33 @@ class FileLoggerTests: XCTestCase {
         }
 
         // Check if logs were correctly written in the log file
-        let contentOfLogFile = fileLoggerManager.readingContentFromLogFile(at: _currentLogFileUrl)
+        let contentOfLogFile = fileLoggerManager.readingContentFromLogFile(at: currentLogFileUrl)
 
-        guard let _contentOfLogFile = contentOfLogFile else {
+        guard let contentOfLogFile = contentOfLogFile else {
             XCTFail("Log file is empty even though it should not be!")
             return
         }
 
-        let linesOfContent = _contentOfLogFile.components(separatedBy: .newlines)
+        let linesOfContent = contentOfLogFile.components(separatedBy: .newlines)
 
-        XCTAssertNotNil(linesOfContent[0].range(of: "^\\[.*] \\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}] .* - .* - line \\d+: Error message$", options: .regularExpression))
-        XCTAssertNotNil(linesOfContent[1].range(of: "^\\[.*] \\[INFO \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}] .* - .* - line \\d+: Info message$", options: .regularExpression))
+        XCTAssertNotNil(linesOfContent[0].range(
+            of: "^\\[.*] \\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}] .* - .* - line \\d+: Error message$",
+            options: .regularExpression)
+        )
+        XCTAssertNotNil(linesOfContent[1].range(
+            of: "^\\[.*] \\[INFO \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}] .* - .* - line \\d+: Info message$",
+            options: .regularExpression)
+        )
 
         // Delete the log file
-        fileLoggerManager.deleteLogFile(at: _currentLogFileUrl)
+        fileLoggerManager.deleteLogFile(at: currentLogFileUrl)
     }
 
     func test_parsing_of_log_file() {
         let fileLoggerManager = FileLoggerManager.shared
         fileLoggerManager.resetPropertiesToDefaultValues()
 
-        guard fileLoggerManager.logDirUrl != nil, let _currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
+        guard fileLoggerManager.logDirUrl != nil, let currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
             XCTFail("Failed to set log directory or current log file")
             return
         }
@@ -119,29 +125,29 @@ class FileLoggerTests: XCTestCase {
 
         let fileLogger = FileLogger()
         fileLogger.levels = [.error, .warn]
-        _ = logManager.add(fileLogger)
+        logManager.add(fileLogger)
 
         Log("Error message", onLevel: .error)
         Log("Warning message\nThis is test!", onLevel: .warn)
 
         logManager.waitForLogingJobsToFinish()
 
-        let logFileRecords = fileLoggerManager.gettingRecordsFromLogFile(at: _currentLogFileUrl)
+        let logFileRecords = fileLoggerManager.gettingRecordsFromLogFile(at: currentLogFileUrl)
 
-        guard let _logFileRecords = logFileRecords else {
+        guard let logFileRecords = logFileRecords else {
             XCTFail("No log file records were parsed from the log file even though there should be 2 of them.")
             return
         }
 
-        XCTAssertEqual(2, _logFileRecords.count)
+        XCTAssertEqual(2, logFileRecords.count)
 
-        XCTAssertNotNil(_logFileRecords[0].header.range(of: "^\\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
-        XCTAssertNotNil(_logFileRecords[0].body.range(of: "^.* - .* - line \\d+: Error message\n$", options: .regularExpression))
+        XCTAssertNotNil(logFileRecords[0].header.range(of: "^\\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
+        XCTAssertNotNil(logFileRecords[0].body.range(of: "^.* - .* - line \\d+: Error message\n$", options: .regularExpression))
 
-        XCTAssertNotNil(_logFileRecords[1].header.range(of: "^\\[WARNING \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
-        XCTAssertNotNil(_logFileRecords[1].body.range(of: "^.* - .* - line \\d+: Warning message\nThis is test!\n$", options: .regularExpression))
+        XCTAssertNotNil(logFileRecords[1].header.range(of: "^\\[WARNING \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
+        XCTAssertNotNil(logFileRecords[1].body.range(of: "^.* - .* - line \\d+: Warning message\nThis is test!\n$", options: .regularExpression))
 
         // Delete the log file
-        fileLoggerManager.deleteLogFile(at: _currentLogFileUrl)
+        fileLoggerManager.deleteLogFile(at: currentLogFileUrl)
     }
 }

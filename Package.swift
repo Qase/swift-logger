@@ -7,7 +7,7 @@ let package = Package(
     name: "logger",
     platforms: [
         .iOS(.v14),
-//        .macOS(.v10_15)
+        .macOS(.v11)
     ],
     products: [
         .library(
@@ -16,13 +16,13 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/marmelroy/Zip.git", .upToNextMinor(from: "2.1.0")),
+        .package(url: "https://github.com/marmelroy/Zip.git", .upToNextMinor(from: "2.1.0"))
     ],
     targets: [
         .target(
             name: "Logger",
             dependencies: [
-                "Zip",
+                "Zip"
             ]
         ),
         .testTarget(
