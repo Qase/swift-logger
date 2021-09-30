@@ -18,7 +18,7 @@ class FileLoggerTests: XCTestCase {
 
     func test_inicialization_of_FileLogger() {
         // Set default values for all Logger properties and store them to UserDefaults
-        let fileLoggerManager = FileLoggerManager.shared
+        let fileLoggerManager = FileLoggerManager()
         fileLoggerManager.resetPropertiesToDefaultValues()
 
         if let currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
@@ -41,7 +41,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_FileLogger() {
-        let fileLoggerManager = FileLoggerManager.shared
+        let fileLoggerManager = FileLoggerManager()
         fileLoggerManager.resetPropertiesToDefaultValues()
 
         guard fileLoggerManager.logDirUrl != nil, let currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
@@ -111,7 +111,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_parsing_of_log_file() {
-        let fileLoggerManager = FileLoggerManager.shared
+        let fileLoggerManager = FileLoggerManager()
         fileLoggerManager.resetPropertiesToDefaultValues()
 
         guard fileLoggerManager.logDirUrl != nil, let currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
@@ -134,18 +134,13 @@ class FileLoggerTests: XCTestCase {
 
         let logFileRecords = fileLoggerManager.gettingRecordsFromLogFile(at: currentLogFileUrl)
 
-        guard let logFileRecords = logFileRecords else {
-            XCTFail("No log file records were parsed from the log file even though there should be 2 of them.")
-            return
-        }
+        XCTAssertEqual(2, logFileRecords!.count)
 
-        XCTAssertEqual(2, logFileRecords.count)
+        XCTAssertNotNil(logFileRecords![0].header.range(of: "^\\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
+        XCTAssertNotNil(logFileRecords![0].body.range(of: "^.* - .* - line \\d+: Error message\n$", options: .regularExpression))
 
-        XCTAssertNotNil(logFileRecords[0].header.range(of: "^\\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
-        XCTAssertNotNil(logFileRecords[0].body.range(of: "^.* - .* - line \\d+: Error message\n$", options: .regularExpression))
-
-        XCTAssertNotNil(logFileRecords[1].header.range(of: "^\\[WARNING \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
-        XCTAssertNotNil(logFileRecords[1].body.range(of: "^.* - .* - line \\d+: Warning message\nThis is test!\n$", options: .regularExpression))
+        XCTAssertNotNil(logFileRecords![1].header.range(of: "^\\[WARNING \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
+        XCTAssertNotNil(logFileRecords![1].body.range(of: "^.* - .* - line \\d+: Warning message\nThis is test!\n$", options: .regularExpression))
 
         // Delete the log file
         fileLoggerManager.deleteLogFile(at: currentLogFileUrl)
