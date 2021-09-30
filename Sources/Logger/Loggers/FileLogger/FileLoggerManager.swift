@@ -10,17 +10,47 @@ import Zip
 
 /// LogFileManager manages all necessary operations for FileLogger.
 class FileLoggerManager {
-    /// The class is used as a Singleton, thus should be accesed via instance property !!!
-    static let shared = FileLoggerManager()
+    private let suiteName: String?
 
-    let logDirUrl: URL? = {
+    init(suiteName: String? = nil) {
+         self.suiteName = suiteName
+
+         if let _dateOfLastLog = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date {
+             dateOfLastLog = _dateOfLastLog
+         } else {
+             UserDefaults.standard.set(dateOfLastLog, forKey: Constants.UserDefaultsKeys.dateOfLastLog)
+         }
+
+         if let _currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
+             currentLogFileNumber = _currentLogFileNumber
+         } else {
+             UserDefaults.standard.set(currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
+         }
+
+         if let _numOfLogFiles = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.numOfLogFiles) as? Int {
+             numOfLogFiles = _numOfLogFiles
+         } else {
+             UserDefaults.standard.set(numOfLogFiles, forKey: Constants.UserDefaultsKeys.numOfLogFiles)
+         }
+    }
+
+    lazy var logDirUrl: URL? = {
         do {
             let fileManager = FileManager.default
-            let documentDirUrl = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            let logDirUrl = documentDirUrl.appendingPathComponent("logs")
+
+            let dirUrl: URL
+            if let suiteName = suiteName, let url = fileManager.containerURL(forSecurityApplicationGroupIdentifier: suiteName) {
+                dirUrl = url
+            } else {
+                dirUrl = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            }
+
+            let logDirUrl = dirUrl.appendingPathComponent("logs")
+
             if !fileManager.fileExists(atPath: logDirUrl.path) {
                 try fileManager.createDirectory(at: logDirUrl, withIntermediateDirectories: true, attributes: nil)
             }
+
             print("File log directory: \(logDirUrl).")
 
             return logDirUrl
@@ -73,7 +103,9 @@ class FileLoggerManager {
     }
 
     var currentLogFileUrl: URL? {
-        logDirUrl?.appendingPathComponent("\(currentLogFileNumber)").appendingPathExtension("log")
+        suiteName == nil ?
+             logDirUrl?.appendingPathComponent("\(currentLogFileNumber)").appendingPathExtension("log") :
+             logDirUrl?.appendingPathComponent("extension-\(currentLogFileNumber)").appendingPathExtension("log")
     }
 
     private var currentWritableFileHandle: FileHandle? {
@@ -95,37 +127,13 @@ class FileLoggerManager {
                 assertionFailure("There must be at least 1 log file so FileLogger can be used.")
             }
             if numOfLogFiles > newNumOfLogFiles {
-                deleteAllLogFiles()
+                deleteAllLogFiles(suiteName: suiteName)
             }
         }
         didSet {
             UserDefaults.standard.set(numOfLogFiles, forKey: Constants.UserDefaultsKeys.numOfLogFiles)
         }
     }
-
-//    private func createArchiveURL(fileName: String) -> Archive? {
-//        guard let logDirUrl = logDirUrl else {
-//            print("\(#function) - logDirUrl is nil.")
-//            return nil
-//        }
-//        let archiveUrl = logDirUrl.appendingPathComponent(fileName)
-//
-//        do {
-//            let fileManager = FileManager.default
-//            try fileManager.removeItem(atPath: archiveUrl.path)
-//        } catch {}
-//
-//        guard Archive(url: archiveUrl, accessMode: .create) != nil else {
-//            print("\(#function) - failed to create the archive.")
-//            return nil
-//        }
-//
-//        guard let archive = Archive(url: archiveUrl, accessMode: .update) else {
-//            print("\(#function) - failed to open the archive for update.")
-//            return nil
-//        }
-//        return archive
-//    }
 
     // Zip file size (in bytes)
     var archivedLogFilesSize: Int? {
@@ -138,64 +146,19 @@ class FileLoggerManager {
         }
     }
 
-//    // Url of the zip file containing all log files.
-//    var archivedLogFilesUrl: URL? {
-//        archivedLogFiles
-//    }
-
     // Zip file containing log files
     var archivedLogFilesUrl: URL? {
-        // Open newly created archive for update
-//        guard let archive = createArchive(fileName: "log_files_archive.zip") else {
-//            print("\(#function) - failed to open the archive for update.")
-//            return nil
-//        }
-
         // Get all log files to the archive
-        guard let allLogFiles = gettingAllLogFiles(), !allLogFiles.isEmpty else {
+        guard let allLogFiles = gettingAllLogFiles(suiteName: suiteName), !allLogFiles.isEmpty else {
             print("\(#function) - no log files.")
             return nil
         }
-
-//        // Add all log files to the archive
-//        do {
-//            try allLogFiles.forEach { logFileUrl in
-//                var logFileUrlVar = logFileUrl
-//                logFileUrlVar.deleteLastPathComponent()
-//                try archive.addEntry(with: logFileUrl.lastPathComponent, relativeTo: logFileUrlVar, compressionMethod: .deflate)
-//            }
-//        } catch let error {
-//            print("\(#function) - failed to add a log file to the archive with error \(error).")
-//            return nil
-//        }
-
-//        return archive
 
         do {
             return try Zip.quickZipFiles(allLogFiles, fileName: "log_files_archive.zip")
         } catch let error {
             print("\(#function) - failed to zip log files with error: \(error).")
             return nil
-        }
-    }
-
-    private init() {
-        if let dateOfLastLog = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date {
-            self.dateOfLastLog = dateOfLastLog
-        } else {
-            UserDefaults.standard.set(dateOfLastLog, forKey: Constants.UserDefaultsKeys.dateOfLastLog)
-        }
-
-        if let currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
-            self.currentLogFileNumber = currentLogFileNumber
-        } else {
-            UserDefaults.standard.set(currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
-        }
-
-        if let numOfLogFiles = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.numOfLogFiles) as? Int {
-            self.numOfLogFiles = numOfLogFiles
-        } else {
-            UserDefaults.standard.set(numOfLogFiles, forKey: Constants.UserDefaultsKeys.numOfLogFiles)
         }
     }
 
@@ -211,8 +174,8 @@ class FileLoggerManager {
     }
 
     /// Method to remove all log files from dedicated log folder. These files are detected by its ".log" suffix.
-    func deleteAllLogFiles() {
-        guard let aLogFiles = gettingAllLogFiles() else { return }
+    func deleteAllLogFiles(suiteName: String? = nil) {
+        guard let aLogFiles = gettingAllLogFiles(suiteName: suiteName) else { return }
 
         aLogFiles.forEach { aLogFileUrl in
             deleteLogFile(at: aLogFileUrl)
@@ -271,12 +234,22 @@ class FileLoggerManager {
 
     /// Method to get all log file names from dedicated log folder. These files are detected by its ".log" suffix.
     ///
+    /// - Parameters:
+    ///   - subsystem: suit name of the application. Must be passed to also get logs from app extensions.
+    ///
     /// - Returns: Array of log file names
-    func gettingAllLogFiles() -> [URL]? {
-        guard let logDirUrl = logDirUrl else { return nil }
+    func gettingAllLogFiles(suiteName: String? = nil) -> [URL]? {
+        let extensionDirectory = suiteName
+            .flatMap { FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: $0)?.appendingPathComponent("logs") }
+            .flatMap { FileManager.default.fileExists(atPath: $0.path) ? $0 : nil }
+
+        let logDirectories = [logDirUrl] + [extensionDirectory]
 
         do {
-            let directoryContent = try FileManager.default.contentsOfDirectory(at: logDirUrl, includingPropertiesForKeys: nil, options: [])
+            let directoryContent = try logDirectories
+                .compactMap { $0 }
+                .flatMap { try FileManager.default.contentsOfDirectory(at: $0, includingPropertiesForKeys: nil, options: []) }
+
             let logFiles = directoryContent.filter({ file -> Bool in
                 file.pathExtension == "log"
             })

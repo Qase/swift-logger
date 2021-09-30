@@ -5,7 +5,7 @@
 //  Created by Alžbeta Gogoláková on 18.08.2021.
 //
 
-#if canImport(SwiftUI)
+#if canImport(SwiftUI) && !os(macOS)
 import MessageUI
 import SwiftUI
 
