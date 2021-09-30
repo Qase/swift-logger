@@ -10,7 +10,7 @@ import Zip
 
 /// Pre-built logger that logs to a single or multiple files within dedicated log dir.
 public class FileLogger: Logging {
-    private let fileLoggerManager = FileLoggerManager.shared
+    private let fileLoggerManager: FileLoggerManager
 
     /// Property to set a number of log files that can be used for loging.
     public var numOfLogFiles: Int = 4 {
@@ -19,25 +19,19 @@ public class FileLogger: Logging {
         }
     }
 
-    public var archivedLogFilesSize: Int? {
-        fileLoggerManager.archivedLogFilesSize
-    }
-
     public var archivedLogFilesUrl: URL? {
         fileLoggerManager.archivedLogFilesUrl
     }
 
-//    public var archivedLogFiles: Archive? {
-//        fileLoggerManager.archivedLogFiles
-//    }
-    
-    public var logFilesUrl: [URL]? {
-        fileLoggerManager.gettingAllLogFiles()
-    }
-
     public var levels: [Level] = [.info]
 
-    public init() {}
+    /// FileLogger initializer
+    ///
+    /// - Parameters:
+    ///   - subsystem: suit name of the application. Must be passed to create logs from app extensions.
+    public init(suiteName: String? = nil) {
+        fileLoggerManager = FileLoggerManager(suiteName: suiteName)
+    }
 
     public var logFilesRecords: [LogFileRecord] {
         fileLoggerManager.logFilesRecords
@@ -47,7 +41,11 @@ public class FileLogger: Logging {
         fileLoggerManager.writeToLogFile(message: message, withMessageHeader: messageHeader(forLevel: level), onLevel: level)
     }
 
-    public func deleteAllLogFiles() {
-        fileLoggerManager.deleteAllLogFiles()
+    /// Delete all logs
+    ///
+    /// - Parameters:
+    ///   - subsystem: suit name of the application. Must be passed to also delete logs from app extensions.
+    public func deleteAllLogFiles(suiteName: String? = nil) {
+        fileLoggerManager.deleteAllLogFiles(suiteName: suiteName)
     }
 }
