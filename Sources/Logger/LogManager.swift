@@ -117,17 +117,25 @@ public class LogManager {
     }
 
     /// Method to delete all log files if there are any.
-    ///
-    /// - Parameters:
-    ///   - subsystem: suit name of the application. Must be passed to also delete logs from app extensions.
-    public func deleteAllLogFiles(suiteName: String? = nil) {
+    public func deleteAllLogFiles() {
         serialLoggingQueue.async {
             dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
 
             self.loggers.compactMap { $0 as? FileLogger }
-                .forEach { $0.deleteAllLogFiles(suiteName: suiteName) }
+                .forEach { $0.deleteAllLogFiles() }
         }
     }
+
+    /// Method to export all log files if there are any.
+     public func exportLogFiles() -> [URL] {
+        serialLoggingQueue.sync {
+            dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
+
+            return self.loggers
+                .compactMap { $0 as? FileLogger }
+                .compactMap { $0.getArchivedLogFilesUrl() }
+        }
+     }
 
     /// Method to set specific application's callbacks to be logged and a level to be logged on.
     /// If array of callbacks set nil, none of the application's callbacks will be logged.

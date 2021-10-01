@@ -19,8 +19,8 @@ public class FileLogger: Logging {
         }
     }
 
-    public var archivedLogFilesUrl: URL? {
-        fileLoggerManager.archivedLogFilesUrl
+    public func getArchivedLogFilesUrl(withFileName archiveFileName: String? = nil) -> URL? {
+        fileLoggerManager.getArchivedLogFilesUrl(withFileName: archiveFileName)
     }
 
     public var levels: [Level] = [.info]
@@ -42,10 +42,7 @@ public class FileLogger: Logging {
     }
 
     /// Delete all logs
-    ///
-    /// - Parameters:
-    ///   - subsystem: suit name of the application. Must be passed to also delete logs from app extensions.
-    public func deleteAllLogFiles(suiteName: String? = nil) {
-        fileLoggerManager.deleteAllLogFiles(suiteName: suiteName)
+    public func deleteAllLogFiles() {
+        fileLoggerManager.deleteAllLogFiles()
     }
 }
