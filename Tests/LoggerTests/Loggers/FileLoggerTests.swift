@@ -71,7 +71,7 @@ class FileLoggerTests: XCTestCase {
         logManager.waitForLogingJobsToFinish()
 
         // Archived log files check
-        let archiveUrl = fileLogger.archivedLogFilesUrl
+        let archiveUrl = fileLogger.getArchivedLogFilesUrl()
         XCTAssertNotNil(archiveUrl)
         do {
             let reachable = try archiveUrl!.checkResourceIsReachable()
@@ -98,11 +98,11 @@ class FileLoggerTests: XCTestCase {
         let linesOfContent = contentOfLogFile.components(separatedBy: .newlines)
 
         XCTAssertNotNil(linesOfContent[0].range(
-            of: "^\\[.*] \\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}] .* - .* - line \\d+: Error message$",
+            of: "^\\[.*] \\[ERROR \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}] .* - .* - line \\d+: Error message$",
             options: .regularExpression)
         )
         XCTAssertNotNil(linesOfContent[1].range(
-            of: "^\\[.*] \\[INFO \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}] .* - .* - line \\d+: Info message$",
+            of: "^\\[.*] \\[INFO \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}] .* - .* - line \\d+: Info message$",
             options: .regularExpression)
         )
 
@@ -136,11 +136,17 @@ class FileLoggerTests: XCTestCase {
 
         XCTAssertEqual(2, logFileRecords!.count)
 
-        XCTAssertNotNil(logFileRecords![0].header.range(of: "^\\[ERROR \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
+        XCTAssertNotNil(
+            logFileRecords![0].header.range(of: "^\\[ERROR \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}]$", options: .regularExpression)
+        )
         XCTAssertNotNil(logFileRecords![0].body.range(of: "^.* - .* - line \\d+: Error message\n$", options: .regularExpression))
 
-        XCTAssertNotNil(logFileRecords![1].header.range(of: "^\\[WARNING \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}]$", options: .regularExpression))
-        XCTAssertNotNil(logFileRecords![1].body.range(of: "^.* - .* - line \\d+: Warning message\nThis is test!\n$", options: .regularExpression))
+        XCTAssertNotNil(
+            logFileRecords![1].header.range(of: "^\\[WARNING \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}]$", options: .regularExpression)
+        )
+        XCTAssertNotNil(
+            logFileRecords![1].body.range(of: "^.* - .* - line \\d+: Warning message\nThis is test!\n$", options: .regularExpression)
+        )
 
         // Delete the log file
         fileLoggerManager.deleteLogFile(at: currentLogFileUrl)
