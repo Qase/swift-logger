@@ -23,7 +23,7 @@ class LoggerTests: XCTestCase {
 
     func test_LogManager() {
         let consoleLogger = ConsoleLogger()
-        let fileLogger = FileLogger()
+        let fileLogger = try! FileLogger()
 
         _ = LogManager.shared.add(consoleLogger)
         _ = LogManager.shared.add(fileLogger)

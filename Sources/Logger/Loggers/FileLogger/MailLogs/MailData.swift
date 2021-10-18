@@ -20,28 +20,30 @@ public struct AttachmentData {
     public let fileName: String
 }
 
+extension AttachmentData {
+    init?(fromURL url: URL, data: Data) {
+        self.data = data
+        self.mimeType = "text/plain"
+        self.fileName = url.lastPathComponent
+    }
+}
+
 // MARK: - MailData
 
 public extension MailData {
-    static func withLogsAsAttachments(subject: String, recipients: [String]?, message: String) -> MailData {
-        let fileLoggerManager = FileLoggerManager()
+    static func withLogsAsAttachments(
+        fromLogger logger: FileLogger? = nil,
+        subject: String,
+        recipients: [String]?, message: String
+    ) -> MailData {
+        let logger = logger ?? LogManager.shared.loggers.compactMap { $0 as? FileLogger }.first
 
         return MailData(
             subject: subject,
             recipients: recipients,
             message: message,
             attachments: {
-                guard let logFilesUrls = fileLoggerManager.gettingAllLogFiles() else { return nil }
-                return logFilesUrls.compactMap { logFileUrl in
-                    guard let logFileContent = fileLoggerManager.readingContentFromLogFile(at: logFileUrl) else {
-                        return nil
-                    }
-                    guard let logFileData = logFileContent.data(using: .utf8) else {
-                        return nil
-                    }
-
-                    return AttachmentData(data: logFileData, mimeType: "text/plain", fileName: logFileUrl.lastPathComponent)
-                }
+                logger?.perFileLogData?.compactMap { AttachmentData(fromURL: $0.key, data: $0.value) }
             }()
         )
     }

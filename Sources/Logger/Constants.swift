@@ -13,15 +13,11 @@ public struct Constants {
         static let logDirUrl = "logDirUrl"
         static let currentLogFileNumber = "currentLogFileNumber"
         static let dateOfLastLog = "dateOfLastLog"
-        static let numOfLogFiles = "numOfLogFiles"
+        static let numberOfLogFiles = "numOfLogFiles"
     }
 
     struct FileLogger {
         static let logFileRecordSeparator = "[Swift-Logger]"
-    }
-
-    public struct FileLoggerTableViewDatasource {
-        public static let fileLoggerTableViewCellIdentifier = "fileLoggerTableViewCellIdentifier"
     }
 
     public struct Queues {
