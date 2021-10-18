@@ -101,7 +101,7 @@ class LoggerPerformanceTests: XCTestCase {
     }
 
     func test_thousand_run_Log_file_async() {
-        let fileLogger = FileLogger()
+        let fileLogger = try! FileLogger()
         fileLogger.levels = [.info]
         _ = LogManager.shared.add(fileLogger)
 
@@ -117,7 +117,7 @@ class LoggerPerformanceTests: XCTestCase {
     func test_thousand_run_Log_both_async() {
         LogManager.shared.loggingConcurrencyMode = .asyncSerial
 
-        let fileLogger = FileLogger()
+        let fileLogger = try! FileLogger()
         fileLogger.levels = [.info]
         _ = LogManager.shared.add(fileLogger)
 
@@ -151,7 +151,7 @@ class LoggerPerformanceTests: XCTestCase {
     func test_thousand_run_Log_file_sync() {
         LogManager.shared.loggingConcurrencyMode = .syncSerial
 
-        let fileLogger = FileLogger()
+        let fileLogger = try! FileLogger()
         fileLogger.levels = [.info]
         _ = LogManager.shared.add(fileLogger)
 
@@ -165,7 +165,7 @@ class LoggerPerformanceTests: XCTestCase {
     func test_thousand_run_Log_both_sync() {
         LogManager.shared.loggingConcurrencyMode = .syncSerial
 
-        let fileLogger = FileLogger()
+        let fileLogger = try! FileLogger()
         fileLogger.levels = [.info]
         _ = LogManager.shared.add(fileLogger)
 
@@ -177,6 +177,19 @@ class LoggerPerformanceTests: XCTestCase {
             for _ in 1...1000 {
                 Log("Test", onLevel: .info)
             }
+        }
+    }
+}
+
+// MARK: - LogManager + asyncWait
+
+private extension LogManager {
+    /// !!! This method only serves for unit tests !!! Before checking values (XCT checks), unit tests must wait for loging jobs to complete.
+    /// Loging is being executed on a different queue (logingQueue) and thus here the main queue waits (sync) until all of logingQueue jobs are completed.
+    /// Then it executes the block within logingQueue.sync which is empty, so it continues on doing other things.
+    func waitForLogingJobsToFinish() {
+        serialLoggingQueue.sync {
+            //
         }
     }
 }

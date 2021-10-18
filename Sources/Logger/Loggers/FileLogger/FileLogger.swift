@@ -12,15 +12,8 @@ import Zip
 public class FileLogger: Logging {
     private let fileLoggerManager: FileLoggerManager
 
-    /// Property to set a number of log files that can be used for loging.
-    public var numOfLogFiles: Int = 4 {
-        didSet {
-            fileLoggerManager.numOfLogFiles = numOfLogFiles
-        }
-    }
-
     public func getArchivedLogFilesUrl(withFileName archiveFileName: String? = nil) -> URL? {
-        fileLoggerManager.getArchivedLogFilesUrl(withFileName: archiveFileName)
+        try? fileLoggerManager.archiveWithLogFiles(withFileName: archiveFileName)
     }
 
     public var levels: [Level] = [.info]
@@ -29,12 +22,21 @@ public class FileLogger: Logging {
     ///
     /// - Parameters:
     ///   - subsystem: suit name of the application. Must be passed to create logs from app extensions.
-    public init(suiteName: String? = nil) {
-        fileLoggerManager = FileLoggerManager(suiteName: suiteName)
+    ///   - numberOfLogFiles: a number of log files that can be used for logging
+    public init(suiteName: String? = nil, numberOfLogFiles: Int = 4) throws {
+        fileLoggerManager = try FileLoggerManager(suiteName: suiteName, numberOfLogFiles: numberOfLogFiles)
     }
 
-    public var logFilesRecords: [LogFileRecord] {
-        fileLoggerManager.logFilesRecords
+    init(fileLoggerManager: FileLoggerManager) {
+        self.fileLoggerManager = fileLoggerManager
+    }
+
+    public var logFilesRecords: [LogFileRecord]? {
+        fileLoggerManager.perFileLogRecords?.flatMap(\.value)
+    }
+
+    var perFileLogData: [URL: Data]? {
+        fileLoggerManager.perFileLogData
     }
 
     public func log(_ message: String, onLevel level: Level) {
@@ -43,6 +45,6 @@ public class FileLogger: Logging {
 
     /// Delete all logs
     public func deleteAllLogFiles() {
-        fileLoggerManager.deleteAllLogFiles()
+        try? fileLoggerManager.deleteAllLogFiles()
     }
 }

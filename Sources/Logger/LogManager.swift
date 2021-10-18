@@ -13,7 +13,9 @@ import Foundation
 /// - Parameters:
 ///   - message: String logging message
 ///   - level: Level of the logging message
-//   swiftlint:disable:next identifier_name
+///   - file: File where the log function was called
+///   - function: Function where the log function was called
+///   - line: Line on which the log function was called
 public func Log(
     _ message: String,
     onLevel level: Level,
@@ -21,8 +23,7 @@ public func Log(
     inFunction function: String = #function,
     onLine line: Int = #line
 ) {
-    let theFileName = (file as NSString).lastPathComponent
-    LogManager.shared.log("\(theFileName) - \(function) - line \(line): \(message)", onLevel: level)
+    LogManager.shared.log(message, onLevel: level, inFile: file, inFunction: function, onLine: line)
 }
 
 /// Logging concurrency types
@@ -46,15 +47,21 @@ public class LogManager {
 
     public var loggingConcurrencyMode: LoggingConcurrencyMode = .asyncSerial
 
-    private let serialLoggingQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background)
-    private let concurrentLoggingQueue = DispatchQueue(label: Constants.Queues.concurrent, qos: .background, attributes: .concurrent)
+    let serialLoggingQueue: DispatchQueue
+    let concurrentLoggingQueue: DispatchQueue
 
-    private var loggers: [Logging]
+    var loggers: [Logging]
 
     private let applicationCallbackLogger = ApplicationCallbackLogger()
     private let metaInformationLogger = MetaInformationLogger()
 
-    private init() {
+    init(
+        serialLoggingQueue: DispatchQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background),
+        concurrentLoggingQueue: DispatchQueue = DispatchQueue(label: Constants.Queues.concurrent, qos: .background, attributes: .concurrent)
+    ) {
+        self.serialLoggingQueue = serialLoggingQueue
+        self.concurrentLoggingQueue = concurrentLoggingQueue
+
         loggers = [Logging]()
 
         applicationCallbackLogger.delegate = self
@@ -105,14 +112,26 @@ public class LogManager {
     /// - Parameters:
     ///   - message: String logging message
     ///   - level: Level of the logging message
-    func log(_ message: String, onLevel level: Level) {
+    ///   - file: File where the log function was called
+    ///   - function: Function where the log function was called
+    ///   - line: Line on which the log function was called
+    func log(
+        _ message: String,
+        onLevel level: Level,
+        inFile file: String = #file,
+        inFunction function: String = #function,
+        onLine line: Int = #line
+    ) {
+        let theFileName = (file as NSString).lastPathComponent
+        let logRecord = "\(theFileName) - \(function) - line \(line): \(message)"
+
         switch loggingConcurrencyMode {
         case .syncSerial:
-            logSyncSerially(message, onLevel: level)
+            logSyncSerially(logRecord, onLevel: level)
         case .asyncSerial:
-            logAsyncSerially(message, onLevel: level)
+            logAsyncSerially(logRecord, onLevel: level)
         case .syncConcurrent:
-            logSyncConcurrently(message, onLevel: level)
+            logSyncConcurrently(logRecord, onLevel: level)
         }
     }
 
@@ -236,15 +255,6 @@ public class LogManager {
                         logger.log(message, onLevel: level)
                     }
                 }
-        }
-    }
-
-    /// !!! This method only serves for unit tests !!! Before checking values (XCT checks), unit tests must wait for loging jobs to complete.
-    /// Loging is being executed on a different queue (logingQueue) and thus here the main queue waits (sync) until all of logingQueue jobs are completed.
-    /// Then it executes the block within logingQueue.sync which is empty, so it continues on doing other things.
-    func waitForLogingJobsToFinish() {
-        serialLoggingQueue.sync {
-            //
         }
     }
 }

@@ -188,9 +188,10 @@ Logging task is dispatched synchronously on a custom serial queue, where all log
 
 The framework provides `SendMailView` that has a pre-configured SwiftUI `View` that, when presented, will offer the option to send all log files via mail.
 
-### Displaying file logs in UITableView
+### Displaying file logs in `FileLogsTable`
 
-The framework also provides `FileLoggerTableViewDatasource` which is a pre-configured `UITableViewDataSource` containing all log files merged, each log = a single `UITableViewCell`.
+The framework provides an example of `SwiftUI` `View` called `FileLogsTable`. It displays all log records stored via `FileLogger` in a table view.  
+The `View` is available within `SwiftLoggerSampleApp`.
 
 ## License
 
