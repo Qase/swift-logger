@@ -16,7 +16,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/marmelroy/Zip.git", .upToNextMinor(from: "2.1.0"))
+        .package(url: "https://github.com/CognitiveDisson/Zip.git", .branch("fix-xcode13"))
     ],
     targets: [
         .target(
