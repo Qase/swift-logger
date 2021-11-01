@@ -18,7 +18,12 @@ class FileLoggerTests: XCTestCase {
 
         userDefaults = UserDefaults(suiteName: "testUserDefaults")!
         fileManager = FileManager.default
-        fileLoggerManager = try! FileLoggerManager(fileManager: fileManager, userDefaults: userDefaults, numberOfLogFiles: 3)
+        fileLoggerManager = try! FileLoggerManager(
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            dateFormatter: FileLogger.dateFormatter,
+            numberOfLogFiles: 3
+        )
     }
 
     override func tearDown() {
@@ -41,7 +46,7 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(currentLogFileNumber, 0)
 
         let dateOfLastLog = userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date
-        XCTAssertNotNil(dateOfLastLog?.toFullDateString().range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression))
+        XCTAssertNotNil(dateOfLastLog)
 
         let numberOfLogFiles = userDefaults.object(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) as? Int
         XCTAssertEqual(numberOfLogFiles, 3)
@@ -94,7 +99,7 @@ class FileLoggerTests: XCTestCase {
             fileLoggerManager.logDirURL.appendingPathComponent("2").appendingPathExtension("log")
         )
 
-        // Day 4 == File 0
+       // Day 4 == File 0
         fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
 
         fileLogger.log("Warning message", onLevel: .warn)
@@ -109,25 +114,29 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_single_logging_file() {
-        let fileLoggerManager = try! FileLoggerManager(fileManager: fileManager, userDefaults: userDefaults)
         let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
+        fileLogger.levels = [.error, .warn]
 
         fileLogger.log("Error message", onLevel: .error)
+
         fileLogger.log("Warning message\nThis is test!", onLevel: .warn)
 
-        let logFileRecords = try! fileLoggerManager.gettingRecordsFromLogFile(at: fileLoggerManager.currentLogFileUrl)
+        let fileLogs = try! fileLoggerManager.gettingRecordsFromLogFile(at: fileLoggerManager.currentLogFileUrl)
 
-        XCTAssertEqual(2, logFileRecords.count)
+        XCTAssertEqual(2, fileLogs.count)
 
-        XCTAssertNotNil(
-            logFileRecords[0].header.range(of: "^\\[ERROR \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}]$", options: .regularExpression)
-        )
-        XCTAssertEqual(logFileRecords[0].body, "Error message\n")
+        XCTAssertNotNil(fileLogs[0].header)
+        XCTAssertEqual(fileLogs[0].body, "Error message")
 
-        XCTAssertNotNil(
-            logFileRecords[1].header.range(of: "^\\[WARNING \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}]$", options: .regularExpression)
-        )
-        XCTAssertEqual(logFileRecords[1].body, "Warning message\nThis is test!\n")
+        XCTAssertNotNil(fileLogs[1].header)
+        XCTAssertEqual(fileLogs[1].body, "Warning message\nThis is test!")
+    }
+
+    func test_pattern_match() {
+        let string = "[WARNING \(DateFormatter.dateFormatter.string(from: Date()))]"
+
+        let messageHeader = LogHeader.init(rawValue: string, dateFormatter: DateFormatter.dateFormatter)
+        XCTAssertNotNil(messageHeader)
     }
 }
 
