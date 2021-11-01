@@ -24,7 +24,10 @@ class FileLoggerTests: XCTestCase {
     override func tearDown() {
         try! FileManager.default.removeItem(atPath: fileLoggerManager.logDirURL.path)
         fileLoggerManager = nil
-        UserDefaults().removeSuite(named: "testUserDefaults")
+
+        userDefaults.removePersistentDomain(forName: "testUserDefaults")
+        userDefaults = nil
+
         fileManager = nil
 
         super.tearDown()
