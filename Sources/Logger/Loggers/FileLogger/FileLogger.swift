@@ -24,14 +24,18 @@ public class FileLogger: Logging {
     ///   - subsystem: suit name of the application. Must be passed to create logs from app extensions.
     ///   - numberOfLogFiles: a number of log files that can be used for logging
     public init(suiteName: String? = nil, numberOfLogFiles: Int = 4) throws {
-        fileLoggerManager = try FileLoggerManager(suiteName: suiteName, numberOfLogFiles: numberOfLogFiles)
+        fileLoggerManager = try FileLoggerManager(
+            dateFormatter: FileLogger.dateFormatter,
+            suiteName: suiteName,
+            numberOfLogFiles: numberOfLogFiles
+        )
     }
 
     init(fileLoggerManager: FileLoggerManager) {
         self.fileLoggerManager = fileLoggerManager
     }
 
-    public var logFilesRecords: [LogFileRecord]? {
+    public var logFilesRecords: [FileLog]? {
         fileLoggerManager.perFileLogRecords?.flatMap(\.value)
     }
 

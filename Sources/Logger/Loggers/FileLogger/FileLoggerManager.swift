@@ -23,6 +23,7 @@ class FileLoggerManager {
     private let fileManager: FileManager
     private let userDefaults: UserDefaults
     private let suiteName: String?
+    private let dateFormatter: DateFormatter
     let logDirURL: URL
     private let externalLogger: (String) -> ()
 
@@ -53,12 +54,14 @@ class FileLoggerManager {
     init(
         fileManager: FileManager = FileManager.default,
         userDefaults: UserDefaults = UserDefaults.standard,
+        dateFormatter: DateFormatter,
         externalLogger: @escaping (String) -> () = { print($0) },
         suiteName: String? = nil,
         numberOfLogFiles: Int = 4
     ) throws {
         self.fileManager = fileManager
         self.userDefaults = userDefaults
+        self.dateFormatter = dateFormatter
         self.externalLogger = externalLogger
         self.suiteName = suiteName
         self.logDirURL = try fileManager.documentDirectoryURL(withName: "logs", usingSuiteName: logFilePathExtension)
@@ -81,10 +84,10 @@ class FileLoggerManager {
 
     // MARK: - Computed properties & methods
 
-    var perFileLogRecords: [URL: [LogFileRecord]]? {
+    var perFileLogRecords: [URL: [FileLog]]? {
         do {
             return try fileManager.allFiles(at: logDirURL, usingSuiteName: suiteName, withPathExtension: logFilePathExtension)
-                .reduce([URL: [LogFileRecord]]()) { result, nextFile in
+                .reduce([URL: [FileLog]]()) { result, nextFile in
                     var newResult = result
                     newResult[nextFile] = try gettingRecordsFromLogFile(at: nextFile)
 
@@ -167,15 +170,19 @@ class FileLoggerManager {
             return try FileHandle(forWritingTo: url)
         }
 
+        let dateString = DateFormatter.dateFormatter.string(from:)
+
         let currentDate = Date()
 
-        if currentDate == dateOfLastLog, currentWritableFileHandle == nil {
+        let isSameDay = dateString(currentDate) == dateString(dateOfLastLog)
+
+        if isSameDay, currentWritableFileHandle == nil {
             currentWritableFileHandle = try fileHandle(fileManager, currentLogFileUrl)
 
             return
         }
 
-        if currentDate == dateOfLastLog { return }
+        if isSameDay { return }
 
         currentLogFileNumber = (currentLogFileNumber + 1) % numberOfLogFiles
         dateOfLastLog = currentDate
@@ -186,37 +193,12 @@ class FileLoggerManager {
     ///
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
-    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogFileRecord] {
+    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLog] {
         try fileManager.contents(fromFileIfExists: fileUrlToRead)
             .components(separatedBy: Constants.FileLogger.logFileRecordSeparator)
             .dropFirst()
-            .map(LogFileRecord.init(fromFileLogRecord:))
+            .map { FileLog(rawValue: $0, dateFormatter: dateFormatter) }
+            .compactMap { $0 }
     }
 }
 
-// MARK: - LogFileRecord + parsing
-
-private extension LogFileRecord {
-    init(fromFileLogRecord fileLogRecord: String) {
-        let headerTrimmed = fileLogRecord
-            .prefix(while: { $0 != "]" })
-            .dropFirst()
-
-        let header = String(headerTrimmed) + "]"
-
-        let body = fileLogRecord
-            .suffix(from: headerTrimmed.endIndex)
-            .dropFirst(2)
-
-        self.header = header
-        self.body = String(body)
-    }
-}
-
-// MARK: - Date + Equatable
-
-private extension Date {
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.toFullDateString() == rhs.toFullDateString()
-    }
-}
