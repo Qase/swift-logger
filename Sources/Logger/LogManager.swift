@@ -26,17 +26,6 @@ public func Log(
     LogManager.shared.log(message, onLevel: level, inFile: file, inFunction: function, onLine: line)
 }
 
-/// Logging concurrency types
-///
-/// - syncSerial: logging executed synchronously towards the main thread. All loggers log serially one by one within a dedicated queue
-/// - asyncSerial: logging executed asynchronously towards the main thread. All loggers log serially one by one within a dedicated queue
-/// - syncConcurrent: logging executed synchronously towards the main thread. All loggers log concurrently within a dedicated queue
-public enum LoggingConcurrencyMode {
-    case syncSerial
-    case asyncSerial
-    case syncConcurrent
-}
-
 /// LogManager manages different types of loggers. The class enables to register custom or pre-built loggers.
 /// Each of these logger classes must be subclassed from BaseLogger. The class handles logging to registered loggers
 /// based on levels they are set to acccept.
@@ -45,22 +34,20 @@ public class LogManager {
     // The class is used as a Singleton, thus should be accesed via instance property !!!
     public static let shared = LogManager()
 
-    public var loggingConcurrencyMode: LoggingConcurrencyMode = .asyncSerial
+    private var loggers: [Logging]
 
-    let serialLoggingQueue: DispatchQueue
-    let concurrentLoggingQueue: DispatchQueue
+    // Configuration of logging mode
+    public var loggingConcurrencyMode: LoggingConcurrencyMode
 
-    var loggers: [Logging]
+    public var fileLoggerIfPresent: FileLogger? {
+        loggers.compactMap { $0 as? FileLogger}.first
+    }
 
     private let applicationCallbackLogger = ApplicationCallbackLogger()
     private let metaInformationLogger = MetaInformationLogger()
 
-    init(
-        serialLoggingQueue: DispatchQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background),
-        concurrentLoggingQueue: DispatchQueue = DispatchQueue(label: Constants.Queues.concurrent, qos: .background, attributes: .concurrent)
-    ) {
-        self.serialLoggingQueue = serialLoggingQueue
-        self.concurrentLoggingQueue = concurrentLoggingQueue
+    init(loggingConcurrencyMode: LoggingConcurrencyMode = .asyncSerial(.defaultSerialLoggingQueue)) {
+        self.loggingConcurrencyMode = loggingConcurrencyMode
 
         loggers = [Logging]()
 
@@ -126,29 +113,29 @@ public class LogManager {
         let logRecord = "\(theFileName) - \(function) - line \(line): \(message)"
 
         switch loggingConcurrencyMode {
-        case .syncSerial:
-            logSyncSerially(logRecord, onLevel: level)
-        case .asyncSerial:
-            logAsyncSerially(logRecord, onLevel: level)
-        case .syncConcurrent:
-            logSyncConcurrently(logRecord, onLevel: level)
+        case let .syncSerial(queue):
+            logSyncSerially(onQueue: queue, logRecord, onLevel: level)
+        case let .asyncSerial(queue):
+            logAsyncSerially(onQueue: queue, logRecord, onLevel: level)
+        case let .syncConcurrent(serialQueue: serialQueue, concurrentQueue: concurrentQueue):
+            logSyncConcurrently(serialQueue: serialQueue, concurrentQueue: concurrentQueue, logRecord, onLevel: level)
         }
     }
 
     /// Method to delete all log files if there are any.
     public func deleteAllLogFiles() {
-        serialLoggingQueue.async {
-            dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
+        loggingConcurrencyMode.serialQueue.async {
+            dispatchPrecondition(condition: .onQueue(self.loggingConcurrencyMode.serialQueue))
 
             self.loggers.compactMap { $0 as? FileLogger }
-                .forEach { $0.deleteAllLogFiles() }
+                .forEach { try? $0.deleteAllLogFiles() }
         }
     }
 
     /// Method to export all log files if there are any.
      public func exportLogFiles() -> [URL] {
-        serialLoggingQueue.sync {
-            dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
+         loggingConcurrencyMode.serialQueue.sync {
+             dispatchPrecondition(condition: .onQueue(self.loggingConcurrencyMode.serialQueue))
 
             return self.loggers
                 .compactMap { $0 as? FileLogger }
@@ -199,9 +186,9 @@ public class LogManager {
     /// - Parameters:
     ///   - message: to be logged
     ///   - level: to be logged on
-    private func logSyncSerially(_ message: String, onLevel level: Level) {
-        serialLoggingQueue.sync {
-            dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
+    private func logSyncSerially(onQueue queue: DispatchQueue, _ message: String, onLevel level: Level) {
+        queue.sync {
+            dispatchPrecondition(condition: .onQueue(queue))
 
             guard !loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
@@ -219,9 +206,9 @@ public class LogManager {
     /// - Parameters:
     ///   - message: to be logged
     ///   - level: to be logged on
-    private func logAsyncSerially(_ message: String, onLevel level: Level) {
-        serialLoggingQueue.async {
-            dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
+    private func logAsyncSerially(onQueue queue: DispatchQueue, _ message: String, onLevel level: Level) {
+        queue.async {
+            dispatchPrecondition(condition: .onQueue(queue))
 
             guard !self.loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
@@ -239,9 +226,9 @@ public class LogManager {
     /// - Parameters:
     ///   - message: to be logged
     ///   - level: to be logged on
-    private func logSyncConcurrently(_ message: String, onLevel level: Level) {
-        serialLoggingQueue.sync {
-            dispatchPrecondition(condition: .onQueue(self.serialLoggingQueue))
+    private func logSyncConcurrently(serialQueue: DispatchQueue, concurrentQueue: DispatchQueue, _ message: String, onLevel level: Level) {
+        serialQueue.sync {
+            dispatchPrecondition(condition: .onQueue(serialQueue))
 
             guard !loggers.isEmpty else {
                 assertionFailure("No loggers were added to the LogManager.")
@@ -251,7 +238,7 @@ public class LogManager {
             loggers
                 .filter { $0.doesLog(forLevel: level) }
                 .forEach { logger in
-                    concurrentLoggingQueue.async {
+                    concurrentQueue.async {
                         logger.log(message, onLevel: level)
                     }
                 }
