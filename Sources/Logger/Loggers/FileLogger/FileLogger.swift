@@ -35,8 +35,8 @@ public class FileLogger: Logging {
         self.fileLoggerManager = fileLoggerManager
     }
 
-    public var logFilesRecords: [FileLog]? {
-        fileLoggerManager.perFileLogRecords?.flatMap(\.value)
+    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true}) -> [FileLog]? {
+        fileLoggerManager.perFileLogRecords(filteredBy: filter)?.flatMap(\.value)
     }
 
     var perFileLogData: [URL: Data]? {
@@ -48,7 +48,7 @@ public class FileLogger: Logging {
     }
 
     /// Delete all logs
-    public func deleteAllLogFiles() {
+    public func deleteAllLogFiles() throws {
         try? fileLoggerManager.deleteAllLogFiles()
     }
 }

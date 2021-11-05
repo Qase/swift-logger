@@ -7,16 +7,16 @@
 
 import Foundation
 
-struct LogEntry {
+struct WebLog {
     let level: Level
     let timestamp: Double
     let message: String
     let sessionID: UUID
 }
 
-// MARK: - LogEntry + Encodable
+// MARK: - WebLog + Encodable
 
-extension LogEntry: Encodable {
+extension WebLog: Encodable {
     enum CodingKeys: String, CodingKey {
         case level = "severity"
         case timestamp
@@ -46,4 +46,4 @@ extension LogEntry: Encodable {
 
 // MARK: - LogEntryBatch
 
-typealias LogEntryBatch = Array<LogEntry>
+typealias LogEntryBatch = Array<WebLog>

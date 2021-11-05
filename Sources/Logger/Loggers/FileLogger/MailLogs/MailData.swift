@@ -36,7 +36,7 @@ public extension MailData {
         subject: String,
         recipients: [String]?, message: String
     ) -> MailData {
-        let logger = logger ?? LogManager.shared.loggers.compactMap { $0 as? FileLogger }.first
+        let logger = logger ?? LogManager.shared.fileLoggerIfPresent
 
         return MailData(
             subject: subject,

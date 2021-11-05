@@ -84,27 +84,23 @@ class FileLoggerManager {
 
     // MARK: - Computed properties & methods
 
-    var perFileLogRecords: [URL: [FileLog]]? {
-        do {
-            return try fileManager.allFiles(at: logDirURL, usingSuiteName: suiteName, withPathExtension: logFilePathExtension)
-                .reduce([URL: [FileLog]]()) { result, nextFile in
-                    var newResult = result
-                    newResult[nextFile] = try gettingRecordsFromLogFile(at: nextFile)
-
-                    return newResult
-                }
-        } catch let error {
-            externalLogger("Failed to retrieve an array of LogFileRecord with error: \(error).")
-            return nil
-        }
+    func perFileLogRecords(filteredBy filter: (FileLog) -> Bool = { _ in true }) -> [URL: [FileLog]]? {
+        perFileLogs(gettingRecordsFromLogFile(at:))
+            .map { perFileLogRecords in
+                perFileLogRecords.mapValues { $0.filter(filter) }
+            }
     }
 
     var perFileLogData: [URL: Data]? {
+        perFileLogs(fileManager.contents(fromFileIfExists:))?.compactMapValues { $0.data(using: .utf8) }
+    }
+
+    private func perFileLogs<LogFormat>(_ logGetter: (URL) throws -> LogFormat) -> [URL: LogFormat]? {
         do {
             return try fileManager.allFiles(at: logDirURL, usingSuiteName: suiteName, withPathExtension: logFilePathExtension)
-                .reduce([URL: Data]()) { result, nextFile in
+                .reduce([URL: LogFormat]()) { result, nextFile in
                     var newResult = result
-                    newResult[nextFile] = try fileManager.contents(fromFileIfExists: nextFile).data(using: .utf8)
+                    newResult[nextFile] = try logGetter(nextFile)
 
                     return newResult
                 }
