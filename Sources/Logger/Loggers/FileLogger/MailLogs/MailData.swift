@@ -32,18 +32,16 @@ extension AttachmentData {
 
 public extension MailData {
     static func withLogsAsAttachments(
-        fromLogger logger: FileLogger? = nil,
+        perLogFileData: [URL: Data],
         subject: String,
         recipients: [String]?, message: String
     ) -> MailData {
-        let logger = logger ?? LogManager.shared.fileLoggerIfPresent
-
-        return MailData(
+        MailData(
             subject: subject,
             recipients: recipients,
             message: message,
             attachments: {
-                logger?.perFileLogData?.compactMap { AttachmentData(fromURL: $0.key, data: $0.value) }
+                perLogFileData.compactMap { AttachmentData(fromURL: $0.key, data: $0.value) }
             }()
         )
     }

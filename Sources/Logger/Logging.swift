@@ -29,3 +29,10 @@ extension Logging {
         levels.contains(level)
     }
 }
+
+
+extension Array where Element == Logging {
+    func availableLoggers(forLevel level: Level) -> Self {
+        self.filter { $0.doesLog(forLevel: level) }
+    }
+}
