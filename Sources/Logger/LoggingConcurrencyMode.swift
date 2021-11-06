@@ -35,3 +35,33 @@ public extension DispatchQueue {
     static let defaultSerialLoggingQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background)
     static let defaultConcurrentLoggingQueue = DispatchQueue(label: Constants.Queues.concurrent, qos: .background, attributes: .concurrent)
 }
+
+// MARK: - LoggingConcurrentMode + log
+
+extension LoggingConcurrencyMode {
+    func log(toLoggers loggers: [Logging], message: String, onLevel level: Level) {
+        let availableLoggers = loggers.availableLoggers(forLevel: level)
+
+        switch self {
+        case let .syncSerial(serialQueue):
+            serialQueue.sync {
+                availableLoggers.forEach { $0.log(message, onLevel: level) }
+            }
+
+        case let .asyncSerial(serialQueue):
+            serialQueue.async {
+                availableLoggers.forEach { $0.log(message, onLevel: level) }
+            }
+
+        case let .syncConcurrent(serialQueue: serialQueue, concurrentQueue: concurrentQueue):
+            serialQueue.sync {
+                availableLoggers
+                    .forEach { logger in
+                        concurrentQueue.async {
+                            logger.log(message, onLevel: level)
+                        }
+                    }
+            }
+        }
+    }
+}

@@ -5,8 +5,7 @@
 //  Created by Martin Troup on 24.09.2021.
 //
 
-// TODO: Refactor using SwiftUI instead of UIKit
-
+import Combine
 import Foundation
 #if canImport(UIKit)
 import UIKit
@@ -114,67 +113,15 @@ protocol ApplicationCallbackLoggerDelegate: AnyObject {
     func logApplicationCallback(_ message: String, onLevel level: Level)
 }
 
-class ApplicationCallbackLogger {
-    weak var delegate: ApplicationCallbackLoggerDelegate?
+public class ApplicationCallbackLogger {
+    private let messageSubject = PassthroughSubject<(level: Level, message: String), Never>()
+    var messagePublisher: AnyPublisher<(level: Level, message: String), Never> { messageSubject.eraseToAnyPublisher() }
 
-    var callbacks: [ApplicationCallbackType]? = [] {
-        didSet {
-            let oldValue = (oldValue?.isEmpty ?? false) ? ApplicationCallbackType.allCases : oldValue
-            let callbacks = (callbacks?.isEmpty ?? false) ? ApplicationCallbackType.allCases : callbacks
+    private let level: Level
 
-            removeNotifications(for: getCallbacksToRemove(from: oldValue, basedOn: callbacks))
-            addNotifications(for: getCallbacksToAdd(from: callbacks, basedOn: oldValue))
-        }
-    }
-
-    var level: Level = .debug
-
-    init() {
-        addNotifications(for: ApplicationCallbackType.allCases)
-    }
-
-    /// Method to get array of callbacks to remove (thus those, who are in oldCallbacks but not in newCallbacks).
-    /// The method is used for removeNotifications(for:) method.
-    ///
-    /// - Parameters:
-    ///   - oldCallbacks: old array of callbacks
-    ///   - newCallbacks: new array of callbacks
-    /// - Returns: array of callbacks to be removed
-    private func getCallbacksToRemove(
-        from oldCallbacks: [ApplicationCallbackType]?,
-        basedOn newCallbacks: [ApplicationCallbackType]?
-    ) -> [ApplicationCallbackType] {
-        oldCallbacks?.filter { !(newCallbacks?.contains($0) ?? false) } ?? []
-    }
-
-    /// Method to get array of callbacks to add (thus those, who are in newCallbacks but not in oldCallbacks).
-    /// The method is used for addNotifications(for:) method.
-    ///
-    /// - Parameters:
-    ///   - newCallbacks: new array of callbacks
-    ///   - oldCallbacks: old array of callbacks
-    /// - Returns: array of callbacks to be added
-    private func getCallbacksToAdd(
-        from newCallbacks: [ApplicationCallbackType]?,
-        basedOn oldCallbacks: [ApplicationCallbackType]?
-    ) -> [ApplicationCallbackType] {
-        newCallbacks?.filter { !(oldCallbacks?.contains($0) ?? false) } ?? []
-    }
-
-    /// Method to remove specific Application's notification callbacks
-    ///
-    /// - Parameter callbacks: callbacks to be removed
-    private func removeNotifications(`for` callbacks: [ApplicationCallbackType]) {
-        callbacks.forEach { callback in
-            NotificationCenter.default.removeObserver(self, name: callback.notificationName, object: nil)
-        }
-    }
-
-    /// Method to add specific Application's notification callbacks
-    ///
-    /// - Parameter callbacks: callbacks to be added
-    private func addNotifications(`for` callbacks: [ApplicationCallbackType]) {
-
+    init(callbacks: [ApplicationCallbackType] = ApplicationCallbackType.allCases, level: Level = .debug) {
+        self.level = level
+        
         callbacks.forEach { callback in
             #if canImport(UIKit)
             let selector = Selector(callback.rawValue)
@@ -186,10 +133,11 @@ class ApplicationCallbackLogger {
     }
 }
 
-// MARK: - Application's notification callbacks
+// MARK: - ApplicationCallbackLogger + notification callbacks
+
 extension ApplicationCallbackLogger {
     private func log(_ message: String, onLevel level: Level) {
-        delegate?.logApplicationCallback(message, onLevel: level)
+        messageSubject.send((level: level, message: message))
     }
 
     #if canImport(UIKit)
