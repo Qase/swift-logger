@@ -19,9 +19,8 @@ public enum LoggingConcurrencyMode {
 
     var serialQueue: DispatchQueue {
         switch self {
-        case let .syncSerial(queue):
-            return queue
-        case let .asyncSerial(queue):
+        case let .syncSerial(queue),
+            let .asyncSerial(queue):
             return queue
         case let .syncConcurrent(serialQueue: queue, _):
             return queue
