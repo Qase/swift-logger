@@ -71,7 +71,7 @@ public enum MetaInformationType: String, CaseIterable {
 
 extension Array where Element == MetaInformationType {
     func dictionary(fromBundle bundle: Bundle) -> [String: String] {
-        self.reduce([String: String]()) { dictionary, nextType in
+        reduce([String: String]()) { dictionary, nextType in
             var newDictionary = dictionary
             newDictionary[nextType.rawValue] = nextType.value(inBundle: bundle)
 

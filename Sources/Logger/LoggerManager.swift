@@ -51,7 +51,8 @@ public class LoggerManager {
     /// All logs from FileLogger files (represented as `Data`).
     public var perFileLogDataIfAvailable: [URL: Data]? {
         loggingConcurrencyMode.serialQueue.sync {
-            return loggers.compactMap { $0 as? FileLogger }
+            loggers
+                .compactMap { $0 as? FileLogger }
                 .compactMap { $0.perFileLogData }
                 .flatMap { $0 }
                 .reduce([URL: Data]()) { dictionary, nextElement in
