@@ -72,7 +72,7 @@ public class LoggerManager {
         }
     }
 
-    func log(
+    public func log(
         _ message: String,
         onLevel level: Level,
         inFile file: String = #file,
