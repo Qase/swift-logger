@@ -73,7 +73,7 @@ public class LoggerManager {
     }
 
     public func log(
-        _ message: String,
+        _ message: CustomStringConvertible,
         onLevel level: Level,
         inFile file: String = #file,
         inFunction function: String = #function,
