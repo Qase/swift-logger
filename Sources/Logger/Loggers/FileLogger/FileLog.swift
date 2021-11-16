@@ -12,6 +12,10 @@ public struct FileLog {
     public let body: String
 }
 
+// MARK: - FileLog + Hashable & Equatable
+
+extension FileLog: Hashable, Equatable {}
+
 // MARK: - FileLog + parsing
 
 extension FileLog {
