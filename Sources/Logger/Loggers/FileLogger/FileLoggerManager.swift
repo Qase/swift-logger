@@ -132,7 +132,7 @@ class FileLoggerManager {
     ///   - message: String logging message
     ///   - withMessageHeader: Log message unified header
     ///   - onLevel: Level of the logging message
-    func writeToLogFile(message: String, withMessageHeader messageHeader: String, onLevel level: Level) {
+    func writeToLogFile(message: CustomStringConvertible, withMessageHeader messageHeader: String, onLevel level: Level) {
         let unwrapped: (FileHandle?) throws -> FileHandle = { fileHandle in
             guard let fileHandle = fileHandle else { throw FileLoggerManagerError.missingWritableFileHandle }
 

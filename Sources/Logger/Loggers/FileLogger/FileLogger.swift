@@ -43,7 +43,7 @@ public class FileLogger: Logging {
         fileLoggerManager.perFileLogData
     }
 
-    public func log(_ message: String, onLevel level: Level) {
+    public func log(_ message: CustomStringConvertible, onLevel level: Level) {
         fileLoggerManager.writeToLogFile(message: message, withMessageHeader: messageHeader(forLevel: level), onLevel: level)
     }
 

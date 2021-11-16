@@ -13,7 +13,7 @@ public class ConsoleLogger: Logging {
 
     public init() {}
 
-    public func log(_ message: String, onLevel level: Level) {
+    public func log(_ message: CustomStringConvertible, onLevel level: Level) {
         print("\(messageHeader(forLevel: level)) \(message)")
     }
 }

@@ -13,7 +13,7 @@ class PerformanceLogger: Logging {
     open func configure() {
         //
     }
-    open func log(_ message: String, onLevel level: Level) {
+    open func log(_ message: CustomStringConvertible, onLevel level: Level) {
         sleep(1)
     }
 

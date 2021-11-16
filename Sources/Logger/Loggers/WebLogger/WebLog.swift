@@ -10,7 +10,7 @@ import Foundation
 struct WebLog {
     let level: Level
     let timestamp: Double
-    let message: String
+    let message: CustomStringConvertible
     let sessionID: UUID
 }
 
@@ -28,7 +28,7 @@ extension WebLog: Encodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(serverLevelName(for: level), forKey: .level)
         try container.encode(timestamp, forKey: .timestamp)
-        try container.encode(message, forKey: .message)
+        try container.encode(message.description, forKey: .message)
         try container.encode(sessionID.uuidString, forKey: .sessionID)
     }
 
