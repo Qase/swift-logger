@@ -44,7 +44,7 @@ public class WebLogger<S: Scheduler>: Logging {
     // the log batch (`Decodable` instance) passed in as a parameter
     let requestPerformer: (Encodable) -> AnyPublisher<Void, Error>
 
-    private let logSubject = PassthroughSubject<LogEntry, Never>()
+    private let logSubject = PassthroughSubject<WebLog, Never>()
     private var subscriptions = Set<AnyCancellable>()
 
     public var levels: [Level] = [.info]
@@ -89,7 +89,7 @@ public class WebLogger<S: Scheduler>: Logging {
     }
 
     public func log(_ message: String, onLevel level: Level) {
-        let entry = LogEntry(
+        let entry = WebLog(
             level: level,
             timestamp: Date().timeIntervalSince1970 * 1000,
             message: message,

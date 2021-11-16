@@ -9,146 +9,146 @@
 import XCTest
 
 class FileLoggerTests: XCTestCase {
+    private var userDefaults: UserDefaults!
+    private var fileManager: FileManager!
+    private var fileLoggerManager: FileLoggerManager!
 
     override func setUp() {
         super.setUp()
 
-        LogManager.shared.removeAllLoggers()
+        userDefaults = UserDefaults(suiteName: "testUserDefaults")!
+        fileManager = FileManager.default
+        fileLoggerManager = try! FileLoggerManager(
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            dateFormatter: FileLogger.dateFormatter,
+            numberOfLogFiles: 3
+        )
+    }
+
+    override func tearDown() {
+        try! FileManager.default.removeItem(atPath: fileLoggerManager.logDirURL.path)
+        fileLoggerManager = nil
+
+        userDefaults.removePersistentDomain(forName: "testUserDefaults")
+        userDefaults = nil
+
+        fileManager = nil
+
+        super.tearDown()
     }
 
     func test_inicialization_of_FileLogger() {
-        // Set default values for all Logger properties and store them to UserDefaults
-        let fileLoggerManager = FileLoggerManager()
-        fileLoggerManager.resetPropertiesToDefaultValues()
+        XCTAssertTrue(fileManager.directoryExists(at: fileLoggerManager.logDirURL))
+        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLoggerManager.logDirURL), 0)
 
-        if let currentLogFileNumber = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int {
-            XCTAssertEqual(0, currentLogFileNumber)
-        } else {
-            XCTFail()
-        }
+        let currentLogFileNumber = userDefaults.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int
+        XCTAssertEqual(currentLogFileNumber, 0)
 
-        if let dateTimeOfLastLog = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date {
-            XCTAssertNotNil(dateTimeOfLastLog.toFullDateString().range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression))
-        } else {
-            XCTFail()
-        }
+        let dateOfLastLog = userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date
+        XCTAssertNotNil(dateOfLastLog)
 
-        if let numOfLogFiles = UserDefaults.standard.object(forKey: Constants.UserDefaultsKeys.numOfLogFiles) as? Int {
-            XCTAssertEqual(4, numOfLogFiles)
-        } else {
-            XCTFail()
-        }
+        let numberOfLogFiles = userDefaults.object(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) as? Int
+        XCTAssertEqual(numberOfLogFiles, 3)
     }
 
-    func test_FileLogger() {
-        let fileLoggerManager = FileLoggerManager()
-        fileLoggerManager.resetPropertiesToDefaultValues()
+    func test_archive_availability() {
+        let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
 
-        guard fileLoggerManager.logDirUrl != nil, let currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
-            XCTFail("Failed to set log directory or current log file")
-            return
-        }
-
-        // Set Console logger and File logger
-        let logManager = LogManager.shared
-        logManager.removeAllLoggers()
-
-        let consoleLogger = ConsoleLogger()
-        consoleLogger.levels = [.warn, .error]
-        _ = logManager.add(consoleLogger)
-
-        let fileLogger = FileLogger()
-        fileLogger.levels = [.error, .info]
-        _ = logManager.add(fileLogger)
-
-        // Should be displayed in console + written to file
-        Log("Error message", onLevel: .error)
-        // Should be displayed in console + NOT written to file
-        Log("Warning message", onLevel: .warn)
-        // Should NOT be displayed in console + written to file
-        Log("Info message", onLevel: .info)
-
-        logManager.waitForLogingJobsToFinish()
+        fileLogger.log("Error message", onLevel: .error)
+        fileLogger.log("Warning message", onLevel: .warn)
 
         // Archived log files check
         let archiveUrl = fileLogger.getArchivedLogFilesUrl()
         XCTAssertNotNil(archiveUrl)
-        do {
-            let reachable = try archiveUrl!.checkResourceIsReachable()
-            XCTAssertTrue(reachable)
-        } catch {
-            XCTFail("Archive with log files was not created.")
-        }
-
-        // Delete archive
-        do {
-            try FileManager.default.removeItem(at: archiveUrl!)
-        } catch {
-            XCTFail("Failed to remove created archive.")
-        }
-
-        // Check if logs were correctly written in the log file
-        let contentOfLogFile = fileLoggerManager.readingContentFromLogFile(at: currentLogFileUrl)
-
-        guard let contentOfLogFile = contentOfLogFile else {
-            XCTFail("Log file is empty even though it should not be!")
-            return
-        }
-
-        let linesOfContent = contentOfLogFile.components(separatedBy: .newlines)
-
-        XCTAssertNotNil(linesOfContent[0].range(
-            of: "^\\[.*] \\[ERROR \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}] .* - .* - line \\d+: Error message$",
-            options: .regularExpression)
-        )
-        XCTAssertNotNil(linesOfContent[1].range(
-            of: "^\\[.*] \\[INFO \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}] .* - .* - line \\d+: Info message$",
-            options: .regularExpression)
-        )
-
-        // Delete the log file
-        fileLoggerManager.deleteLogFile(at: currentLogFileUrl)
+        XCTAssertTrue(try! archiveUrl!.checkResourceIsReachable())
+        try! FileManager.default.removeItem(at: archiveUrl!)
     }
 
-    func test_parsing_of_log_file() {
-        let fileLoggerManager = FileLoggerManager()
-        fileLoggerManager.resetPropertiesToDefaultValues()
+    func test_file_rotation() {
+        let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
 
-        guard fileLoggerManager.logDirUrl != nil, let currentLogFileUrl = fileLoggerManager.currentLogFileUrl else {
-            XCTFail("Failed to set log directory or current log file")
-            return
-        }
+        // Day 1 == File 0
+        fileLogger.log("Warning message", onLevel: .warn)
 
-        // Set Console logger and File logger
-        let logManager = LogManager.shared
-        logManager.removeAllLoggers()
+        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 0)
+        XCTAssertEqual(
+            fileLoggerManager.currentLogFileUrl,
+            fileLoggerManager.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+        )
 
-        let fileLogger = FileLogger()
+        // Day 2 == File 1
+        fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
+
+        fileLogger.log("Warning message", onLevel: .warn)
+
+        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 1)
+        XCTAssertEqual(
+            fileLoggerManager.currentLogFileUrl,
+            fileLoggerManager.logDirURL.appendingPathComponent("1").appendingPathExtension("log")
+        )
+
+        // Day 3 == File 2
+        fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
+
+        fileLogger.log("Warning message", onLevel: .warn)
+
+        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 2)
+        XCTAssertEqual(
+            fileLoggerManager.currentLogFileUrl,
+            fileLoggerManager.logDirURL.appendingPathComponent("2").appendingPathExtension("log")
+        )
+
+       // Day 4 == File 0
+        fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
+
+        fileLogger.log("Warning message", onLevel: .warn)
+
+        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 0)
+        XCTAssertEqual(
+            fileLoggerManager.currentLogFileUrl,
+            fileLoggerManager.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+        )
+
+        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLoggerManager.logDirURL), 3)
+    }
+
+    func test_single_logging_file() {
+        let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
         fileLogger.levels = [.error, .warn]
-        logManager.add(fileLogger)
 
-        Log("Error message", onLevel: .error)
-        Log("Warning message\nThis is test!", onLevel: .warn)
+        fileLogger.log("Error message", onLevel: .error)
 
-        logManager.waitForLogingJobsToFinish()
+        fileLogger.log("Warning message\nThis is test!", onLevel: .warn)
 
-        let logFileRecords = fileLoggerManager.gettingRecordsFromLogFile(at: currentLogFileUrl)
+        let fileLogs = try! fileLoggerManager.gettingRecordsFromLogFile(at: fileLoggerManager.currentLogFileUrl)
 
-        XCTAssertEqual(2, logFileRecords!.count)
+        XCTAssertEqual(2, fileLogs.count)
 
-        XCTAssertNotNil(
-            logFileRecords![0].header.range(of: "^\\[ERROR \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}]$", options: .regularExpression)
-        )
-        XCTAssertNotNil(logFileRecords![0].body.range(of: "^.* - .* - line \\d+: Error message\n$", options: .regularExpression))
+        XCTAssertNotNil(fileLogs[0].header)
+        XCTAssertEqual(fileLogs[0].body, "Error message")
 
-        XCTAssertNotNil(
-            logFileRecords![1].header.range(of: "^\\[WARNING \\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}]$", options: .regularExpression)
-        )
-        XCTAssertNotNil(
-            logFileRecords![1].body.range(of: "^.* - .* - line \\d+: Warning message\nThis is test!\n$", options: .regularExpression)
-        )
+        XCTAssertNotNil(fileLogs[1].header)
+        XCTAssertEqual(fileLogs[1].body, "Warning message\nThis is test!")
+    }
 
-        // Delete the log file
-        fileLoggerManager.deleteLogFile(at: currentLogFileUrl)
+    func test_pattern_match() {
+        let string = "[WARNING \(DateFormatter.dateFormatter.string(from: Date()))]"
+
+        let messageHeader = LogHeader.init(rawValue: string, dateFormatter: DateFormatter.dateFormatter)
+        XCTAssertNotNil(messageHeader)
+    }
+}
+
+// MARK: - FileManager + helper functions
+
+private extension FileManager {
+    func directoryExists(at url: URL) -> Bool {
+        var isDirectory: ObjCBool = false
+        return fileExists(atPath: url.path, isDirectory: &isDirectory)
+    }
+
+    func numberOfFiles(inDirectory url: URL) throws -> Int {
+        try contentsOfDirectory(atPath: url.path).count
     }
 }

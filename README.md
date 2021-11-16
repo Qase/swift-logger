@@ -6,8 +6,8 @@ Logger is a super lightweight logging library for iOS development in Swift. It p
 
 - Swift 5.0+
 - Xcode 10+
-- iOS 11.0+ 
-
+- iOS 14.0+ 
+- MacOS 11.0+
 
 ## Usage
 
@@ -89,7 +89,7 @@ A special type of logger, that automatically logs all received UIApplication<cal
   - `UIApplicationBackgroundRefreshStatusDidChange`
   - `UIApplicationProtectedDataWillBecomeUnavailable`  
   
-The logger is integrated and set automatically, thus it logs all application callbacks on `debug` level as is. By using `setApplicationCallbackLogger(with: [ApplicationCallbackType]?)` on `LogManager` a user can specific application callbacks to be logged (all of them are logged by default). If an empty array is passed, all application callbacks will be logged. If nil is passed, none of application callbacks will be logged. By using `setApplicationCallbackLogger(onLevel: Level)` a user can set a specific level on which to log application callbacks (`debug` is used by default). By using `setApplicationCallbackLogger(with: [ApplicationCallbackType]?, onLevel: Level)` a user can set both, application callbacks and a level at the same time.
+The logger is integrated and set automatically, thus it logs all application callbacks on `debug` level. By using `applicationCallbackLoggerBundle` parameter when initializing `LoggerManager`, a user can set specific application callbacks to be logged (all of them are logged by default). If an empty array of callbacks is passed, none of application callbacks will be logged.
 
 #### `MetaInformationLogger`
 
@@ -104,7 +104,7 @@ A special type of logger, that enables to log various meta information about the
   - `upTime` boot time of the application
   - `language` localization of the application's host device
 
-The logger is accessible outside of the framework using `logMetaInformation(_: [MetaInformationType])` method on `LogManager`. It allows to explicitly list meta information that should be logged. If not specified explicitely, all the meta information will be logged. 
+The logger is integrated and set automatically, thus it logs all application information on `debug` level. By using `metaInformationLoggerBundle` parameter when initializing `LoggerManager`, a user can set specific information to be logged (all is logged by default). If an empty array of types (meta information) is passed, none of application information will be logged.
 
 ### Creating custom loggers
 
@@ -131,26 +131,46 @@ class CrashLyticsLogger: Logger.Logging {
 }
 ```
 
-
 ### Initialization
 
-Logging initialization is done through `LogManager` Singleton instance. The LogManager holds an array of all configured loggers and then manages the logging.
+Logging initialization is done through `LoggerManager` instance. The LoggerManager holds an array of all configured loggers and then manages the logging.
 
 Here is an example of how to initialize the logger to use `FileLogger`, `ConsoleLogger` and previously created custom `CrashLyticsLogger`:
 
 ```
-let logManager = LogManager.shared
 
 let fileLogger = FileLogger()
 fileLogger.levels = [.warn, .error]
-logManager.add(fileLogger)
 
 let systemLogger = ConsoleLogger()
 systemLogger.levels = [.verbose, .info, .debug, .warn, .error]
-logManager.add(systemLogger)
 
 let crashlyticsLogger = CrashLyticsLogger()
-logManager.add(crashlyticsLogger)
+
+let loggerManager = LoggerManager(loggers: [fileLogger, systemLogger, crashlyticsLogger])
+```
+
+#### Global function
+
+Logger can be made available through the whole application if a global function is implemented. Here is an example of such function:
+
+```
+//
+// - Parameters:
+//   - message: String logging message
+//   - level: Level of the logging message
+//   - file: File where the log function was called
+//   - function: Function where the log function was called
+//   - line: Line on which the log function was called
+public func Log(
+    _ message: String,
+    onLevel level: Level,
+    inFile file: String = #file,
+    inFunction function: String = #function,
+    onLine line: Int = #line
+) {
+    loggerManager.log(message, onLevel: level, inFile: file, inFunction: function, onLine: line)
+}
 ```
 
 ### Logging
@@ -164,7 +184,7 @@ Log("This is the message to be logged.", onLevel: .info)
 
 ### Concurrency modes
 
-`Logger` supports 3 different concurrency modes at the moment. The mode is set using `loggingConcurrencyMode` property of `LogManager`. Default value is `asyncSerial`.
+`LoggerManager` supports 3 different concurrency modes at the moment. By using `loggingConcurrencyMode` parameter when initializing `LoggerManager`, a user can set specific concurrency mode. Default value is `asyncSerial`.
 
 #### `syncSerial`
 
@@ -188,9 +208,10 @@ Logging task is dispatched synchronously on a custom serial queue, where all log
 
 The framework provides `SendMailView` that has a pre-configured SwiftUI `View` that, when presented, will offer the option to send all log files via mail.
 
-### Displaying file logs in UITableView
+### Displaying file logs in `FileLogsTable`
 
-The framework also provides `FileLoggerTableViewDatasource` which is a pre-configured `UITableViewDataSource` containing all log files merged, each log = a single `UITableViewCell`.
+The framework provides an example of `SwiftUI` `View` called `FileLogsTable`. It displays all log records stored via `FileLogger` in a table view.  
+The `View` is available within `SwiftLoggerSampleApp`.
 
 ## License
 

@@ -15,13 +15,24 @@ public protocol Logging {
 }
 
 extension Logging {
+    static public var dateFormatter: DateFormatter {
+        DateFormatter.monthsDaysTimeFormatter
+    }
+
     public func configure() {}
 
     public func messageHeader(forLevel level: Level) -> String {
-        "[\(level.rawValue) \(Date().toShortenedDateString())]"
+        LogHeader(date: Date(), level: level, dateFormatter: Self.dateFormatter).rawValue
     }
 
     func doesLog(forLevel level: Level) -> Bool {
         levels.contains(level)
+    }
+}
+
+
+extension Array where Element == Logging {
+    func availableLoggers(forLevel level: Level) -> Self {
+        filter { $0.doesLog(forLevel: level) }
     }
 }
