@@ -9,14 +9,12 @@ import Logger
 import SwiftUI
 
 struct FileLogsTable: View {
-    let fileLogger = FileLogger()
-
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading) {
-                ForEach(fileLogger.logFilesRecords, id: \.self) { log in
+                ForEach(appLogger.logFilesRecords() ?? [], id: \.self) { log in
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(log.header)
+                        Text(log.header.rawValue)
                             .font(Font.headline)
                         Text(log.body)
                             .font(Font.body)
@@ -32,16 +30,5 @@ struct FileLogsTable: View {
 struct FileLogsTable_Previews: PreviewProvider {
     static var previews: some View {
         FileLogsTable()
-    }
-}
-
-extension LogFileRecord: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(header)
-        hasher.combine(body)
-    }
-
-    public static func == (lhs: LogFileRecord, rhs: LogFileRecord) -> Bool {
-        lhs.header == rhs.header && lhs.body == rhs.body
     }
 }

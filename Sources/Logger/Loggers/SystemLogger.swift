@@ -19,7 +19,7 @@ public class SystemLogger: Logging {
 
     public var levels: [Level] = [.info]
 
-    public func log(_ message: String, onLevel level: Level) {
+    public func log(_ message: CustomStringConvertible, onLevel level: Level) {
         let staticMessage = "\(messageHeader(forLevel: level)) \(message)"
         os_log("%@", log: logger, type: level.logType, staticMessage)
     }

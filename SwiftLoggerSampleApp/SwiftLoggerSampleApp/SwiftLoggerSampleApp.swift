@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct SwiftLoggerSampleApp: App {
+    // swiftlint:disable:next weak_delegate
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {

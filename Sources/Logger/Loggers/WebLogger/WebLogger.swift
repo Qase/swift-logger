@@ -88,7 +88,7 @@ public class WebLogger<S: Scheduler>: Logging {
             .store(in: &subscriptions)
     }
 
-    public func log(_ message: String, onLevel level: Level) {
+    public func log(_ message: CustomStringConvertible, onLevel level: Level) {
         let entry = WebLog(
             level: level,
             timestamp: Date().timeIntervalSince1970 * 1000,

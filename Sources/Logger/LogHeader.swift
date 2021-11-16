@@ -12,12 +12,16 @@ public struct LogHeader {
     public let level: Level
     let dateFormatter: DateFormatter
 
-    var rawValue: String {
+    public var rawValue: String {
         "[\(level.rawValue) \(dateFormatter.string(from: date))]"
     }
 }
 
-// MARK: FileLogHeader + parsing init
+// MARK: - LogHeader + Hashable & Equatable
+
+extension LogHeader: Hashable, Equatable {}
+
+// MARK: - FileLogHeader + parsing init
 
 extension LogHeader {
     init?(rawValue: String, dateFormatter: DateFormatter) {

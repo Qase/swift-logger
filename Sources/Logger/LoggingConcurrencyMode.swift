@@ -38,7 +38,7 @@ public extension DispatchQueue {
 // MARK: - LoggingConcurrentMode + log
 
 extension LoggingConcurrencyMode {
-    func log(toLoggers loggers: [Logging], message: String, onLevel level: Level) {
+    func log(toLoggers loggers: [Logging], message: CustomStringConvertible, onLevel level: Level) {
         let availableLoggers = loggers.availableLoggers(forLevel: level)
 
         switch self {

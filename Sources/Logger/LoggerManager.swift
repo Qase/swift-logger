@@ -64,6 +64,13 @@ public class LoggerManager {
         }
     }
 
+    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true}) -> [FileLog]? {
+        loggers
+            .compactMap { $0 as? FileLogger }
+            .compactMap { $0.logFilesRecords(filteredBy: filter) }
+            .flatMap { $0 }
+    }
+
     /// Method to delete all log files if there are any.
     public func deleteAllLogFilesIfAvailable() {
         loggingConcurrencyMode.serialQueue.async {
@@ -73,7 +80,7 @@ public class LoggerManager {
     }
 
     public func log(
-        _ message: String,
+        _ message: CustomStringConvertible,
         onLevel level: Level,
         inFile file: String = #file,
         inFunction function: String = #function,
