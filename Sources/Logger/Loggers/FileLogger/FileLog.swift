@@ -10,6 +10,11 @@ import Foundation
 public struct FileLog {
     public let header: LogHeader
     public let body: String
+
+    public init(header: LogHeader, body: String) {
+        self.header = header
+        self.body = body
+    }
 }
 
 // MARK: - FileLog + Hashable & Equatable
