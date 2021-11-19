@@ -22,7 +22,7 @@ extension Logging {
     public func configure() {}
 
     public func messageHeader(forLevel level: Level) -> String {
-        LogHeader(date: Date(), level: level, dateFormatter: Self.dateFormatter).rawValue
+        LogHeader(date: Date(), level: level, dateFormatter: Self.dateFormatter).description
     }
 
     func doesLog(forLevel level: Level) -> Bool {

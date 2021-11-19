@@ -37,4 +37,12 @@ extension FileLog {
     }
 }
 
+// MARK: - FileLog + CustomStringConvertible
+
+extension FileLog: CustomStringConvertible {
+    public var description: String {
+        "\(header) \(body)"
+    }
+}
+
 
