@@ -10,7 +10,7 @@ import Foundation
 public struct LogHeader {
     public let date: Date
     public let level: Level
-    let dateFormatter: DateFormatter
+    public let dateFormatter: DateFormatter
 
     public var rawValue: String {
         "[\(level.rawValue) \(dateFormatter.string(from: date))]"

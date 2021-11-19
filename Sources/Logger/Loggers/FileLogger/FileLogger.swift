@@ -35,7 +35,7 @@ public class FileLogger: Logging {
         self.fileLoggerManager = fileLoggerManager
     }
 
-    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true}) -> [FileLog]? {
+    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true }) -> [FileLog]? {
         fileLoggerManager.perFileLogRecords(filteredBy: filter)?.flatMap(\.value)
     }
 
