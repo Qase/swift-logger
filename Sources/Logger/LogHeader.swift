@@ -12,6 +12,12 @@ public struct LogHeader {
     public let level: Level
     public let dateFormatter: DateFormatter
 
+    public init(date: Date, level: Level, dateFormatter: DateFormatter) {
+        self.date = date
+        self.level = level
+        self.dateFormatter = dateFormatter
+    }
+    
     public var rawValue: String {
         "[\(level.rawValue) \(dateFormatter.string(from: date))]"
     }
