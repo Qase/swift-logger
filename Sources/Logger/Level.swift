@@ -8,7 +8,7 @@
 import Foundation
 
 /// Enum representing different possible levels for log messages.
-public enum Level: String {
+public enum Level: String, CaseIterable {
     case error = "ERROR"
     case warn = "WARNING"
     case info = "INFO"
