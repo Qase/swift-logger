@@ -17,8 +17,10 @@ public struct LogHeader {
         self.level = level
         self.dateFormatter = dateFormatter
     }
-    
-    public var rawValue: String {
+}
+
+extension LogHeader: CustomStringConvertible {
+    public var description: String {
         "[\(level.rawValue) \(dateFormatter.string(from: date))]"
     }
 }
