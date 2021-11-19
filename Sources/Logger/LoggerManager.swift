@@ -64,7 +64,7 @@ public class LoggerManager {
         }
     }
 
-    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true}) -> [FileLog]? {
+    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true }) -> [FileLog]? {
         loggers
             .compactMap { $0 as? FileLogger }
             .compactMap { $0.logFilesRecords(filteredBy: filter) }
