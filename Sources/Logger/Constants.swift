@@ -17,7 +17,7 @@ public struct Constants {
     }
 
     struct FileLogger {
-        static let logFileRecordSeparator = "[Swift-Logger]"
+        static let logFileRecordSeparator = "|>"
     }
 
     public struct Queues {

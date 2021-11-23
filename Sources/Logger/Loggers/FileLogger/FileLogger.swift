@@ -25,7 +25,7 @@ public class FileLogger: Logging {
     ///   - numberOfLogFiles: a number of log files that can be used for logging
     public init(suiteName: String? = nil, numberOfLogFiles: Int = 4) throws {
         fileLoggerManager = try FileLoggerManager(
-            dateFormatter: FileLogger.dateFormatter,
+            dateFormatter: DateFormatter.monthsDaysTimeFormatter,
             suiteName: suiteName,
             numberOfLogFiles: numberOfLogFiles
         )
@@ -35,7 +35,7 @@ public class FileLogger: Logging {
         self.fileLoggerManager = fileLoggerManager
     }
 
-    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true }) -> [FileLog]? {
+    public func logFilesRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [FileLogEntry]? {
         fileLoggerManager.perFileLogRecords(filteredBy: filter)?.flatMap(\.value)
     }
 
@@ -43,8 +43,8 @@ public class FileLogger: Logging {
         fileLoggerManager.perFileLogData
     }
 
-    public func log(_ message: CustomStringConvertible, onLevel level: Level) {
-        fileLoggerManager.writeToLogFile(message: message, withMessageHeader: messageHeader(forLevel: level), onLevel: level)
+    public func log(_ logEntry: LogEntry) {
+        fileLoggerManager.writeToLogFile(logEntry: logEntry)
     }
 
     /// Delete all logs

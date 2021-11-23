@@ -84,7 +84,7 @@ class FileLoggerManager {
 
     // MARK: - Computed properties & methods
 
-    func perFileLogRecords(filteredBy filter: (FileLog) -> Bool = { _ in true }) -> [URL: [FileLog]]? {
+    func perFileLogRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [URL: [FileLogEntry]]? {
         perFileLogs(gettingRecordsFromLogFile(at:))
             .map { perFileLogRecords in
                 perFileLogRecords.mapValues { $0.filter(filter) }
@@ -129,10 +129,8 @@ class FileLoggerManager {
     /// Method to write a log message into the current log file.
     ///
     /// - Parameters:
-    ///   - message: String logging message
-    ///   - withMessageHeader: Log message unified header
-    ///   - onLevel: Level of the logging message
-    func writeToLogFile(message: CustomStringConvertible, withMessageHeader messageHeader: String, onLevel level: Level) {
+    ///   - log: `LogEntry` instance with header, location and log message
+    func writeToLogFile(logEntry: LogEntry) {
         let unwrapped: (FileHandle?) throws -> FileHandle = { fileHandle in
             guard let fileHandle = fileHandle else { throw FileLoggerManagerError.missingWritableFileHandle }
 
@@ -148,7 +146,7 @@ class FileLoggerManager {
         do {
             try refreshCurrentLogFileStatus()
 
-            let contentToAppend = "\(Constants.FileLogger.logFileRecordSeparator) \(messageHeader) \(message)\n"
+            let contentToAppend = "\(Constants.FileLogger.logFileRecordSeparator) \(logEntry)\n"
 
             let fileHandle = try unwrapped(currentWritableFileHandle)
             fileHandle.seekToEndOfFile()
@@ -189,11 +187,11 @@ class FileLoggerManager {
     ///
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
-    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLog] {
+    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLogEntry] {
         try fileManager.contents(fromFileIfExists: fileUrlToRead)
             .components(separatedBy: Constants.FileLogger.logFileRecordSeparator)
             .dropFirst()
-            .map { FileLog(rawValue: $0, dateFormatter: dateFormatter) }
+            .map { FileLogEntry(rawValue: $0, dateFormatter: dateFormatter) }
             .compactMap { $0 }
     }
 }

@@ -11,19 +11,11 @@ public protocol Logging {
     var levels: [Level] { get set }
 
     func configure()
-    func log(_ message: CustomStringConvertible, onLevel level: Level)
+    func log(_: LogEntry)
 }
 
 extension Logging {
-    static public var dateFormatter: DateFormatter {
-        DateFormatter.monthsDaysTimeFormatter
-    }
-
     public func configure() {}
-
-    public func messageHeader(forLevel level: Level) -> String {
-        LogHeader(date: Date(), level: level, dateFormatter: Self.dateFormatter).description
-    }
 
     func doesLog(forLevel level: Level) -> Bool {
         levels.contains(level)

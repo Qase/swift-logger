@@ -126,7 +126,7 @@ class WebLoggerTests: XCTestCase {
         webLogger.configure()
 
         (0..<50).forEach { index in
-            webLogger.log("random-message-index-\(index)", onLevel: .info)
+            webLogger.log(.mock("random-message-index-\(index)"))
         }
     }
 
@@ -154,7 +154,7 @@ class WebLoggerTests: XCTestCase {
         webLogger.configure()
 
         (0..<5).forEach { index in
-            webLogger.log("random-message-index-\(index)", onLevel: .info)
+            webLogger.log(.mock("random-message-index-\(index)"))
         }
 
         waitForExpectations(timeout: 0.1)
@@ -199,12 +199,12 @@ class WebLoggerTests: XCTestCase {
         webLogger.configure()
 
         (0..<11).forEach {
-            webLogger.log("random-message-index-\($0)", onLevel: .info)
+            webLogger.log(.mock("random-message-index-\($0)"))
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             (0..<5).forEach {
-                webLogger.log("random-message-index-\($0)", onLevel: .info)
+                webLogger.log(.mock("random-message-index-\($0)"))
             }
         }
 

@@ -88,11 +88,11 @@ public class WebLogger<S: Scheduler>: Logging {
             .store(in: &subscriptions)
     }
 
-    public func log(_ message: CustomStringConvertible, onLevel level: Level) {
+    public func log(_ logEntry: LogEntry) {
         let entry = WebLog(
-            level: level,
+            level: logEntry.header.level,
             timestamp: Date().timeIntervalSince1970 * 1000,
-            message: message,
+            message: "\(logEntry)",
             sessionID: sessionID
         )
 
