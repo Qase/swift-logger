@@ -38,18 +38,18 @@ public extension DispatchQueue {
 // MARK: - LoggingConcurrentMode + log
 
 extension LoggingConcurrencyMode {
-    func log(toLoggers loggers: [Logging], message: CustomStringConvertible, onLevel level: Level) {
-        let availableLoggers = loggers.availableLoggers(forLevel: level)
+    func log(toLoggers loggers: [Logging], log: LogEntry) {
+        let availableLoggers = loggers.availableLoggers(forLevel: log.header.level)
 
         switch self {
         case let .syncSerial(serialQueue):
             serialQueue.sync {
-                availableLoggers.forEach { $0.log(message, onLevel: level) }
+                availableLoggers.forEach { $0.log(log) }
             }
 
         case let .asyncSerial(serialQueue):
             serialQueue.async {
-                availableLoggers.forEach { $0.log(message, onLevel: level) }
+                availableLoggers.forEach { $0.log(log) }
             }
 
         case let .syncConcurrent(serialQueue: serialQueue, concurrentQueue: concurrentQueue):
@@ -57,7 +57,7 @@ extension LoggingConcurrencyMode {
                 availableLoggers
                     .forEach { logger in
                         concurrentQueue.async {
-                            logger.log(message, onLevel: level)
+                            logger.log(log)
                         }
                     }
             }

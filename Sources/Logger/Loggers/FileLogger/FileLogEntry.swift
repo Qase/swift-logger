@@ -1,5 +1,5 @@
 //
-//  FileLog.swift
+//  FileLogEntry.swift
 //  
 //
 //  Created by Martin Troup on 24.09.2021.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct FileLog {
+public struct FileLogEntry {
     public let header: LogHeader
     public let body: String
 
@@ -19,13 +19,13 @@ public struct FileLog {
 
 // MARK: - FileLog + Hashable & Equatable
 
-extension FileLog: Hashable, Equatable {}
+extension FileLogEntry: Hashable, Equatable {}
 
 // MARK: - FileLog + parsing
 
-extension FileLog {
+extension FileLogEntry {
     init?(rawValue string: String, dateFormatter: DateFormatter) {
-        let elements = string.split(separator: "]")
+        let elements = string.split(separator: "]", maxSplits: 2, omittingEmptySubsequences: true)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
         guard elements.count == 2 else { return nil }
@@ -39,7 +39,7 @@ extension FileLog {
 
 // MARK: - FileLog + CustomStringConvertible
 
-extension FileLog: CustomStringConvertible {
+extension FileLogEntry: CustomStringConvertible {
     public var description: String {
         "\(header) \(body)"
     }
