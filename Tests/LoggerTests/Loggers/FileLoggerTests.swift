@@ -21,7 +21,7 @@ class FileLoggerTests: XCTestCase {
         fileLoggerManager = try! FileLoggerManager(
             fileManager: fileManager,
             userDefaults: userDefaults,
-            dateFormatter: FileLogger.dateFormatter,
+            dateFormatter: DateFormatter.monthsDaysTimeFormatter,
             numberOfLogFiles: 3
         )
     }
@@ -55,8 +55,8 @@ class FileLoggerTests: XCTestCase {
     func test_archive_availability() {
         let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
 
-        fileLogger.log("Error message", onLevel: .error)
-        fileLogger.log("Warning message", onLevel: .warn)
+        fileLogger.log(.mock("Error message"))
+        fileLogger.log(.mock("Warning message"))
 
         // Archived log files check
         let archiveUrl = fileLogger.getArchivedLogFilesUrl()
@@ -69,7 +69,7 @@ class FileLoggerTests: XCTestCase {
         let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
 
         // Day 1 == File 0
-        fileLogger.log("Warning message", onLevel: .warn)
+        fileLogger.log(.mock("Warning message"))
 
         XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 0)
         XCTAssertEqual(
@@ -80,7 +80,7 @@ class FileLoggerTests: XCTestCase {
         // Day 2 == File 1
         fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
 
-        fileLogger.log("Warning message", onLevel: .warn)
+        fileLogger.log(.mock("Warning message"))
 
         XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 1)
         XCTAssertEqual(
@@ -91,7 +91,7 @@ class FileLoggerTests: XCTestCase {
         // Day 3 == File 2
         fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
 
-        fileLogger.log("Warning message", onLevel: .warn)
+        fileLogger.log(.mock("Warning message"))
 
         XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 2)
         XCTAssertEqual(
@@ -102,7 +102,7 @@ class FileLoggerTests: XCTestCase {
        // Day 4 == File 0
         fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
 
-        fileLogger.log("Warning message", onLevel: .warn)
+        fileLogger.log(.mock("Warning message"))
 
         XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 0)
         XCTAssertEqual(
@@ -117,19 +117,31 @@ class FileLoggerTests: XCTestCase {
         let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
         fileLogger.levels = [.error, .warn]
 
-        fileLogger.log("Error message", onLevel: .error)
+        fileLogger.log(
+            .init(
+                header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.monthsDaysTimeFormatter),
+                location: .init(fileName: "file", function: "function", line: 1),
+                message: "Error message"
+            )
+        )
 
-        fileLogger.log("Warning message\nThis is test!", onLevel: .warn)
+        fileLogger.log(
+            .init(
+                header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.monthsDaysTimeFormatter),
+                location: .init(fileName: "file2", function: "function2", line: 20),
+                message: "Warning message\nThis is test!"
+            )
+        )
 
         let fileLogs = try! fileLoggerManager.gettingRecordsFromLogFile(at: fileLoggerManager.currentLogFileUrl)
 
-        XCTAssertEqual(2, fileLogs.count)
+        XCTAssertEqual(fileLogs.count, 2)
 
         XCTAssertNotNil(fileLogs[0].header)
-        XCTAssertEqual(fileLogs[0].body, "Error message")
+        XCTAssertEqual(fileLogs[0].body, "file - function - line 1: Error message")
 
         XCTAssertNotNil(fileLogs[1].header)
-        XCTAssertEqual(fileLogs[1].body, "Warning message\nThis is test!")
+        XCTAssertEqual(fileLogs[1].body, "file2 - function2 - line 20: Warning message\nThis is test!")
     }
 
     func test_pattern_match() {

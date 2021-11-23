@@ -64,7 +64,7 @@ public class LoggerManager {
         }
     }
 
-    public func logFilesRecords(filteredBy filter: (FileLog) -> Bool = { _ in true }) -> [FileLog]? {
+    public func logFilesRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [FileLogEntry]? {
         loggers
             .compactMap { $0 as? FileLogger }
             .compactMap { $0.logFilesRecords(filteredBy: filter) }
@@ -86,9 +86,11 @@ public class LoggerManager {
         inFunction function: String = #function,
         onLine line: Int = #line
     ) {
-        let theFileName = (file as NSString).lastPathComponent
-        let logRecord = "\(theFileName) - \(function) - line \(line): \(message)"
+        let logHeader = LogHeader(date: Date(), level: level, dateFormatter: DateFormatter.monthsDaysTimeFormatter)
+        let logLocation = LogLocation(fileName: (file as NSString).lastPathComponent, function: function, line: line)
 
-        loggingConcurrencyMode.log(toLoggers: self.loggers, message: logRecord, onLevel: level)
+        let log = LogEntry(header: logHeader, location: logLocation, message: message)
+
+        loggingConcurrencyMode.log(toLoggers: self.loggers, log: log)
     }
 }
