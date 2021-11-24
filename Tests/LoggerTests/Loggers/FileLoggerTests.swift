@@ -21,7 +21,6 @@ class FileLoggerTests: XCTestCase {
         fileLoggerManager = try! FileLoggerManager(
             fileManager: fileManager,
             userDefaults: userDefaults,
-            dateFormatter: DateFormatter.monthsDaysTimeFormatter,
             numberOfLogFiles: 3
         )
     }
@@ -149,6 +148,29 @@ class FileLoggerTests: XCTestCase {
 
         let messageHeader = LogHeader.init(rawValue: string, dateFormatter: DateFormatter.dateFormatter)
         XCTAssertNotNil(messageHeader)
+    }
+
+
+    func test_date_formatting() {
+        let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
+        fileLogger.levels = [.error, .warn]
+
+        let date = Date()
+
+        XCTAssertEqual(Date(), Date())
+
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "file", function: "function", line: 1),
+                message: "Error message"
+            )
+        )
+
+        let fileLogs = try! fileLoggerManager.gettingRecordsFromLogFile(at: fileLoggerManager.currentLogFileUrl)
+
+        XCTAssertEqual(fileLogs.count, 1)
+        XCTAssertTrue(abs(date.timeIntervalSinceReferenceDate) - abs(fileLogs[0].header.date.timeIntervalSinceReferenceDate) < 0.001)
     }
 }
 

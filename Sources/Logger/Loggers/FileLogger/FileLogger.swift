@@ -25,7 +25,6 @@ public class FileLogger: Logging {
     ///   - numberOfLogFiles: a number of log files that can be used for logging
     public init(suiteName: String? = nil, numberOfLogFiles: Int = 4) throws {
         fileLoggerManager = try FileLoggerManager(
-            dateFormatter: DateFormatter.monthsDaysTimeFormatter,
             suiteName: suiteName,
             numberOfLogFiles: numberOfLogFiles
         )

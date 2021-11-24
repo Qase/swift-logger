@@ -23,7 +23,7 @@ class FileLoggerManager {
     private let fileManager: FileManager
     private let userDefaults: UserDefaults
     private let suiteName: String?
-    private let dateFormatter: DateFormatter
+    private let dateFormatter: DateFormatter = .dateTimeFormatter
     let logDirURL: URL
     private let externalLogger: (String) -> ()
 
@@ -54,14 +54,12 @@ class FileLoggerManager {
     init(
         fileManager: FileManager = FileManager.default,
         userDefaults: UserDefaults = UserDefaults.standard,
-        dateFormatter: DateFormatter,
         externalLogger: @escaping (String) -> () = { print($0) },
         suiteName: String? = nil,
         numberOfLogFiles: Int = 4
     ) throws {
         self.fileManager = fileManager
         self.userDefaults = userDefaults
-        self.dateFormatter = dateFormatter
         self.externalLogger = externalLogger
         self.suiteName = suiteName
         self.logDirURL = try fileManager.documentDirectoryURL(withName: "logs", usingSuiteName: logFilePathExtension)
