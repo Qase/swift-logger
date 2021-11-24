@@ -86,7 +86,7 @@ public class LoggerManager {
         inFunction function: String = #function,
         onLine line: Int = #line
     ) {
-        let logHeader = LogHeader(date: Date(), level: level, dateFormatter: DateFormatter.monthsDaysTimeFormatter)
+        let logHeader = LogHeader(date: Date(), level: level, dateFormatter: DateFormatter.dateTimeFormatter)
         let logLocation = LogLocation(fileName: (file as NSString).lastPathComponent, function: function, line: line)
 
         let log = LogEntry(header: logHeader, location: logLocation, message: message)
