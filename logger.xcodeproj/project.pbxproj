@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		634B4ECD274E5D46006D660A /* LogEntry+mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634B4ECC274E5D46006D660A /* LogEntry+mock.swift */; };
 		6C7A2F4C274D4B5100BDC541 /* LogLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7A2F4A274D4B5100BDC541 /* LogLocation.swift */; };
 		6C7A2F4D274D4B5100BDC541 /* LogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7A2F4B274D4B5100BDC541 /* LogEntry.swift */; };
 		6C8AF872273D632700EC67FF /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6C8AF871273D632700EC67FF /* Zip.framework */; };
 		OBJ_103 /* LogManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* LogManagerTests.swift */; };
-		OBJ_104 /* LoggerPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* LoggerPerformanceTests.swift */; };
 		OBJ_105 /* FileLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* FileLoggerTests.swift */; };
 		OBJ_106 /* WebLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* WebLoggerTests.swift */; };
 		OBJ_71 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* Constants.swift */; };
@@ -47,6 +47,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		634B4ECA274E5B51006D660A /* Logger.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Logger.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		634B4ECB274E5B51006D660A /* LoggerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		634B4ECC274E5D46006D660A /* LogEntry+mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LogEntry+mock.swift"; sourceTree = "<group>"; };
 		63B2E1B8273C296100C92C09 /* Zip.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Zip.xcframework; path = Carthage/Build/Zip.xcframework; sourceTree = "<group>"; };
 		6C7A2F4A274D4B5100BDC541 /* LogLocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogLocation.swift; sourceTree = "<group>"; };
 		6C7A2F4B274D4B5100BDC541 /* LogEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogEntry.swift; sourceTree = "<group>"; };
@@ -71,7 +74,6 @@
 		OBJ_31 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		OBJ_32 /* LoggingConcurrencyMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggingConcurrencyMode.swift; sourceTree = "<group>"; };
 		OBJ_35 /* LogManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogManagerTests.swift; sourceTree = "<group>"; };
-		OBJ_36 /* LoggerPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerPerformanceTests.swift; sourceTree = "<group>"; };
 		OBJ_38 /* FileLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLoggerTests.swift; sourceTree = "<group>"; };
 		OBJ_39 /* WebLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebLoggerTests.swift; sourceTree = "<group>"; };
 		OBJ_6 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
@@ -80,8 +82,6 @@
 		OBJ_64 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		OBJ_65 /* LICENCE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENCE; sourceTree = "<group>"; };
 		OBJ_9 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		"logger::Logger::Product" /* Logger.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; name = Logger.framework; path = "/Users/dagytran/Developer/quanti/swift-logger/build/Debug-iphoneos/Logger.framework"; sourceTree = "<absolute>"; };
-		"logger::LoggerTests::Product" /* LoggerTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = LoggerTests.xctest; path = "/Users/dagytran/Developer/quanti/swift-logger/build/Debug/LoggerTests.xctest"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,8 +167,8 @@
 		OBJ_34 /* LoggerTests */ = {
 			isa = PBXGroup;
 			children = (
+				634B4ECC274E5D46006D660A /* LogEntry+mock.swift */,
 				OBJ_35 /* LogManagerTests.swift */,
-				OBJ_36 /* LoggerPerformanceTests.swift */,
 				OBJ_37 /* Loggers */,
 			);
 			name = LoggerTests;
@@ -195,6 +195,8 @@
 				OBJ_64 /* README.md */,
 				OBJ_65 /* LICENCE */,
 				63B2E1B7273C296000C92C09 /* Frameworks */,
+				634B4ECA274E5B51006D660A /* Logger.framework */,
+				634B4ECB274E5B51006D660A /* LoggerTests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -240,7 +242,7 @@
 			);
 			name = Logger;
 			productName = Logger;
-			productReference = "logger::Logger::Product" /* Logger.framework */;
+			productReference = 634B4ECA274E5B51006D660A /* Logger.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		"logger::LoggerTests" /* LoggerTests */ = {
@@ -257,7 +259,7 @@
 			);
 			name = LoggerTests;
 			productName = LoggerTests;
-			productReference = "logger::LoggerTests::Product" /* LoggerTests.xctest */;
+			productReference = 634B4ECB274E5B51006D660A /* LoggerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -293,9 +295,9 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_103 /* LogManagerTests.swift in Sources */,
-				OBJ_104 /* LoggerPerformanceTests.swift in Sources */,
 				OBJ_105 /* FileLoggerTests.swift in Sources */,
 				OBJ_106 /* WebLoggerTests.swift in Sources */,
+				634B4ECD274E5D46006D660A /* LogEntry+mock.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -414,6 +416,7 @@
 					"SWIFT_PACKAGE=1",
 					"DEBUG=1",
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -DXcode";
@@ -440,6 +443,7 @@
 					"$(inherited)",
 					"SWIFT_PACKAGE=1",
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_SWIFT_FLAGS = "$(inherited) -DXcode";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -468,7 +472,7 @@
 					"$(SRCROOT)/.build/checkouts/Zip/Zip/minizip/include",
 				);
 				INFOPLIST_FILE = logger.xcodeproj/Logger_Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_CFLAGS = "$(inherited)";
@@ -503,7 +507,7 @@
 					"$(SRCROOT)/.build/checkouts/Zip/Zip/minizip/include",
 				);
 				INFOPLIST_FILE = logger.xcodeproj/Logger_Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_CFLAGS = "$(inherited)";
