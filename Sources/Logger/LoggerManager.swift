@@ -81,6 +81,7 @@ public class LoggerManager {
 
     public func log(
         _ message: CustomStringConvertible,
+        error: Error? = nil,
         onLevel level: Level,
         inFile file: String = #file,
         inFunction function: String = #function,
@@ -89,7 +90,7 @@ public class LoggerManager {
         let logHeader = LogHeader(date: Date(), level: level, dateFormatter: DateFormatter.dateTimeFormatter)
         let logLocation = LogLocation(fileName: (file as NSString).lastPathComponent, function: function, line: line)
 
-        let log = LogEntry(header: logHeader, location: logLocation, message: message)
+        let log = LogEntry(header: logHeader, location: logLocation, message: message, error: error)
 
         loggingConcurrencyMode.log(toLoggers: self.loggers, log: log)
     }
