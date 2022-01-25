@@ -30,6 +30,10 @@ public class FileLogger: Logging {
 //    public var archivedLogFiles: Archive? {
 //        fileLoggerManager.archivedLogFiles
 //    }
+    
+    public var logFilesUrl: [URL]? {
+        fileLoggerManager.gettingAllLogFiles()
+    }
 
     public var levels: [Level] = [.info]
 
