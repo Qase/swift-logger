@@ -21,6 +21,10 @@ public class LoggerManager {
     private let loggers: [Logging]
 
     private var subscriptions = Set<AnyCancellable>()
+
+    public func logger(withID id: UUID) -> Logging? {
+      loggers.first { $0.id == id }
+    }
     
     public init(
         loggingConcurrencyMode: LoggingConcurrencyMode = .asyncSerial(.defaultSerialLoggingQueue),
@@ -53,9 +57,9 @@ public class LoggerManager {
     }
 
     /// All logs from FileLogger files (represented as `Data`).
-    public var perFileLogDataIfAvailable: [URL: Data]? {
+    public func perFileLogDataIfAvailable(forLoggerWithID loggerID: UUID? = nil) -> [URL: Data]? {
         loggingConcurrencyMode.serialQueue.sync {
-            loggers
+            (loggerID.flatMap(logger(withID:)).map { [$0] } ?? loggers)
                 .compactMap { $0 as? FileLogger }
                 .compactMap { $0.perFileLogData }
                 .flatMap { $0 }
@@ -68,17 +72,21 @@ public class LoggerManager {
         }
     }
 
-    public func logFilesRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [FileLogEntry]? {
-        loggers
+    public func logFilesRecords(
+      forLoggerWithID loggerID: UUID? = nil,
+      filteredBy filter: (FileLogEntry) -> Bool = { _ in true }
+    ) -> [FileLogEntry]? {
+        (loggerID.flatMap(logger(withID:)).map { [$0] } ?? loggers)
             .compactMap { $0 as? FileLogger }
             .compactMap { $0.logFilesRecords(filteredBy: filter) }
             .flatMap { $0 }
     }
 
     /// Method to delete all log files if there are any.
-    public func deleteAllLogFilesIfAvailable() {
+    public func deleteAllLogFilesIfAvailable(forLoggerWithID loggerID: UUID? = nil) {
         loggingConcurrencyMode.serialQueue.async {
-            self.loggers.compactMap { $0 as? FileLogger }
+            (loggerID.flatMap(self.logger(withID:)).map { [$0] } ?? self.loggers)
+                .compactMap { $0 as? FileLogger }
                 .forEach { try? $0.deleteAllLogFiles() }
         }
     }

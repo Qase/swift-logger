@@ -25,6 +25,7 @@ Although it is definitely up to the developer in which way the levels will be us
 - `error` for errors
 - `system` (for native os_log only) matches to os_log_fault -> sends a fault-level message to the logging system
 - `process` (for native os_log only) matches to os_log_error -> sends an error-level message to the logging system
+- `custom(CustomStringConvertible)` available for other level customization if necessary
 
 ### Pre-build loggers
 
@@ -116,6 +117,8 @@ import Fabric
 import Crashlytics
 
 class CrashLyticsLogger: Logger.Logging {
+    let id: UUID
+    
     open func configure() {
         Fabric.with([Crashlytics.self])
     }

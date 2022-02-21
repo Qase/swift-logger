@@ -10,11 +10,16 @@ import os
 
 /// Pre-built logger that wraps system os_logger
 public class SystemLogger: Logging {
-
+    public let id: UUID
     private var logger: OSLog
 
-    public init(subsystem: String, category: String) {
-        logger = OSLog(subsystem: subsystem, category: category)
+    public init(
+      id: UUID = UUID(),
+      subsystem: String,
+      category: String
+    ) {
+        self.id = id
+        self.logger = OSLog(subsystem: subsystem, category: category)
     }
 
     public var levels: [Level] = [.info]
