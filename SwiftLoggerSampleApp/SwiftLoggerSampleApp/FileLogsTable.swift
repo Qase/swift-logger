@@ -14,7 +14,7 @@ struct FileLogsTable: View {
             LazyVStack(alignment: .leading) {
                 ForEach(appLogger.logFilesRecords() ?? [], id: \.self) { log in
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(log.header.rawValue)
+                        Text(log.header.description)
                             .font(Font.headline)
                         Text(log.body)
                             .font(Font.body)
