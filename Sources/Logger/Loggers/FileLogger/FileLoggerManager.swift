@@ -26,6 +26,7 @@ class FileLoggerManager {
     private let dateFormatter: DateFormatter
     let logDirURL: URL
     private let externalLogger: (String) -> ()
+    private let fileHeaderContent: String
 
     var dateOfLastLog: Date {
         didSet {
@@ -52,22 +53,29 @@ class FileLoggerManager {
     // MARK: - Initializers
 
     init(
-        fileManager: FileManager = FileManager.default,
-        userDefaults: UserDefaults = UserDefaults.standard,
+        fileManager: FileManager,
+        userDefaults: UserDefaults,
         dateFormatter: DateFormatter,
-        externalLogger: @escaping (String) -> () = { print($0) },
-        suiteName: String? = nil,
-        numberOfLogFiles: Int = 4
+        externalLogger: @escaping (String) -> (),
+        suiteName: String?,
+        logDirectoryName: String,
+        fileHeaderContent: String,
+        numberOfLogFiles: Int
     ) throws {
         self.fileManager = fileManager
         self.userDefaults = userDefaults
         self.dateFormatter = dateFormatter
         self.externalLogger = externalLogger
+        self.fileHeaderContent = fileHeaderContent
         self.suiteName = suiteName
-        self.logDirURL = try fileManager.documentDirectoryURL(withName: "logs", usingSuiteName: logFilePathExtension)
+        self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingSuiteName: logFilePathExtension)
 
+        // Create log directory
         try fileManager.createDirectoryIfNotExists(at: logDirURL)
 
+        // If the number of logFiles got decreased -> delete all existing log files.
+        // Otherwise, there would be unused files in the log directory.
+        // It is important to notice that when changing numOfLogFiles parameter some logs might be lost!
         if numberOfLogFiles < userDefaults.integer(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) {
             try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
         }
@@ -160,7 +168,7 @@ class FileLoggerManager {
     /// It is called at the beginning of `writeToLogFile(_, _)` method.
     private func refreshCurrentLogFileStatus() throws {
         let fileHandle: (FileManager, URL) throws -> FileHandle = { fileManager, url in
-            try fileManager.createFileIfNotExists(at: url, shouldRemoveExistingFileContents: true)
+            try fileManager.createFileIfNotExists(at: url, withInitialContent: self.fileHeaderContent)
             return try FileHandle(forWritingTo: url)
         }
 
@@ -190,7 +198,6 @@ class FileLoggerManager {
     func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLogEntry] {
         try fileManager.contents(fromFileIfExists: fileUrlToRead)
             .components(separatedBy: Constants.FileLogger.logFileRecordSeparator)
-            .dropFirst()
             .map { FileLogEntry(rawValue: $0, dateFormatter: dateFormatter) }
             .compactMap { $0 }
     }

@@ -22,6 +22,10 @@ class FileLoggerTests: XCTestCase {
             fileManager: fileManager,
             userDefaults: userDefaults,
             dateFormatter: DateFormatter.monthsDaysTimeFormatter,
+            externalLogger: { _ in },
+            suiteName: nil,
+            logDirectoryName: "logs",
+            fileHeaderContent: "Test file header",
             numberOfLogFiles: 3
         )
     }

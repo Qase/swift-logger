@@ -56,18 +56,12 @@ extension FileManager {
         try removeItem(at: url)
     }
 
-    func createFileIfNotExists(at url: URL, shouldRemoveExistingFileContents: Bool = false) throws {
-        let fileExists = fileExists(atPath: url.path)
+    func createFileIfNotExists(at url: URL, withInitialContent initialContent: String = "") throws {
+        guard !fileExists(atPath: url.path) else { return }
 
-        if fileExists, shouldRemoveExistingFileContents {
-            try "".write(toFile: url.path, atomically: false, encoding: .utf8)
-        }
+        let initialContent = initialContent.count > 0 ? "\(initialContent)\n\n" : initialContent
 
-        guard !fileExists else { return }
-
-        if !createFile(atPath: url.path, contents: nil) {
-            throw FileManagerError.fileCreationFailed
-        }
+        try initialContent.write(toFile: url.path, atomically: false, encoding: .utf8)
     }
 
     func contents(fromFileIfExists url: URL) throws -> String {

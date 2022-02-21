@@ -25,27 +25,31 @@ public class LoggerManager {
     public init(
         loggingConcurrencyMode: LoggingConcurrencyMode = .asyncSerial(.defaultSerialLoggingQueue),
         loggers: [Logging],
-        applicationCallbackLoggerBundle: ApplicationCallbackBundle = (callbacks: ApplicationCallbackType.allCases, level: Level.debug),
-        metaInformationLoggerBundle: MetaInformationBundle = (types: MetaInformationType.allCases, bundle: Bundle.main, level: Level.debug)
+        applicationCallbackLoggerBundle: ApplicationCallbackBundle = (callbacks: [], level: Level.debug),
+        metaInformationLoggerBundle: MetaInformationBundle = (types: [], bundle: Bundle.main, level: Level.debug)
     ) {
         loggers.forEach { $0.configure() }
         self.loggers = loggers
 
         self.loggingConcurrencyMode = loggingConcurrencyMode
 
-        let applicationCallbackLogger = ApplicationCallbackLogger(
-            callbacks: applicationCallbackLoggerBundle.callbacks,
-            level: applicationCallbackLoggerBundle.level
-        )
+        if applicationCallbackLoggerBundle.callbacks.count > 0 {
+            let applicationCallbackLogger = ApplicationCallbackLogger(
+                callbacks: applicationCallbackLoggerBundle.callbacks,
+                level: applicationCallbackLoggerBundle.level
+            )
 
-        applicationCallbackLogger.messagePublisher
-            .sink { [weak self] level, message in
-                self?.log(message, onLevel: level)
-            }
-            .store(in: &subscriptions)
+            applicationCallbackLogger.messagePublisher
+                .sink { [weak self] level, message in
+                    self?.log(message, onLevel: level)
+                }
+                .store(in: &subscriptions)
+        }
 
-        let metaInformation = metaInformationLoggerBundle.types.dictionary(fromBundle: metaInformationLoggerBundle.bundle)
-        log("Meta information: \(metaInformation)", onLevel: metaInformationLoggerBundle.level)
+        if metaInformationLoggerBundle.types.count > 0 {
+            let metaInformation = metaInformationLoggerBundle.types.dictionary(fromBundle: metaInformationLoggerBundle.bundle)
+            log("Meta information: \(metaInformation)", onLevel: metaInformationLoggerBundle.level)
+        }
     }
 
     /// All logs from FileLogger files (represented as `Data`).

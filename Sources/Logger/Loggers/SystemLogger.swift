@@ -31,7 +31,7 @@ private extension Level {
             return .info
         case .debug:
             return .debug
-        case .verbose, .warn, .error:
+        case .verbose, .warn, .error, .custom:
             return .default
         case .system:
             return .fault

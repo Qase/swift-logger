@@ -18,16 +18,33 @@ public class FileLogger: Logging {
 
     public var levels: [Level] = [.info]
 
-    /// FileLogger initializer
+    /// FileLogger initialization
     ///
     /// - Parameters:
-    ///   - subsystem: suit name of the application. Must be passed to create logs from app extensions.
+    ///   - userDefaults: `UserDefaults` storage instance, where necessary metadata for the logger are stored.
+    ///   Use different `UserDefaults.init(suiteName:)` when registering multiple instances of `FileLogger`.
+    ///   - fileManager: `FileManager` instance used for persisting logging files
+    ///   - suiteName: name of the application. Must be used if logs are to be shared between the app and its extensions.
+    ///   - logDirectoryName: name of the directory, where logging files are to be stored
+    ///   - fileHeaderContent: such `String` will be placed at the header of each logging file. Empty `String` is used as default.
     ///   - numberOfLogFiles: a number of log files that can be used for logging
-    public init(suiteName: String? = nil, numberOfLogFiles: Int = 4) throws {
+    public init(
+      userDefaults: UserDefaults = UserDefaults.standard,
+      fileManager: FileManager = FileManager.default,
+      suiteName: String? = nil,
+      logDirectoryName: String = "logs",
+      fileHeaderContent: String = "",
+      numberOfLogFiles: Int = 4
+    ) throws {
         fileLoggerManager = try FileLoggerManager(
-            dateFormatter: DateFormatter.monthsDaysTimeFormatter,
-            suiteName: suiteName,
-            numberOfLogFiles: numberOfLogFiles
+          fileManager: fileManager,
+          userDefaults: userDefaults,
+          dateFormatter: DateFormatter.monthsDaysTimeFormatter,
+          externalLogger: { print($0) },
+          suiteName: suiteName,
+          logDirectoryName: logDirectoryName,
+          fileHeaderContent: fileHeaderContent,
+          numberOfLogFiles: numberOfLogFiles
         )
     }
 
