@@ -23,6 +23,6 @@ public struct LogEntry {
 
 extension LogEntry: CustomStringConvertible {
     public var description: String {
-        "\(header) \(location): \(message)"
+        "\(header) \(location)\(Constants.Separators.messageSeparator) \(message)"
     }
 }

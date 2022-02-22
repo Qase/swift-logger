@@ -8,7 +8,6 @@
 import Foundation
 
 public struct Constants {
-
     struct UserDefaultsKeys {
         static let logDirUrl = "logDirUrl"
         static let currentLogFileNumber = "currentLogFileNumber"
@@ -16,8 +15,19 @@ public struct Constants {
         static let numberOfLogFiles = "numOfLogFiles"
     }
 
-    struct FileLogger {
+    struct Separators {
+        /// The between used file records
         static let logFileRecordSeparator = "|>"
+        /// The opening separator encapsulating the LogHeader
+        static let logHeaderOpeningSeparator = "[~"
+        /// The closing separator encapsulating the LogHeader
+        static let logHeaderClosingSeparator = "~]"
+        /// The separator of LogLocation components
+        static let logLocationSeparator = "—"
+        /// The separator before the line number
+        static let lineSeparator = "line"
+        /// The separator between the header + location section and the logged message
+        static let messageSeparator = ":"
     }
 
     public struct Queues {

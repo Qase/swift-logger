@@ -9,10 +9,12 @@ import Foundation
 
 public struct FileLogEntry {
     public let header: LogHeader
+    public let location: LogLocation
     public let body: String
 
-    public init(header: LogHeader, body: String) {
+    public init(header: LogHeader, location: LogLocation, body: String) {
         self.header = header
+        self.location = location
         self.body = body
     }
 }
@@ -20,22 +22,6 @@ public struct FileLogEntry {
 // MARK: - FileLog + Hashable & Equatable
 
 extension FileLogEntry: Hashable, Equatable {}
-
-// MARK: - FileLog + parsing
-
-extension FileLogEntry {
-    init?(rawValue string: String, dateFormatter: DateFormatter) {
-        let elements = string.split(separator: "]", maxSplits: 2, omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-
-        guard elements.count == 2 else { return nil }
-
-        guard let header = LogHeader(rawValue: elements[0], dateFormatter: dateFormatter) else { return nil }
-
-        self.header = header
-        self.body = elements[1]
-    }
-}
 
 // MARK: - FileLog + CustomStringConvertible
 
