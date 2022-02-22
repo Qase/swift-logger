@@ -116,9 +116,11 @@ class FileLoggerTests: XCTestCase {
     func test_single_logging_file() {
         fileLogger.levels = [.error, .warn]
 
+        let date = Date(timeIntervalSince1970: 0)
+
         fileLogger.log(
             .init(
-                header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.monthsDaysTimeFormatter),
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
                 location: .init(fileName: "file", function: "function", line: 1),
                 message: "Error message"
             )
@@ -126,7 +128,7 @@ class FileLoggerTests: XCTestCase {
 
         fileLogger.log(
             .init(
-                header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.monthsDaysTimeFormatter),
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
                 location: .init(fileName: "file2", function: "function2", line: 20),
                 message: "Warning message\nThis is test!"
             )
@@ -136,18 +138,19 @@ class FileLoggerTests: XCTestCase {
 
         XCTAssertEqual(fileLogs.count, 2)
 
-        XCTAssertNotNil(fileLogs[0].header)
-        XCTAssertEqual(fileLogs[0].body, "file - function - line 1: Error message")
+        XCTAssertEqual(fileLogs[0].header.level, .info)
+        XCTAssertEqual(fileLogs[0].header.date, date)
+        XCTAssertEqual(fileLogs[0].location.fileName, "file")
+        XCTAssertEqual(fileLogs[0].location.function, "function")
+        XCTAssertEqual(fileLogs[0].location.line, 1)
+        XCTAssertEqual(fileLogs[0].body, "Error message")
 
-        XCTAssertNotNil(fileLogs[1].header)
-        XCTAssertEqual(fileLogs[1].body, "file2 - function2 - line 20: Warning message\nThis is test!")
-    }
-
-    func test_pattern_match() {
-        let string = "[WARNING \(DateFormatter.dateFormatter.string(from: Date()))]"
-
-        let messageHeader = LogHeader.init(rawValue: string, dateFormatter: DateFormatter.dateFormatter)
-        XCTAssertNotNil(messageHeader)
+        XCTAssertEqual(fileLogs[1].header.level, .info)
+        XCTAssertEqual(fileLogs[1].header.date, date)
+        XCTAssertEqual(fileLogs[1].location.fileName, "file2")
+        XCTAssertEqual(fileLogs[1].location.function, "function2")
+        XCTAssertEqual(fileLogs[1].location.line, 20)
+        XCTAssertEqual(fileLogs[1].body, "Warning message\nThis is test!")
     }
 }
 
