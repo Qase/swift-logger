@@ -19,15 +19,6 @@ public struct LogHeader {
     }
 }
 
-extension LogHeader: CustomStringConvertible {
-    public var description: String {
-        let openingSeparator = Constants.Separators.logHeaderOpeningSeparator
-        let closingSeparator = Constants.Separators.logHeaderClosingSeparator
-
-        return "\(openingSeparator)\(level.rawValue) \(dateFormatter.string(from: date))\(closingSeparator)"
-    }
-}
-
 // MARK: - LogHeader + Hashable & Equatable
 
 extension LogHeader: Hashable, Equatable {}

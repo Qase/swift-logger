@@ -9,11 +9,17 @@ import Foundation
 
 /// Pre-built logger that logs to the console.
 public class ConsoleLogger: Logging {
+    private let logEntryEncoder: LogEntryEncoding
+
     public var levels: [Level] = [.info]
 
-    public init() {}
+    public init(
+        logEntryEncoder: LogEntryEncoding = LogEntryEncoder()
+    ) {
+        self.logEntryEncoder = logEntryEncoder
+    }
 
     public func log(_ logEntry: LogEntry) {
-        print("\(logEntry)")
+        print(logEntryEncoder.encode(logEntry))
     }
 }

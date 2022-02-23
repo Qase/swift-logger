@@ -22,14 +22,3 @@ public struct LogLocation {
 // MARK: - LogHeader + Hashable & Equatable
 
 extension LogLocation: Hashable, Equatable {}
-
-// MARK: - LogLocation
-
-extension LogLocation: CustomStringConvertible {
-    public var description: String {
-        let locationSeparator = Constants.Separators.logLocationSeparator
-        let lineSeparator = Constants.Separators.lineSeparator
-
-        return "\(fileName) \(locationSeparator) \(function) \(locationSeparator) \(lineSeparator) \(line)"
-    }
-}

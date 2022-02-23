@@ -22,13 +22,3 @@ public struct FileLogEntry {
 // MARK: - FileLog + Hashable & Equatable
 
 extension FileLogEntry: Hashable, Equatable {}
-
-// MARK: - FileLog + CustomStringConvertible
-
-extension FileLogEntry: CustomStringConvertible {
-    public var description: String {
-        "\(header) \(body)"
-    }
-}
-
-
