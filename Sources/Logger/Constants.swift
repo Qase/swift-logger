@@ -15,19 +15,19 @@ public struct Constants {
         static let numberOfLogFiles = "numOfLogFiles"
     }
 
-    struct Separators {
+    public struct Separators {
         /// The between used file records
-        static let logFileRecordSeparator = "|>"
+        public static let logFileRecordSeparator = "|>"
         /// The opening separator encapsulating the LogHeader
-        static let logHeaderOpeningSeparator = "[~"
+        public static let logHeaderOpeningSeparator = "[~"
         /// The closing separator encapsulating the LogHeader
-        static let logHeaderClosingSeparator = "~]"
+        public static let logHeaderClosingSeparator = "~]"
         /// The separator of LogLocation components
-        static let logLocationSeparator = "—"
+        public static let logLocationSeparator = "—"
         /// The separator before the line number
-        static let lineSeparator = "line"
+        public static let lineSeparator = "line"
         /// The separator between the header + location section and the logged message
-        static let messageSeparator = ":"
+        public static let messageSeparator = ":"
     }
 
     public struct Queues {

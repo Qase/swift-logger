@@ -1,6 +1,13 @@
+//
+//  LogEntryDecoder.swift
+//  
+//
+//  Created by Radek Čep on 23.02.2022.
+//
+
 import Foundation
 
-struct FileLogEntryParser {
+public struct LogEntryDecoder: LogEntryDecoding {
     private enum Elements: String {
         case level, date, fileName, functionName, lineNumber, message
     }
@@ -11,14 +18,16 @@ struct FileLogEntryParser {
     private let logLocationSeparator: String
     private let lineIdentifier: String
     private let messageSeparator: String
+    private let dateFormatter: DateFormatter
 
-    init(
-        logFileRecordSeparator: String,
-        logHeaderOpeningSeparator: String,
-        logHeaderClosingSeparator: String,
-        logLocationSeparator: String,
-        lineIdentifier: String,
-        messageSeparator: String
+    public init(
+        logFileRecordSeparator: String = Constants.Separators.logFileRecordSeparator,
+        logHeaderOpeningSeparator: String = Constants.Separators.logHeaderOpeningSeparator,
+        logHeaderClosingSeparator: String = Constants.Separators.logHeaderClosingSeparator,
+        logLocationSeparator: String = Constants.Separators.logLocationSeparator,
+        lineIdentifier: String = Constants.Separators.lineSeparator,
+        messageSeparator: String = Constants.Separators.messageSeparator,
+        dateFormatter: DateFormatter = DateFormatter.dateTimeFormatter
     ) {
         self.logFileRecordSeparator = logFileRecordSeparator
         self.logHeaderOpeningSeparator = logHeaderOpeningSeparator
@@ -26,9 +35,10 @@ struct FileLogEntryParser {
         self.logLocationSeparator = logLocationSeparator
         self.lineIdentifier = lineIdentifier
         self.messageSeparator = messageSeparator
+        self.dateFormatter = dateFormatter
     }
 
-    func parse(_ record: String, dateFormatter: DateFormatter) throws -> FileLogEntry? {
+    public func decode(_ rawEntry: String) throws -> FileLogEntry? {
         let pattern =
             "^(\(logFileRecordSeparator.escapingRegexCharacters))*\\s*" +
             "\(logHeaderOpeningSeparator.escapingRegexCharacters)(?<\(Elements.level.rawValue)>\\S*)\\s\\s*" +
@@ -38,30 +48,30 @@ struct FileLogEntryParser {
             "\(logLocationSeparator)\\s\\s*\(lineIdentifier)\\s\\s*(?<\(Elements.lineNumber.rawValue)>\\d*)" +
             "\(messageSeparator)\\s\\s*(?<\(Elements.message.rawValue)>(.*\\s*)*)"
 
-        let range = NSRange(location: 0, length: record.utf16.count)
+        let range = NSRange(location: 0, length: rawEntry.utf16.count)
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
-        let match = regularExpression.firstMatch(in: record, options: [], range: range)
+        let match = regularExpression.firstMatch(in: rawEntry, options: [], range: range)
 
         guard
             let levelRange = match?.range(withName: Elements.level.rawValue),
-            let levelRawValue = record[levelRange],
+            let levelRawValue = rawEntry.at(levelRange),
 
             let dateRange = match?.range(withName: Elements.date.rawValue),
-            let dateString = record[dateRange],
+            let dateString = rawEntry.at(dateRange),
             let date = dateFormatter.date(from: dateString),
 
             let fileNameRange = match?.range(withName: Elements.fileName.rawValue),
-            let fileName = record[fileNameRange],
+            let fileName = rawEntry.at(fileNameRange),
 
             let functionNameRange = match?.range(withName: Elements.functionName.rawValue),
-            let functionName = record[functionNameRange],
+            let functionName = rawEntry.at(functionNameRange),
 
             let lineNumberRange = match?.range(withName: Elements.lineNumber.rawValue),
-            let lineNumberString = record[lineNumberRange],
+            let lineNumberString = rawEntry.at(lineNumberRange),
             let line = Int(lineNumberString),
 
             let messageRange = match?.range(withName: Elements.message.rawValue),
-            let message = record[messageRange]?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let message = rawEntry.at(messageRange)?.trimmingCharacters(in: .whitespacesAndNewlines)
         else {
             return nil
         }
@@ -83,14 +93,6 @@ struct FileLogEntryParser {
 }
 
 private extension String {
-    subscript(index: NSRange) -> Self? {
-        get {
-            Range(index, in: self)
-                .map { self[$0] }
-                .map(String.init)
-        }
-    }
-
     var regexCharacters: [Self] {
         [".", "+", "*", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|", "\\"]
     }
@@ -103,5 +105,15 @@ private extension String {
                 regexCharacters.contains(character) ? "\\\(character)" : character
             }
             .joined()
+    }
+
+    /// Creates a `String` at the given range
+    ///
+    /// - Parameter range: A range of the substring
+    /// - Returns: A `String` at the given range
+    func at(_ nsRange: NSRange) -> Self? {
+        Range(nsRange, in: self)
+            .map { self[$0] }
+            .map(String.init)
     }
 }

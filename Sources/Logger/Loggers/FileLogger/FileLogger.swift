@@ -20,10 +20,11 @@ public class FileLogger: Logging {
     private let fileManager: FileManager
     private let userDefaults: UserDefaults
     private let suiteName: String?
-    private let dateFormatter: DateFormatter = .dateTimeFormatter
+    private let dateFormatter: DateFormatter = .monthsDaysTimeFormatter
     private let externalLogger: (String) -> ()
     private let fileHeaderContent: String
-    private let fileLogEntryParser: FileLogEntryParser
+    private let logEntryEncoder: LogEntryEncoding
+    private let logEntryDecoder: LogEntryDecoding
 
     let logDirURL: URL
 
@@ -66,24 +67,18 @@ public class FileLogger: Logging {
         suiteName: String? = nil,
         logDirectoryName: String = "logs",
         fileHeaderContent: String = "",
-        numberOfLogFiles: Int = 4
+        numberOfLogFiles: Int = 4,
+        logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
+        logEntryDecoder: LogEntryDecoding = LogEntryDecoder()
     ) throws {
         self.fileManager = fileManager
         self.userDefaults = userDefaults
         self.externalLogger = externalLogger
         self.fileHeaderContent = fileHeaderContent
         self.suiteName = suiteName
+        self.logEntryEncoder = logEntryEncoder
+        self.logEntryDecoder = logEntryDecoder
         self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingSuiteName: logFilePathExtension)
-
-        // TODO: Inject this
-        self.fileLogEntryParser = .init(
-            logFileRecordSeparator: Constants.Separators.logFileRecordSeparator,
-            logHeaderOpeningSeparator: Constants.Separators.logHeaderOpeningSeparator,
-            logHeaderClosingSeparator: Constants.Separators.logHeaderClosingSeparator,
-            logLocationSeparator: Constants.Separators.logLocationSeparator,
-            lineIdentifier: Constants.Separators.lineSeparator,
-            messageSeparator: Constants.Separators.messageSeparator
-        )
 
         // Create log directory
         try fileManager.createDirectoryIfNotExists(at: logDirURL)
@@ -167,8 +162,7 @@ public class FileLogger: Logging {
         do {
             try refreshCurrentLogFileStatus()
 
-            let contentToAppend = "\(Constants.Separators.logFileRecordSeparator) \(logEntry)\n"
-
+            let contentToAppend = logEntryEncoder.encode(logEntry) + "\n"
             let fileHandle = try unwrapped(currentWritableFileHandle)
             fileHandle.seekToEndOfFile()
             fileHandle.write(try utf8Data(contentToAppend))
@@ -211,7 +205,7 @@ public class FileLogger: Logging {
     func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLogEntry] {
         try fileManager.contents(fromFileIfExists: fileUrlToRead)
             .components(separatedBy: Constants.Separators.logFileRecordSeparator)
-            .compactMap { try fileLogEntryParser.parse($0, dateFormatter: dateFormatter) }
+            .compactMap(logEntryDecoder.decode)
     }
 }
 
