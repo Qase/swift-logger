@@ -11,6 +11,8 @@ import Foundation
 public class ConsoleLogger: Logging {
     public var levels: [Level] = [.info]
 
+    public init() {}
+
     public func log(_ logEntry: LogEntry) {
         print("\(logEntry)")
     }

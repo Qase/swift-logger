@@ -117,8 +117,6 @@ import Fabric
 import Crashlytics
 
 class CrashLyticsLogger: Logger.Logging {
-    let id: UUID
-    
     open func configure() {
         Fabric.with([Crashlytics.self])
     }

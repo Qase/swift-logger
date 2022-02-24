@@ -12,7 +12,7 @@ struct FileLogsTable: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading) {
-                ForEach(appLogger.logFilesRecords() ?? [], id: \.self) { log in
+                ForEach(fileLogger.logRecords() ?? [], id: \.self) { log in
                     VStack(alignment: .leading, spacing: 10) {
                         Text(log.header.description)
                             .font(Font.headline)

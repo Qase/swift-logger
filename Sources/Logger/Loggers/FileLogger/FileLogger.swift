@@ -58,7 +58,7 @@ public class FileLogger: Logging {
 
     // MARK: - Initializers
 
-    init(
+    public init(
         fileManager: FileManager = .default,
         userDefaults: UserDefaults = .standard,
         externalLogger: @escaping (String) -> () = { print($0) },
@@ -96,14 +96,18 @@ public class FileLogger: Logging {
 
     // MARK: - Computed properties & methods
 
-    public func perFileLogRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [URL: [FileLogEntry]]? {
+    public func logRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [FileLogEntry]? {
+      perFileLogRecords(filteredBy: filter)?.flatMap(\.value)
+    }
+
+    func perFileLogRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [URL: [FileLogEntry]]? {
         perFileLogs(gettingRecordsFromLogFile(at:))
             .map { perFileLogRecords in
                 perFileLogRecords.mapValues { $0.filter(filter) }
             }
     }
 
-    public var perFileLogData: [URL: Data]? {
+    var perFileLogData: [URL: Data]? {
         perFileLogs(fileManager.contents(fromFileIfExists:))?.compactMapValues { $0.data(using: .utf8) }
     }
 
