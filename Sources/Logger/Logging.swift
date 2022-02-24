@@ -8,7 +8,6 @@
 import Foundation
 
 public protocol Logging {
-    var id: UUID { get }
     var levels: [Level] { get set }
 
     func configure()

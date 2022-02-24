@@ -18,6 +18,18 @@ public enum Level {
     case process
     case custom(CustomStringConvertible)
 
+    public var standardCases: [Level] {
+      [
+        .error,
+        .warn,
+        .info,
+        .debug,
+        .verbose,
+        .system,
+        .process
+      ]
+    }
+
     public var rawValue: String {
         switch self {
         case .error:

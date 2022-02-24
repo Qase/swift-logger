@@ -30,7 +30,6 @@ public struct BatchConfiguration<S: Scheduler> {
 }
 
 public class WebLogger<S: Scheduler>: Logging {
-    public let id: UUID
     // `sessionID` is used on a server to filter logs for a specific application instance.
     // - each application may provide or is provided with a `sessionID`
     // - `sessionID` may be persisted or renewed after each application run (implementation responsibility of `WebLogger` integrator)
@@ -56,12 +55,10 @@ public class WebLogger<S: Scheduler>: Logging {
     ///   - batchConfiguration: configuration for batching individual logs
     ///   - requestPerformer: a function that is handling the log batch server sending
     public init(
-        id: UUID = UUID(),
         sessionID: UUID = UUID(),
         batchConfiguration: BatchConfiguration<S>,
         requestPerformer: @escaping (Encodable) -> AnyPublisher<Void, Error>
     ) {
-        self.id = id
         self.sessionID = sessionID
         self.batchConfiguration = batchConfiguration
         self.requestPerformer = requestPerformer
