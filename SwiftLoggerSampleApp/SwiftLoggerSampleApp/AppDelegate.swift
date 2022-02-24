@@ -8,6 +8,7 @@
 import Logger
 import UIKit
 
+var fileLogger: FileLogger!
 var appLogger: LoggerManager!
 
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -19,7 +20,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         let consoleLogger = ConsoleLogger()
         consoleLogger.levels = [.warn, .debug]
 
-        let fileLogger = try? FileLogger()
+        fileLogger = try? FileLogger()
         fileLogger?.levels = [.error, .warn, .info]
 
         let loggers: [Logging?] = [consoleLogger, fileLogger]

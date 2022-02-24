@@ -42,14 +42,9 @@ extension LogHeader {
             let levelString = trimmedString.prefix(upTo: firstSpace)
             let dateString = trimmedString.suffix(from: firstSpace)
 
-            guard
-                let level = Level(rawValue: String(levelString)),
-                let date = dateFormatter.date(from: String(dateString))
-            else {
-                return nil
-            }
+            guard let date = dateFormatter.date(from: String(dateString)) else { return nil }
 
-            return (level, date)
+            return (Level(rawValue: String(levelString)), date)
         }
 
         guard let (level, date) = parse(rawValue, dateFormatter) else {

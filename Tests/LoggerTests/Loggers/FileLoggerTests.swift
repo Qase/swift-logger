@@ -11,24 +11,28 @@ import XCTest
 class FileLoggerTests: XCTestCase {
     private var userDefaults: UserDefaults!
     private var fileManager: FileManager!
-    private var fileLoggerManager: FileLoggerManager!
+    private var fileLogger: FileLogger!
 
     override func setUp() {
         super.setUp()
 
         userDefaults = UserDefaults(suiteName: "testUserDefaults")!
         fileManager = FileManager.default
-        fileLoggerManager = try! FileLoggerManager(
+      
+        fileLogger = try! FileLogger(
             fileManager: fileManager,
             userDefaults: userDefaults,
-            dateFormatter: DateFormatter.monthsDaysTimeFormatter,
+            externalLogger: { _ in },
+            suiteName: nil,
+            logDirectoryName: "logs",
+            fileHeaderContent: "Test file header",
             numberOfLogFiles: 3
         )
     }
 
     override func tearDown() {
-        try! FileManager.default.removeItem(atPath: fileLoggerManager.logDirURL.path)
-        fileLoggerManager = nil
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        fileLogger = nil
 
         userDefaults.removePersistentDomain(forName: "testUserDefaults")
         userDefaults = nil
@@ -39,8 +43,8 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_inicialization_of_FileLogger() {
-        XCTAssertTrue(fileManager.directoryExists(at: fileLoggerManager.logDirURL))
-        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLoggerManager.logDirURL), 0)
+        XCTAssertTrue(fileManager.directoryExists(at: fileLogger.logDirURL))
+        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 0)
 
         let currentLogFileNumber = userDefaults.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int
         XCTAssertEqual(currentLogFileNumber, 0)
@@ -53,68 +57,63 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_archive_availability() {
-        let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
-
         fileLogger.log(.mock("Error message"))
         fileLogger.log(.mock("Warning message"))
 
         // Archived log files check
-        let archiveUrl = fileLogger.getArchivedLogFilesUrl()
+        let archiveUrl = try! fileLogger.archiveWithLogFiles(withFileName: "logs")
         XCTAssertNotNil(archiveUrl)
         XCTAssertTrue(try! archiveUrl!.checkResourceIsReachable())
         try! FileManager.default.removeItem(at: archiveUrl!)
     }
 
     func test_file_rotation() {
-        let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
-
         // Day 1 == File 0
         fileLogger.log(.mock("Warning message"))
 
-        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 0)
+        XCTAssertEqual(fileLogger.currentLogFileNumber, 0)
         XCTAssertEqual(
-            fileLoggerManager.currentLogFileUrl,
-            fileLoggerManager.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+          fileLogger.currentLogFileUrl,
+          fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
         )
 
         // Day 2 == File 1
-        fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
+        fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
 
         fileLogger.log(.mock("Warning message"))
 
-        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 1)
+        XCTAssertEqual(fileLogger.currentLogFileNumber, 1)
         XCTAssertEqual(
-            fileLoggerManager.currentLogFileUrl,
-            fileLoggerManager.logDirURL.appendingPathComponent("1").appendingPathExtension("log")
+            fileLogger.currentLogFileUrl,
+            fileLogger.logDirURL.appendingPathComponent("1").appendingPathExtension("log")
         )
 
         // Day 3 == File 2
-        fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
+        fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
 
         fileLogger.log(.mock("Warning message"))
 
-        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 2)
+        XCTAssertEqual(fileLogger.currentLogFileNumber, 2)
         XCTAssertEqual(
-            fileLoggerManager.currentLogFileUrl,
-            fileLoggerManager.logDirURL.appendingPathComponent("2").appendingPathExtension("log")
+            fileLogger.currentLogFileUrl,
+            fileLogger.logDirURL.appendingPathComponent("2").appendingPathExtension("log")
         )
 
        // Day 4 == File 0
-        fileLoggerManager.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLoggerManager.dateOfLastLog)!
+        fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
 
         fileLogger.log(.mock("Warning message"))
 
-        XCTAssertEqual(fileLoggerManager.currentLogFileNumber, 0)
+        XCTAssertEqual(fileLogger.currentLogFileNumber, 0)
         XCTAssertEqual(
-            fileLoggerManager.currentLogFileUrl,
-            fileLoggerManager.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+            fileLogger.currentLogFileUrl,
+            fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
         )
 
-        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLoggerManager.logDirURL), 3)
+        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 3)
     }
 
     func test_single_logging_file() {
-        let fileLogger = FileLogger(fileLoggerManager: fileLoggerManager)
         fileLogger.levels = [.error, .warn]
 
         fileLogger.log(
@@ -133,7 +132,7 @@ class FileLoggerTests: XCTestCase {
             )
         )
 
-        let fileLogs = try! fileLoggerManager.gettingRecordsFromLogFile(at: fileLoggerManager.currentLogFileUrl)
+        let fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
 
         XCTAssertEqual(fileLogs.count, 2)
 

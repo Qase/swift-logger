@@ -21,64 +21,49 @@ public class LoggerManager {
     private let loggers: [Logging]
 
     private var subscriptions = Set<AnyCancellable>()
-    
+
+    /// `LoggerManager` initialization
+    /// - Parameters:
+    ///   - loggingConcurrencyMode: concurrency mode in which the manager logs via its registered loggers.
+    ///   - loggers: registered loggers.
+    ///   - applicationCallbackLoggerBundle: application lifecycle callbacks that are to be logged by the manager.
+    ///   - metaInformationLoggerBundle: meta information to be logged by the manager.
     public init(
         loggingConcurrencyMode: LoggingConcurrencyMode = .asyncSerial(.defaultSerialLoggingQueue),
         loggers: [Logging],
-        applicationCallbackLoggerBundle: ApplicationCallbackBundle = (callbacks: ApplicationCallbackType.allCases, level: Level.debug),
-        metaInformationLoggerBundle: MetaInformationBundle = (types: MetaInformationType.allCases, bundle: Bundle.main, level: Level.debug)
+        applicationCallbackLoggerBundle: ApplicationCallbackBundle? = (callbacks: ApplicationCallbackType.allCases, level: Level.debug),
+        metaInformationLoggerBundle: MetaInformationBundle? = (types: MetaInformationType.allCases, bundle: Bundle.main, level: Level.debug)
     ) {
         loggers.forEach { $0.configure() }
         self.loggers = loggers
 
         self.loggingConcurrencyMode = loggingConcurrencyMode
 
-        let applicationCallbackLogger = ApplicationCallbackLogger(
-            callbacks: applicationCallbackLoggerBundle.callbacks,
-            level: applicationCallbackLoggerBundle.level
-        )
+        if let applicationCallbackLoggerBundle = applicationCallbackLoggerBundle {
+            let applicationCallbackLogger = ApplicationCallbackLogger(
+                callbacks: applicationCallbackLoggerBundle.callbacks,
+                level: applicationCallbackLoggerBundle.level
+            )
 
-        applicationCallbackLogger.messagePublisher
-            .sink { [weak self] level, message in
-                self?.log(message, onLevel: level)
-            }
-            .store(in: &subscriptions)
-
-        let metaInformation = metaInformationLoggerBundle.types.dictionary(fromBundle: metaInformationLoggerBundle.bundle)
-        log("Meta information: \(metaInformation)", onLevel: metaInformationLoggerBundle.level)
-    }
-
-    /// All logs from FileLogger files (represented as `Data`).
-    public var perFileLogDataIfAvailable: [URL: Data]? {
-        loggingConcurrencyMode.serialQueue.sync {
-            loggers
-                .compactMap { $0 as? FileLogger }
-                .compactMap { $0.perFileLogData }
-                .flatMap { $0 }
-                .reduce([URL: Data]()) { dictionary, nextElement in
-                    var newDictionary = dictionary
-                    newDictionary[nextElement.key] = nextElement.value
-
-                    return newDictionary
+            applicationCallbackLogger.messagePublisher
+                .sink { [weak self] level, message in
+                    self?.log(message, onLevel: level)
                 }
+                .store(in: &subscriptions)
+        }
+
+        if let metaInformationLoggerBundle = metaInformationLoggerBundle {
+            let metaInformation = metaInformationLoggerBundle.types.dictionary(fromBundle: metaInformationLoggerBundle.bundle)
+            log("Meta information: \(metaInformation)", onLevel: metaInformationLoggerBundle.level)
         }
     }
 
-    public func logFilesRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [FileLogEntry]? {
-        loggers
-            .compactMap { $0 as? FileLogger }
-            .compactMap { $0.logFilesRecords(filteredBy: filter) }
-            .flatMap { $0 }
-    }
-
-    /// Method to delete all log files if there are any.
-    public func deleteAllLogFilesIfAvailable() {
-        loggingConcurrencyMode.serialQueue.async {
-            self.loggers.compactMap { $0 as? FileLogger }
-                .forEach { try? $0.deleteAllLogFiles() }
-        }
-    }
-
+    /// Log specific entity via the manager.
+    /// - Parameters:
+    ///   - message: Entity to be logged.
+    ///   - file: Name of the file where the logging occures.
+    ///   - function: Name of the function where the logging occures.
+    ///   - line: Number of the line where the logging occures.
     public func log(
         _ message: CustomStringConvertible,
         onLevel level: Level,

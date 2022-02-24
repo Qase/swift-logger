@@ -30,7 +30,6 @@ public struct BatchConfiguration<S: Scheduler> {
 }
 
 public class WebLogger<S: Scheduler>: Logging {
-
     // `sessionID` is used on a server to filter logs for a specific application instance.
     // - each application may provide or is provided with a `sessionID`
     // - `sessionID` may be persisted or renewed after each application run (implementation responsibility of `WebLogger` integrator)

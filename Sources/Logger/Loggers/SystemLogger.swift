@@ -10,11 +10,10 @@ import os
 
 /// Pre-built logger that wraps system os_logger
 public class SystemLogger: Logging {
-
     private var logger: OSLog
 
     public init(subsystem: String, category: String) {
-        logger = OSLog(subsystem: subsystem, category: category)
+        self.logger = OSLog(subsystem: subsystem, category: category)
     }
 
     public var levels: [Level] = [.info]
@@ -31,7 +30,7 @@ private extension Level {
             return .info
         case .debug:
             return .debug
-        case .verbose, .warn, .error:
+        case .verbose, .warn, .error, .custom:
             return .default
         case .system:
             return .fault
