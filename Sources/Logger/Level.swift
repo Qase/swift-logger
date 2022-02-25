@@ -18,7 +18,7 @@ public enum Level {
     case process
     case custom(CustomStringConvertible)
 
-    public var standardCases: [Level] {
+    public static var standardCases: [Level] {
       [
         .error,
         .warn,
