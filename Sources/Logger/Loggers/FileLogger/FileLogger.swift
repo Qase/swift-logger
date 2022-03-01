@@ -203,9 +203,8 @@ public class FileLogger: Logging {
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
     func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLogEntry] {
-        try fileManager.contents(fromFileIfExists: fileUrlToRead)
-            .components(separatedBy: Constants.Separators.logRecordSeparator)
-            .compactMap(logEntryDecoder.decode)
+        let fileContents = try fileManager.contents(fromFileIfExists: fileUrlToRead)
+        return try logEntryDecoder.decode(fileContents)
     }
 }
 

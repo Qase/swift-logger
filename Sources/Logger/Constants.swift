@@ -15,11 +15,6 @@ public struct Constants {
         static let numberOfLogFiles = "numOfLogFiles"
     }
 
-    public struct Separators {
-        /// The between used file records
-        public static let logRecordSeparator = "|>"
-    }
-
     public struct Queues {
         public static let serial = "com.swift.loggerSerial"
         public static let concurrent = "com.swift.loggerConcurrent"
