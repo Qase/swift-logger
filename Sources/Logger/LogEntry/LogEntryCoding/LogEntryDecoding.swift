@@ -8,9 +8,9 @@
 import Foundation
 
 public protocol LogEntryDecoding {
-    /// A function to decode a raw `FileLogEntry` array. E.g. from a log file. To an instance of `[LogEntry]`
+    /// A function to decode a raw `LogEntry`. E.g. from a log file. To an instance of `LogEntry`
     ///
-    /// - Parameter rawEntry: A `String` representation of `[LogEntry]`
-    /// - Returns: Decoded `[LogEntry]` instance
-    func decode(_ rawEntries: String) throws -> [LogEntry]
+    /// - Parameter rawEntry: A `String` representation of `LogEntry`
+    /// - Returns: Decoded `LogEntry` instance
+    func decode(_ rawEntry: String) throws -> LogEntry?
 }

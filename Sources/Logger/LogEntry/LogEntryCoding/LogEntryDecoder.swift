@@ -38,7 +38,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
         self.dateFormatter = dateFormatter
     }
 
-    public func decode(_ rawEntries: String) throws -> [LogEntry] {
+    public func decode(_ rawEntry: String) throws -> LogEntry? {
         let pattern =
             "\(logRecordSeparator.escapingRegexCharacters)\\s*" +
             "\(logHeaderOpeningSeparator.escapingRegexCharacters)(?<\(Elements.level.rawValue)>\\S*)\\s\\s*" +
@@ -48,11 +48,11 @@ public struct LogEntryDecoder: LogEntryDecoding {
             "\(logLocationSeparator)\\s\\s*\(lineIdentifier)\\s\\s*(?<\(Elements.lineNumber.rawValue)>\\d*)" +
             "\(messageSeparator)\\s\\s*(?<\(Elements.message.rawValue)>(.*\\s*(?!\(logRecordSeparator.escapingRegexCharacters)))*)"
 
-        let range = NSRange(location: 0, length: rawEntries.utf16.count)
+        let range = NSRange(location: 0, length: rawEntry.utf16.count)
 
         return try NSRegularExpression(pattern: pattern, options: [])
-            .matches(in: rawEntries, options: [], range: range)
-            .compactMap { match in
+            .firstMatch(in: rawEntry, options: [], range: range)
+            .flatMap { match in
                 let levelRange = match.range(withName: Elements.level.rawValue)
                 let dateRange = match.range(withName: Elements.date.rawValue)
                 let fileNameRange = match.range(withName: Elements.fileName.rawValue)
@@ -61,14 +61,14 @@ public struct LogEntryDecoder: LogEntryDecoding {
                 let messageRange = match.range(withName: Elements.message.rawValue)
 
                 guard
-                    let levelRawValue = rawEntries.at(levelRange),
-                    let dateString = rawEntries.at(dateRange),
+                    let levelRawValue = rawEntry.at(levelRange),
+                    let dateString = rawEntry.at(dateRange),
                     let date = dateFormatter.date(from: dateString),
-                    let fileName = rawEntries.at(fileNameRange),
-                    let functionName = rawEntries.at(functionNameRange),
-                    let lineNumberString = rawEntries.at(lineNumberRange),
+                    let fileName = rawEntry.at(fileNameRange),
+                    let functionName = rawEntry.at(functionNameRange),
+                    let lineNumberString = rawEntry.at(lineNumberRange),
                     let line = Int(lineNumberString),
-                    let message = rawEntries.at(messageRange)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let message = rawEntry.at(messageRange)?.trimmingCharacters(in: .whitespacesAndNewlines)
                 else {
                     return nil
                 }

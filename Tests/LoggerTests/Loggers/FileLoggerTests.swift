@@ -210,7 +210,7 @@ class FileLoggerTests: XCTestCase {
         )
 
         let data = try JSONEncoder().encode(codable)
-        let encodedCodableString = String(data: data, encoding: .utf16)!
+        let encodedCodableString = String(data: data, encoding: .utf8)!
         let date = Date(timeIntervalSince1970: 0)
 
         fileLogger.log(
@@ -231,6 +231,17 @@ class FileLoggerTests: XCTestCase {
             .init(
                 header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
                 location: .init(fileName: "File3.swift", function: "Function3", line: 3),
+                message: """
+                    line 1
+                    line 2
+                    line 3
+                    """
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File3.swift", function: "Function3", line: 3),
                 message: "[🚗] Some message"
             )
         )
@@ -244,7 +255,7 @@ class FileLoggerTests: XCTestCase {
 
         let fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
 
-        XCTAssertEqual(fileLogs.count, 4)
+        XCTAssertEqual(fileLogs.count, 5)
 
         XCTAssertEqual(fileLogs.first?.header.level.rawValue, Level.info.rawValue)
         XCTAssertEqual(fileLogs.first?.header.date, date)
@@ -254,8 +265,14 @@ class FileLoggerTests: XCTestCase {
 
         XCTAssertEqual(fileLogs[0].message.description, encodedCodableString)
         XCTAssertEqual(fileLogs[1].message.description, "Special characters ::[]{}()//")
-        XCTAssertEqual(fileLogs[2].message.description, "[🚗] Some message")
-        XCTAssertEqual(fileLogs[3].message.description, encodedCodableString)
+        XCTAssertEqual(fileLogs[2].message.description, """
+            line 1
+            line 2
+            line 3
+            """
+        )
+        XCTAssertEqual(fileLogs[3].message.description, "[🚗] Some message")
+        XCTAssertEqual(fileLogs[4].message.description, encodedCodableString)
     }
 }
 

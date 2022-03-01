@@ -23,6 +23,7 @@ public class FileLogger: Logging {
     private let dateFormatter: DateFormatter = .monthsDaysTimeFormatter
     private let externalLogger: (String) -> ()
     private let fileHeaderContent: String
+    private let lineSeparator: String
     private let logEntryEncoder: LogEntryEncoding
     private let logEntryDecoder: LogEntryDecoding
 
@@ -68,6 +69,7 @@ public class FileLogger: Logging {
         logDirectoryName: String = "logs",
         fileHeaderContent: String = "",
         numberOfLogFiles: Int = 4,
+        lineSeparator: String = " ", // Defaults to U+2028
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
         logEntryDecoder: LogEntryDecoding = LogEntryDecoder()
     ) throws {
@@ -76,6 +78,7 @@ public class FileLogger: Logging {
         self.externalLogger = externalLogger
         self.fileHeaderContent = fileHeaderContent
         self.suiteName = suiteName
+        self.lineSeparator = lineSeparator
         self.logEntryEncoder = logEntryEncoder
         self.logEntryDecoder = logEntryDecoder
         self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingSuiteName: logFilePathExtension)
@@ -162,7 +165,7 @@ public class FileLogger: Logging {
         do {
             try refreshCurrentLogFileStatus()
 
-            let contentToAppend = logEntryEncoder.encode(logEntry) + "\n"
+            let contentToAppend = logEntryEncoder.encode(logEntry) + lineSeparator
             let fileHandle = try unwrapped(currentWritableFileHandle)
             fileHandle.seekToEndOfFile()
             fileHandle.write(try utf8Data(contentToAppend))
@@ -203,8 +206,9 @@ public class FileLogger: Logging {
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
     func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogEntry] {
-        let fileContents = try fileManager.contents(fromFileIfExists: fileUrlToRead)
-        return try logEntryDecoder.decode(fileContents)
+        try fileManager.contents(fromFileIfExists: fileUrlToRead)
+            .components(separatedBy: lineSeparator)
+            .compactMap(logEntryDecoder.decode)
     }
 }
 
