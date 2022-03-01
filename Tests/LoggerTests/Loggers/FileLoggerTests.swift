@@ -192,6 +192,71 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogs.first?.location.line, 1)
         XCTAssertEqual(fileLogs.first?.body, encodedCodableString)
     }
+
+    func test_encoding_and_decoding_several_logs() throws {
+        let fileLogger = try FileLogger()
+        fileLogger.levels = [.error, .warn]
+
+        let codable = MockedCodable(
+            int: 42,
+            string: "Test",
+            array: [
+                MockedCodable(
+                    int: 42,
+                    string: "Test",
+                    array: []
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(codable)
+        let encodedCodableString = String(data: data, encoding: .utf16)!
+        let date = Date(timeIntervalSince1970: 0)
+
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File.swift", function: "Function", line: 1),
+                message: encodedCodableString
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File2.swift", function: "Function2", line: 2),
+                message: "Special characters ::[]{}()//"
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File3.swift", function: "Function3", line: 3),
+                message: "[🚗] Some message"
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File4.swift", function: "Function4", line: 4),
+                message: encodedCodableString
+            )
+        )
+
+        let fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+
+        XCTAssertEqual(fileLogs.count, 4)
+
+        XCTAssertEqual(fileLogs.first?.header.level.rawValue, Level.info.rawValue)
+        XCTAssertEqual(fileLogs.first?.header.date, date)
+        XCTAssertEqual(fileLogs.first?.location.fileName, "File.swift")
+        XCTAssertEqual(fileLogs.first?.location.function, "Function")
+        XCTAssertEqual(fileLogs.first?.location.line, 1)
+
+        XCTAssertEqual(fileLogs[0].body, encodedCodableString)
+        XCTAssertEqual(fileLogs[1].body, "Special characters ::[]{}()//")
+        XCTAssertEqual(fileLogs[2].body, "[🚗] Some message")
+        XCTAssertEqual(fileLogs[3].body, encodedCodableString)
+    }
 }
 
 // MARK: - FileManager + helper functions
