@@ -46,7 +46,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
             "(?<\(Elements.fileName.rawValue)>.*)\\s\\s*" +
             "\(logLocationSeparator)\\s\\s*(?<\(Elements.functionName.rawValue)>.*)\\s\\s*" +
             "\(logLocationSeparator)\\s\\s*\(lineIdentifier)\\s\\s*(?<\(Elements.lineNumber.rawValue)>\\d*)" +
-            "\(messageSeparator)\\s\\s*(?<\(Elements.message.rawValue)>(.*\\s*)*)"
+            "\(messageSeparator)\\s\\s*(?<\(Elements.message.rawValue)>(.*\\s*(?!\(logFileRecordSeparator.escapingRegexCharacters)))*)"
 
         let range = NSRange(location: 0, length: rawEntry.utf16.count)
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
