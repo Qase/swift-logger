@@ -15,7 +15,7 @@ class LogEntryDecoderTests: XCTestCase {
         let record = "|> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: Some log with special characters ::[]{}()//"
 
         let sut = LogEntryDecoder(
-            logFileRecordSeparator: "|>",
+            logRecordSeparator: "|>",
             logHeaderOpeningSeparator: "[",
             logHeaderClosingSeparator: "]",
             logLocationSeparator: "-",
@@ -44,7 +44,7 @@ class LogEntryDecoderTests: XCTestCase {
             """
 
         let sut = LogEntryDecoder(
-            logFileRecordSeparator: "|>",
+            logRecordSeparator: "|>",
             logHeaderOpeningSeparator: "[",
             logHeaderClosingSeparator: "]",
             logLocationSeparator: "-",
@@ -70,7 +70,7 @@ class LogEntryDecoderTests: XCTestCase {
         let record = "|> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: {\"array\":[1,2,3],\"text\":\"Text\"}"
 
         let sut = LogEntryDecoder(
-            logFileRecordSeparator: "|>",
+            logRecordSeparator: "|>",
             logHeaderOpeningSeparator: "[",
             logHeaderClosingSeparator: "]",
             logLocationSeparator: "-",
@@ -96,7 +96,7 @@ class LogEntryDecoderTests: XCTestCase {
         let record = "|> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: [🚗] Some message"
 
         let sut = LogEntryDecoder(
-            logFileRecordSeparator: "|>",
+            logRecordSeparator: "|>",
             logHeaderOpeningSeparator: "[",
             logHeaderClosingSeparator: "]",
             logLocationSeparator: "-",
@@ -127,7 +127,7 @@ class LogEntryDecoderTests: XCTestCase {
             """
 
         let sut = LogEntryDecoder(
-            logFileRecordSeparator: "|>",
+            logRecordSeparator: "|>",
             logHeaderOpeningSeparator: "[",
             logHeaderClosingSeparator: "]",
             logLocationSeparator: "-",

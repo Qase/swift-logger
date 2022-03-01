@@ -8,7 +8,7 @@
 import Foundation
 
 public struct LogEntryEncoder: LogEntryEncoding {
-    private let logFileRecordSeparator: String
+    private let logRecordSeparator: String
     private let logHeaderOpeningSeparator: String
     private let logHeaderClosingSeparator: String
     private let logLocationSeparator: String
@@ -17,15 +17,15 @@ public struct LogEntryEncoder: LogEntryEncoding {
     private let dateFormatter: DateFormatter
 
     public init(
-        logFileRecordSeparator: String = Constants.Separators.logFileRecordSeparator,
-        logHeaderOpeningSeparator: String = Constants.Separators.logHeaderOpeningSeparator,
-        logHeaderClosingSeparator: String = Constants.Separators.logHeaderClosingSeparator,
-        logLocationSeparator: String = Constants.Separators.logLocationSeparator,
-        lineIdentifier: String = Constants.Separators.lineSeparator,
-        messageSeparator: String = Constants.Separators.messageSeparator,
+        logRecordSeparator: String = "|>",
+        logHeaderOpeningSeparator: String = "[~",
+        logHeaderClosingSeparator: String = "~]",
+        logLocationSeparator: String = "—",
+        lineIdentifier: String = "line",
+        messageSeparator: String = ":",
         dateFormatter: DateFormatter = DateFormatter.dateTimeFormatter
     ) {
-        self.logFileRecordSeparator = logFileRecordSeparator
+        self.logRecordSeparator = logRecordSeparator
         self.logHeaderOpeningSeparator = logHeaderOpeningSeparator
         self.logHeaderClosingSeparator = logHeaderClosingSeparator
         self.logLocationSeparator = logLocationSeparator
@@ -45,6 +45,6 @@ public struct LogEntryEncoder: LogEntryEncoding {
         let header = "\(logHeaderOpeningSeparator)\(level) \(date)\(logHeaderClosingSeparator)"
         let location = "\(fileName) \(logLocationSeparator) \(function) \(logLocationSeparator) \(lineIdentifier) \(line)"
 
-        return "\(logFileRecordSeparator) \(header) \(location)\(Constants.Separators.messageSeparator) \(logEntry.message)"
+        return "\(logRecordSeparator) \(header) \(location)\(messageSeparator) \(logEntry.message)"
     }
 }

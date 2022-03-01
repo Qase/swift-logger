@@ -12,7 +12,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
         case level, date, fileName, functionName, lineNumber, message
     }
 
-    private let logFileRecordSeparator: String
+    private let logRecordSeparator: String
     private let logHeaderOpeningSeparator: String
     private let logHeaderClosingSeparator: String
     private let logLocationSeparator: String
@@ -21,15 +21,15 @@ public struct LogEntryDecoder: LogEntryDecoding {
     private let dateFormatter: DateFormatter
 
     public init(
-        logFileRecordSeparator: String = Constants.Separators.logFileRecordSeparator,
-        logHeaderOpeningSeparator: String = Constants.Separators.logHeaderOpeningSeparator,
-        logHeaderClosingSeparator: String = Constants.Separators.logHeaderClosingSeparator,
-        logLocationSeparator: String = Constants.Separators.logLocationSeparator,
-        lineIdentifier: String = Constants.Separators.lineSeparator,
-        messageSeparator: String = Constants.Separators.messageSeparator,
+        logRecordSeparator: String = "|>",
+        logHeaderOpeningSeparator: String = "[~",
+        logHeaderClosingSeparator: String = "~]",
+        logLocationSeparator: String = "—",
+        lineIdentifier: String = "line",
+        messageSeparator: String = ":",
         dateFormatter: DateFormatter = DateFormatter.dateTimeFormatter
     ) {
-        self.logFileRecordSeparator = logFileRecordSeparator
+        self.logRecordSeparator = logRecordSeparator
         self.logHeaderOpeningSeparator = logHeaderOpeningSeparator
         self.logHeaderClosingSeparator = logHeaderClosingSeparator
         self.logLocationSeparator = logLocationSeparator
@@ -40,13 +40,13 @@ public struct LogEntryDecoder: LogEntryDecoding {
 
     public func decode(_ rawEntry: String) throws -> FileLogEntry? {
         let pattern =
-            "^(\(logFileRecordSeparator.escapingRegexCharacters))*\\s*" +
+            "^(\(logRecordSeparator.escapingRegexCharacters))*\\s*" +
             "\(logHeaderOpeningSeparator.escapingRegexCharacters)(?<\(Elements.level.rawValue)>\\S*)\\s\\s*" +
             "(?<\(Elements.date.rawValue)>.*)\(logHeaderClosingSeparator.escapingRegexCharacters)\\s\\s*" +
             "(?<\(Elements.fileName.rawValue)>.*)\\s\\s*" +
             "\(logLocationSeparator)\\s\\s*(?<\(Elements.functionName.rawValue)>.*)\\s\\s*" +
             "\(logLocationSeparator)\\s\\s*\(lineIdentifier)\\s\\s*(?<\(Elements.lineNumber.rawValue)>\\d*)" +
-            "\(messageSeparator)\\s\\s*(?<\(Elements.message.rawValue)>(.*\\s*(?!\(logFileRecordSeparator.escapingRegexCharacters)))*)"
+            "\(messageSeparator)\\s\\s*(?<\(Elements.message.rawValue)>(.*\\s*(?!\(logRecordSeparator.escapingRegexCharacters)))*)"
 
         let range = NSRange(location: 0, length: rawEntry.utf16.count)
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])

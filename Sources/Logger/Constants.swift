@@ -17,17 +17,7 @@ public struct Constants {
 
     public struct Separators {
         /// The between used file records
-        public static let logFileRecordSeparator = "|>"
-        /// The opening separator encapsulating the LogHeader
-        public static let logHeaderOpeningSeparator = "[~"
-        /// The closing separator encapsulating the LogHeader
-        public static let logHeaderClosingSeparator = "~]"
-        /// The separator of LogLocation components
-        public static let logLocationSeparator = "—"
-        /// The separator before the line number
-        public static let lineSeparator = "line"
-        /// The separator between the header + location section and the logged message
-        public static let messageSeparator = ":"
+        public static let logRecordSeparator = "|>"
     }
 
     public struct Queues {
