@@ -38,7 +38,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
         self.dateFormatter = dateFormatter
     }
 
-    public func decode(_ rawEntries: String) throws -> [FileLogEntry] {
+    public func decode(_ rawEntries: String) throws -> [LogEntry] {
         let pattern =
             "\(logRecordSeparator.escapingRegexCharacters)\\s*" +
             "\(logHeaderOpeningSeparator.escapingRegexCharacters)(?<\(Elements.level.rawValue)>\\S*)\\s\\s*" +
@@ -73,7 +73,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
                     return nil
                 }
 
-                return FileLogEntry(
+                return LogEntry(
                     header: .init(
                         date: date,
                         level: Level(rawValue: levelRawValue),
@@ -84,7 +84,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
                         function: functionName,
                         line: line
                     ),
-                    body: message
+                    message: message
                 )
             }
     }

@@ -32,7 +32,7 @@ class LogEntryDecoderTests: XCTestCase {
         XCTAssertEqual(result.first?.location.fileName, "FileName.swift")
         XCTAssertEqual(result.first?.location.function, "Function")
         XCTAssertEqual(result.first?.location.line, 42)
-        XCTAssertEqual(result.first?.body, "Some log with special characters ::[]{}()//")
+        XCTAssertEqual(result.first?.message.description, "Some log with special characters ::[]{}()//")
     }
 
     func test_sut_should_parse_first_line_only() throws {
@@ -61,7 +61,7 @@ class LogEntryDecoderTests: XCTestCase {
         XCTAssertEqual(result.first?.location.fileName, "FileName.swift")
         XCTAssertEqual(result.first?.location.function, "Function")
         XCTAssertEqual(result.first?.location.line, 42)
-        XCTAssertEqual(result.first?.body, "First log with special characters ::[]{}()//")
+        XCTAssertEqual(result.first?.message.description, "First log with special characters ::[]{}()//")
     }
 
     func test_sut_should_parse_encoded_json() throws {
@@ -87,7 +87,7 @@ class LogEntryDecoderTests: XCTestCase {
         XCTAssertEqual(result.first?.location.fileName, "FileName.swift")
         XCTAssertEqual(result.first?.location.function, "Function")
         XCTAssertEqual(result.first?.location.line, 42)
-        XCTAssertEqual(result.first?.body, "{\"array\":[1,2,3],\"text\":\"Text\"}")
+        XCTAssertEqual(result.first?.message.description, "{\"array\":[1,2,3],\"text\":\"Text\"}")
     }
 
     func test_sut_should_parse_line_with_an_emoji() throws {
@@ -113,7 +113,7 @@ class LogEntryDecoderTests: XCTestCase {
         XCTAssertEqual(result.first?.location.fileName, "FileName.swift")
         XCTAssertEqual(result.first?.location.function, "Function")
         XCTAssertEqual(result.first?.location.line, 42)
-        XCTAssertEqual(result.first?.body, "[🚗] Some message")
+        XCTAssertEqual(result.first?.message.description, "[🚗] Some message")
     }
 
     func test_sut_should_parse_multiline_log() throws {
@@ -144,7 +144,7 @@ class LogEntryDecoderTests: XCTestCase {
         XCTAssertEqual(result.first?.location.fileName, "FileName.swift")
         XCTAssertEqual(result.first?.location.function, "Function")
         XCTAssertEqual(result.first?.location.line, 42)
-        XCTAssertEqual(result.first?.body, """
+        XCTAssertEqual(result.first?.message.description, """
             Multiline Message:
                 line 1
                 line 2
@@ -180,21 +180,21 @@ class LogEntryDecoderTests: XCTestCase {
         let result = try sut.decode(record)
 
         XCTAssertEqual(result.count, 4)
-        XCTAssertEqual(result[0].body, """
+        XCTAssertEqual(result[0].message.description, """
             Multiline Message:
                 line 1
                 line 2
                 line 3
             """
         )
-        XCTAssertEqual(result[1].body, "[🚗] Some message")
-        XCTAssertEqual(result[2].body, """
+        XCTAssertEqual(result[1].message.description, "[🚗] Some message")
+        XCTAssertEqual(result[2].message.description, """
             Multiline Message:
                 line 1
                 line 2
                 line 3
             """
         )
-        XCTAssertEqual(result[3].body, "Second log with special characters ::[]{}()//")
+        XCTAssertEqual(result[3].message.description, "Second log with special characters ::[]{}()//")
     }
 }

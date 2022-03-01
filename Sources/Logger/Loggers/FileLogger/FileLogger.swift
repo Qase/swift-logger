@@ -102,11 +102,11 @@ public class FileLogger: Logging {
 
     // MARK: - Computed properties & methods
 
-    public func logRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [FileLogEntry]? {
+    public func logRecords(filteredBy filter: (LogEntry) -> Bool = { _ in true }) -> [LogEntry]? {
       perFileLogRecords(filteredBy: filter)?.flatMap(\.value)
     }
 
-    func perFileLogRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [URL: [FileLogEntry]]? {
+    func perFileLogRecords(filteredBy filter: (LogEntry) -> Bool = { _ in true }) -> [URL: [LogEntry]]? {
         perFileLogs(gettingRecordsFromLogFile(at:))
             .map { perFileLogRecords in
                 perFileLogRecords.mapValues { $0.filter(filter) }
@@ -202,7 +202,7 @@ public class FileLogger: Logging {
     ///
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
-    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLogEntry] {
+    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogEntry] {
         let fileContents = try fileManager.contents(fromFileIfExists: fileUrlToRead)
         return try logEntryDecoder.decode(fileContents)
     }
