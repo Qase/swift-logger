@@ -10,16 +10,22 @@ import os
 
 /// Pre-built logger that wraps system os_logger
 public class SystemLogger: Logging {
+    private let logEntryEncoder: LogEntryEncoding
     private var logger: OSLog
 
-    public init(subsystem: String, category: String) {
+    public init(
+        subsystem: String,
+        category: String,
+        logEntryEncoder: LogEntryEncoding = LogEntryEncoder()
+    ) {
+        self.logEntryEncoder = logEntryEncoder
         self.logger = OSLog(subsystem: subsystem, category: category)
     }
 
     public var levels: [Level] = [.info]
 
     public func log(_ logEntry: LogEntry) {
-        os_log("%@", log: logger, type: logEntry.header.level.logType, "\(logEntry)")
+        os_log("%@", log: logger, type: logEntry.header.level.logType, logEntryEncoder.encode(logEntry))
     }
 }
 

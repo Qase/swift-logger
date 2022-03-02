@@ -19,10 +19,6 @@ public struct LogLocation {
     }
 }
 
-// MARK: - LogLocation
+// MARK: - LogHeader + Hashable & Equatable
 
-extension LogLocation: CustomStringConvertible {
-    public var description: String {
-        "\(fileName) - \(function) - line \(line)"
-    }
-}
+extension LogLocation: Hashable, Equatable {}

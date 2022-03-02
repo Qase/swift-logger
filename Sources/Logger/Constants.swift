@@ -8,16 +8,11 @@
 import Foundation
 
 public struct Constants {
-
     struct UserDefaultsKeys {
         static let logDirUrl = "logDirUrl"
         static let currentLogFileNumber = "currentLogFileNumber"
         static let dateOfLastLog = "dateOfLastLog"
         static let numberOfLogFiles = "numOfLogFiles"
-    }
-
-    struct FileLogger {
-        static let logFileRecordSeparator = "|>"
     }
 
     public struct Queues {

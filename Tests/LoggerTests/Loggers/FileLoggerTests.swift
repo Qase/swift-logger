@@ -116,9 +116,11 @@ class FileLoggerTests: XCTestCase {
     func test_single_logging_file() {
         fileLogger.levels = [.error, .warn]
 
+        let date = Date(timeIntervalSince1970: 0)
+
         fileLogger.log(
             .init(
-                header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.monthsDaysTimeFormatter),
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
                 location: .init(fileName: "file", function: "function", line: 1),
                 message: "Error message"
             )
@@ -126,7 +128,7 @@ class FileLoggerTests: XCTestCase {
 
         fileLogger.log(
             .init(
-                header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.monthsDaysTimeFormatter),
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
                 location: .init(fileName: "file2", function: "function2", line: 20),
                 message: "Warning message\nThis is test!"
             )
@@ -136,18 +138,141 @@ class FileLoggerTests: XCTestCase {
 
         XCTAssertEqual(fileLogs.count, 2)
 
-        XCTAssertNotNil(fileLogs[0].header)
-        XCTAssertEqual(fileLogs[0].body, "file - function - line 1: Error message")
+        XCTAssertEqual(fileLogs.first?.header.level, .info)
+        XCTAssertEqual(fileLogs.first?.header.date, date)
+        XCTAssertEqual(fileLogs.first?.location.fileName, "file")
+        XCTAssertEqual(fileLogs.first?.location.function, "function")
+        XCTAssertEqual(fileLogs.first?.location.line, 1)
+        XCTAssertEqual(fileLogs.first?.message.description, "Error message")
 
-        XCTAssertNotNil(fileLogs[1].header)
-        XCTAssertEqual(fileLogs[1].body, "file2 - function2 - line 20: Warning message\nThis is test!")
+        XCTAssertEqual(fileLogs.last?.header.level, .info)
+        XCTAssertEqual(fileLogs.last?.header.date, date)
+        XCTAssertEqual(fileLogs.last?.location.fileName, "file2")
+        XCTAssertEqual(fileLogs.last?.location.function, "function2")
+        XCTAssertEqual(fileLogs.last?.location.line, 20)
+        XCTAssertEqual(fileLogs.last?.message.description, "Warning message\nThis is test!")
     }
 
-    func test_pattern_match() {
-        let string = "[WARNING \(DateFormatter.dateFormatter.string(from: Date()))]"
+    func test_encoding_and_decoding_codable() throws {
+        let fileLogger = try FileLogger()
+        fileLogger.levels = [.error, .warn]
 
-        let messageHeader = LogHeader.init(rawValue: string, dateFormatter: DateFormatter.dateFormatter)
-        XCTAssertNotNil(messageHeader)
+        let codable = MockedCodable(
+            int: 42,
+            string: "Test",
+            array: [
+                MockedCodable(
+                    int: 42,
+                    string: "Test",
+                    array: []
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(codable)
+        let encodedCodableString = String(data: data, encoding: .utf8)!
+        let date = Date(timeIntervalSince1970: 0)
+
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File.swift", function: "Function", line: 1),
+                message: encodedCodableString
+            )
+        )
+
+        let fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+
+        XCTAssertEqual(fileLogs.count, 1)
+
+        XCTAssertEqual(fileLogs.first?.header.level.rawValue, Level.info.rawValue)
+        XCTAssertEqual(fileLogs.first?.header.date, date)
+        XCTAssertEqual(fileLogs.first?.location.fileName, "File.swift")
+        XCTAssertEqual(fileLogs.first?.location.function, "Function")
+        XCTAssertEqual(fileLogs.first?.location.line, 1)
+        XCTAssertEqual(fileLogs.first?.message.description, encodedCodableString)
+    }
+
+    func test_encoding_and_decoding_several_logs() throws {
+        let fileLogger = try FileLogger()
+        fileLogger.levels = [.error, .warn]
+
+        let codable = MockedCodable(
+            int: 42,
+            string: "Test",
+            array: [
+                MockedCodable(
+                    int: 42,
+                    string: "Test",
+                    array: []
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(codable)
+        let encodedCodableString = String(data: data, encoding: .utf8)!
+        let date = Date(timeIntervalSince1970: 0)
+
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File.swift", function: "Function", line: 1),
+                message: encodedCodableString
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File2.swift", function: "Function2", line: 2),
+                message: "Special characters ::[]{}()//"
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File3.swift", function: "Function3", line: 3),
+                message: """
+                    line 1
+                    line 2
+                    line 3
+                    """
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File3.swift", function: "Function3", line: 3),
+                message: "[🚗] Some message"
+            )
+        )
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "File4.swift", function: "Function4", line: 4),
+                message: encodedCodableString
+            )
+        )
+
+        let fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+
+        XCTAssertEqual(fileLogs.count, 5)
+
+        XCTAssertEqual(fileLogs.first?.header.level.rawValue, Level.info.rawValue)
+        XCTAssertEqual(fileLogs.first?.header.date, date)
+        XCTAssertEqual(fileLogs.first?.location.fileName, "File.swift")
+        XCTAssertEqual(fileLogs.first?.location.function, "Function")
+        XCTAssertEqual(fileLogs.first?.location.line, 1)
+
+        XCTAssertEqual(fileLogs[0].message.description, encodedCodableString)
+        XCTAssertEqual(fileLogs[1].message.description, "Special characters ::[]{}()//")
+        XCTAssertEqual(fileLogs[2].message.description, """
+            line 1
+            line 2
+            line 3
+            """
+        )
+        XCTAssertEqual(fileLogs[3].message.description, "[🚗] Some message")
+        XCTAssertEqual(fileLogs[4].message.description, encodedCodableString)
     }
 }
 
@@ -161,5 +286,13 @@ private extension FileManager {
 
     func numberOfFiles(inDirectory url: URL) throws -> Int {
         try contentsOfDirectory(atPath: url.path).count
+    }
+}
+
+private extension FileLoggerTests {
+    struct MockedCodable: Codable {
+        var int: Int
+        var string: String
+        var array: [MockedCodable]
     }
 }

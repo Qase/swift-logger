@@ -18,11 +18,3 @@ public struct LogEntry {
         self.message = message
     }
 }
-
-// MARK: - LogEntry + CustomStringConvertible
-
-extension LogEntry: CustomStringConvertible {
-    public var description: String {
-        "\(header) \(location): \(message)"
-    }
-}

@@ -1,5 +1,5 @@
 //
-//  FileLoggerManager.swift
+//  FileLogger.swift
 //  
 //
 //  Created by Martin Troup on 24.09.2021.
@@ -17,14 +17,17 @@ public class FileLogger: Logging {
     // MARK: - Stored properties
 
     private let logFilePathExtension: String = "log"
-
     private let fileManager: FileManager
     private let userDefaults: UserDefaults
     private let suiteName: String?
     private let dateFormatter: DateFormatter = .monthsDaysTimeFormatter
-    let logDirURL: URL
     private let externalLogger: (String) -> ()
     private let fileHeaderContent: String
+    private let lineSeparator: String
+    private let logEntryEncoder: LogEntryEncoding
+    private let logEntryDecoder: LogEntryDecoding
+
+    let logDirURL: URL
 
     var dateOfLastLog: Date {
         didSet {
@@ -65,13 +68,19 @@ public class FileLogger: Logging {
         suiteName: String? = nil,
         logDirectoryName: String = "logs",
         fileHeaderContent: String = "",
-        numberOfLogFiles: Int = 4
+        numberOfLogFiles: Int = 4,
+        lineSeparator: String = "\u{2028}",
+        logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
+        logEntryDecoder: LogEntryDecoding = LogEntryDecoder()
     ) throws {
         self.fileManager = fileManager
         self.userDefaults = userDefaults
         self.externalLogger = externalLogger
         self.fileHeaderContent = fileHeaderContent
         self.suiteName = suiteName
+        self.lineSeparator = lineSeparator
+        self.logEntryEncoder = logEntryEncoder
+        self.logEntryDecoder = logEntryDecoder
         self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingSuiteName: logFilePathExtension)
 
         // Create log directory
@@ -96,11 +105,11 @@ public class FileLogger: Logging {
 
     // MARK: - Computed properties & methods
 
-    public func logRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [FileLogEntry]? {
+    public func logRecords(filteredBy filter: (LogEntry) -> Bool = { _ in true }) -> [LogEntry]? {
       perFileLogRecords(filteredBy: filter)?.flatMap(\.value)
     }
 
-    func perFileLogRecords(filteredBy filter: (FileLogEntry) -> Bool = { _ in true }) -> [URL: [FileLogEntry]]? {
+    func perFileLogRecords(filteredBy filter: (LogEntry) -> Bool = { _ in true }) -> [URL: [LogEntry]]? {
         perFileLogs(gettingRecordsFromLogFile(at:))
             .map { perFileLogRecords in
                 perFileLogRecords.mapValues { $0.filter(filter) }
@@ -156,8 +165,7 @@ public class FileLogger: Logging {
         do {
             try refreshCurrentLogFileStatus()
 
-            let contentToAppend = "\(Constants.FileLogger.logFileRecordSeparator) \(logEntry)\n"
-
+            let contentToAppend = logEntryEncoder.encode(logEntry) + lineSeparator
             let fileHandle = try unwrapped(currentWritableFileHandle)
             fileHandle.seekToEndOfFile()
             fileHandle.write(try utf8Data(contentToAppend))
@@ -197,11 +205,10 @@ public class FileLogger: Logging {
     ///
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
-    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [FileLogEntry] {
+    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogEntry] {
         try fileManager.contents(fromFileIfExists: fileUrlToRead)
-            .components(separatedBy: Constants.FileLogger.logFileRecordSeparator)
-            .map { FileLogEntry(rawValue: $0, dateFormatter: dateFormatter) }
-            .compactMap { $0 }
+            .components(separatedBy: lineSeparator)
+            .compactMap(logEntryDecoder.decode)
     }
 }
 
