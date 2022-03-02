@@ -11,14 +11,12 @@ import SwiftUI
 struct FileLogsTable: View {
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading) {
-                ForEach(fileLogger.logRecords() ?? [], id: \.self) { log in
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(log.header.description)
-                            .font(Font.headline)
-                        Text(log.body)
-                            .font(Font.body)
-                    }
+            LazyVStack(alignment: .leading, spacing: 10) {
+                let logRecords = fileLogger.logRecords() ?? []
+                let logEntryEncoder = LogEntryEncoder()
+
+                ForEach(Array(zip(logRecords.indices, logRecords)), id: \.0) { _, logEntry in
+                    Text(logEntryEncoder.encode(logEntry))
                 }
             }
             .padding()
