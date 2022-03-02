@@ -8,43 +8,27 @@
 import Foundation
 
 public struct LogEntryEncoder: LogEntryEncoding {
-    private let logRecordSeparator: String
-    private let logHeaderOpeningSeparator: String
-    private let logHeaderClosingSeparator: String
-    private let logLocationSeparator: String
-    private let lineIdentifier: String
-    private let messageSeparator: String
-    private let dateFormatter: DateFormatter
+    private let logEntryConfig: LogEntryConfig
 
     public init(
-        logRecordSeparator: String = "|>",
-        logHeaderOpeningSeparator: String = "[~",
-        logHeaderClosingSeparator: String = "~]",
-        logLocationSeparator: String = "—",
-        lineIdentifier: String = "line",
-        messageSeparator: String = ":",
-        dateFormatter: DateFormatter = DateFormatter.dateTimeFormatter
+        logEntryConfig: LogEntryConfig = .init()
     ) {
-        self.logRecordSeparator = logRecordSeparator
-        self.logHeaderOpeningSeparator = logHeaderOpeningSeparator
-        self.logHeaderClosingSeparator = logHeaderClosingSeparator
-        self.logLocationSeparator = logLocationSeparator
-        self.lineIdentifier = lineIdentifier
-        self.messageSeparator = messageSeparator
-        self.dateFormatter = dateFormatter
+        self.logEntryConfig = logEntryConfig
     }
 
     public func encode(_ logEntry: LogEntry) -> String {
         let level = logEntry.header.level.rawValue
-        let date = dateFormatter.string(from: logEntry.header.date)
+        let date = logEntryConfig.dateFormatter.string(from: logEntry.header.date)
 
         let fileName = logEntry.location.fileName
         let function = logEntry.location.function
         let line = logEntry.location.line
 
-        let header = "\(logHeaderOpeningSeparator)\(level) \(date)\(logHeaderClosingSeparator)"
-        let location = "\(fileName) \(logLocationSeparator) \(function) \(logLocationSeparator) \(lineIdentifier) \(line)"
+        let header = "\(logEntryConfig.logHeaderOpeningSeparator)\(level) \(date)\(logEntryConfig.logHeaderClosingSeparator)"
 
-        return "\(logRecordSeparator) \(header) \(location)\(messageSeparator) \(logEntry.message)"
+        let logLocationSeparator = logEntryConfig.logLocationSeparator
+        let location = "\(fileName) \(logLocationSeparator) \(function) \(logLocationSeparator) \(logEntryConfig.lineIdentifier) \(line)"
+
+        return "\(logEntryConfig.logRecordSeparator) \(header) \(location)\(logEntryConfig.messageSeparator) \(logEntry.message)"
     }
 }

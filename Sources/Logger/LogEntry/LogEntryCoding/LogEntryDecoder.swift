@@ -12,41 +12,24 @@ public struct LogEntryDecoder: LogEntryDecoding {
         case level, date, fileName, functionName, lineNumber, message
     }
 
-    private let logRecordSeparator: String
-    private let logHeaderOpeningSeparator: String
-    private let logHeaderClosingSeparator: String
-    private let logLocationSeparator: String
-    private let lineIdentifier: String
-    private let messageSeparator: String
-    private let dateFormatter: DateFormatter
+    private let logEntryConfig: LogEntryConfig
 
     public init(
-        logRecordSeparator: String = "|>",
-        logHeaderOpeningSeparator: String = "[~",
-        logHeaderClosingSeparator: String = "~]",
-        logLocationSeparator: String = "—",
-        lineIdentifier: String = "line",
-        messageSeparator: String = ":",
-        dateFormatter: DateFormatter = DateFormatter.dateTimeFormatter
+        logEntryConfig: LogEntryConfig = .init()
     ) {
-        self.logRecordSeparator = logRecordSeparator
-        self.logHeaderOpeningSeparator = logHeaderOpeningSeparator
-        self.logHeaderClosingSeparator = logHeaderClosingSeparator
-        self.logLocationSeparator = logLocationSeparator
-        self.lineIdentifier = lineIdentifier
-        self.messageSeparator = messageSeparator
-        self.dateFormatter = dateFormatter
+        self.logEntryConfig = logEntryConfig
     }
 
     public func decode(_ rawEntry: String) throws -> LogEntry? {
         let pattern =
-            "\(logRecordSeparator.escapingRegexCharacters)\\s*" +
-            "\(logHeaderOpeningSeparator.escapingRegexCharacters)(?<\(Elements.level.rawValue)>\\S*)\\s\\s*" +
-            "(?<\(Elements.date.rawValue)>.*)\(logHeaderClosingSeparator.escapingRegexCharacters)\\s\\s*" +
+            "\(logEntryConfig.logRecordSeparator.escapingRegexCharacters)\\s*" +
+            "\(logEntryConfig.logHeaderOpeningSeparator.escapingRegexCharacters)(?<\(Elements.level.rawValue)>\\S*)\\s\\s*" +
+            "(?<\(Elements.date.rawValue)>.*)\(logEntryConfig.logHeaderClosingSeparator.escapingRegexCharacters)\\s\\s*" +
             "(?<\(Elements.fileName.rawValue)>.*)\\s\\s*" +
-            "\(logLocationSeparator)\\s\\s*(?<\(Elements.functionName.rawValue)>.*)\\s\\s*" +
-            "\(logLocationSeparator)\\s\\s*\(lineIdentifier)\\s\\s*(?<\(Elements.lineNumber.rawValue)>\\d*)" +
-            "\(messageSeparator)\\s\\s*(?<\(Elements.message.rawValue)>(.*\\s*(?!\(logRecordSeparator.escapingRegexCharacters)))*)"
+            "\(logEntryConfig.logLocationSeparator)\\s\\s*(?<\(Elements.functionName.rawValue)>.*)\\s\\s*" +
+            "\(logEntryConfig.logLocationSeparator)\\s\\s*\(logEntryConfig.lineIdentifier)\\s\\s*(?<\(Elements.lineNumber.rawValue)>\\d*)" +
+            "\(logEntryConfig.messageSeparator)\\s\\s*" +
+            "(?<\(Elements.message.rawValue)>(.*\\s*(?!\(logEntryConfig.logRecordSeparator.escapingRegexCharacters)))*)"
 
         let range = NSRange(location: 0, length: rawEntry.utf16.count)
 
@@ -63,7 +46,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
                 guard
                     let levelRawValue = rawEntry.at(levelRange),
                     let dateString = rawEntry.at(dateRange),
-                    let date = dateFormatter.date(from: dateString),
+                    let date = logEntryConfig.dateFormatter.date(from: dateString),
                     let fileName = rawEntry.at(fileNameRange),
                     let functionName = rawEntry.at(functionNameRange),
                     let lineNumberString = rawEntry.at(lineNumberRange),
@@ -77,7 +60,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
                     header: .init(
                         date: date,
                         level: Level(rawValue: levelRawValue),
-                        dateFormatter: dateFormatter
+                        dateFormatter: logEntryConfig.dateFormatter
                     ),
                     location: .init(
                         fileName: fileName,

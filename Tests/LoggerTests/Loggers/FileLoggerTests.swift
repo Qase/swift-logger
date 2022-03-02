@@ -170,7 +170,7 @@ class FileLoggerTests: XCTestCase {
         )
 
         let data = try JSONEncoder().encode(codable)
-        let encodedCodableString = String(data: data, encoding: .utf16)!
+        let encodedCodableString = String(data: data, encoding: .utf8)!
         let date = Date(timeIntervalSince1970: 0)
 
         fileLogger.log(

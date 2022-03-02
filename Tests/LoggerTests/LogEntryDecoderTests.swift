@@ -10,19 +10,11 @@ import XCTest
 
 class LogEntryDecoderTests: XCTestCase {
     func test_sut_should_parse_line() throws {
-        let dateFormatter = DateFormatter.monthsDaysTimeFormatter
-        let expectedDate = dateFormatter.date(from: "02-21 15:16:17.189")
-        let record = "|> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: Some log with special characters ::[]{}()//"
+        let logEntryConfig = LogEntryConfig()
+        let expectedDate = logEntryConfig.dateFormatter.date(from: "2022-02-21 15:16:17.189")
+        let record = "|> [INFO 2022-02-21 15:16:17.189] FileName.swift — Function — line 42: Some log with special characters ::[]{}()//"
 
-        let sut = LogEntryDecoder(
-            logRecordSeparator: "|>",
-            logHeaderOpeningSeparator: "[",
-            logHeaderClosingSeparator: "]",
-            logLocationSeparator: "-",
-            lineIdentifier: "line",
-            messageSeparator: ":",
-            dateFormatter: dateFormatter
-        )
+        let sut = LogEntryDecoder(logEntryConfig: logEntryConfig)
 
         let result = try sut.decode(record)
 
@@ -35,22 +27,14 @@ class LogEntryDecoderTests: XCTestCase {
     }
 
     func test_sut_should_parse_first_line_only() throws {
-        let dateFormatter = DateFormatter.monthsDaysTimeFormatter
-        let expectedDate = dateFormatter.date(from: "02-21 15:16:17.189")
+        let logEntryConfig = LogEntryConfig()
+        let expectedDate = logEntryConfig.dateFormatter.date(from: "2022-02-21 15:16:17.189")
         let record = """
-            |> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: First log with special characters ::[]{}()//
-            |> [INFO 02-21 16:17:18.000] FileName2.swift - Function2 - line 43: Second log with special characters ::[]{}()//
+            |> [INFO 2022-02-21 15:16:17.189] FileName.swift — Function — line 42: First log with special characters ::[]{}()//
+            |> [INFO 2022-02-21 16:17:18.000] FileName2.swift — Function2 — line 43: Second log with special characters ::[]{}()//
             """
 
-        let sut = LogEntryDecoder(
-            logRecordSeparator: "|>",
-            logHeaderOpeningSeparator: "[",
-            logHeaderClosingSeparator: "]",
-            logLocationSeparator: "-",
-            lineIdentifier: "line",
-            messageSeparator: ":",
-            dateFormatter: dateFormatter
-        )
+        let sut = LogEntryDecoder(logEntryConfig: logEntryConfig)
 
         let result = try sut.decode(record)
 
@@ -63,19 +47,11 @@ class LogEntryDecoderTests: XCTestCase {
     }
 
     func test_sut_should_parse_encoded_json() throws {
-        let dateFormatter = DateFormatter.monthsDaysTimeFormatter
-        let expectedDate = dateFormatter.date(from: "02-21 15:16:17.189")
-        let record = "|> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: {\"array\":[1,2,3],\"text\":\"Text\"}"
+        let logEntryConfig = LogEntryConfig()
+        let expectedDate = logEntryConfig.dateFormatter.date(from: "2022-02-21 15:16:17.189")
+        let record = "|> [INFO 2022-02-21 15:16:17.189] FileName.swift — Function — line 42: {\"array\":[1,2,3],\"text\":\"Text\"}"
 
-        let sut = LogEntryDecoder(
-            logRecordSeparator: "|>",
-            logHeaderOpeningSeparator: "[",
-            logHeaderClosingSeparator: "]",
-            logLocationSeparator: "-",
-            lineIdentifier: "line",
-            messageSeparator: ":",
-            dateFormatter: dateFormatter
-        )
+        let sut = LogEntryDecoder(logEntryConfig: logEntryConfig)
 
         let result = try sut.decode(record)
 
@@ -88,19 +64,11 @@ class LogEntryDecoderTests: XCTestCase {
     }
 
     func test_sut_should_parse_line_with_an_emoji() throws {
-        let dateFormatter = DateFormatter.monthsDaysTimeFormatter
-        let expectedDate = dateFormatter.date(from: "02-21 15:16:17.189")
-        let record = "|> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: [🚗] Some message"
+        let logEntryConfig = LogEntryConfig()
+        let expectedDate = logEntryConfig.dateFormatter.date(from: "2022-02-21 15:16:17.189")
+        let record = "|> [INFO 2022-02-21 15:16:17.189] FileName.swift — Function — line 42: [🚗] Some message"
 
-        let sut = LogEntryDecoder(
-            logRecordSeparator: "|>",
-            logHeaderOpeningSeparator: "[",
-            logHeaderClosingSeparator: "]",
-            logLocationSeparator: "-",
-            lineIdentifier: "line",
-            messageSeparator: ":",
-            dateFormatter: dateFormatter
-        )
+        let sut = LogEntryDecoder(logEntryConfig: logEntryConfig)
 
         let result = try sut.decode(record)
 
@@ -113,24 +81,16 @@ class LogEntryDecoderTests: XCTestCase {
     }
 
     func test_sut_should_parse_multiline_log() throws {
-        let dateFormatter = DateFormatter.monthsDaysTimeFormatter
-        let expectedDate = dateFormatter.date(from: "02-21 15:16:17.189")
+        let logEntryConfig = LogEntryConfig()
+        let expectedDate = logEntryConfig.dateFormatter.date(from: "2022-02-21 15:16:17.189")
         let record = """
-            |> [INFO 02-21 15:16:17.189] FileName.swift - Function - line 42: Multiline Message:
+            |> [INFO 2022-02-21 15:16:17.189] FileName.swift — Function — line 42: Multiline Message:
                 line 1
                 line 2
                 line 3
             """
 
-        let sut = LogEntryDecoder(
-            logRecordSeparator: "|>",
-            logHeaderOpeningSeparator: "[",
-            logHeaderClosingSeparator: "]",
-            logLocationSeparator: "-",
-            lineIdentifier: "line",
-            messageSeparator: ":",
-            dateFormatter: dateFormatter
-        )
+        let sut = LogEntryDecoder(logEntryConfig: logEntryConfig)
 
         let result = try sut.decode(record)
 
