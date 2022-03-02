@@ -69,7 +69,7 @@ public class FileLogger: Logging {
         logDirectoryName: String = "logs",
         fileHeaderContent: String = "",
         numberOfLogFiles: Int = 4,
-        lineSeparator: String = " ", // Defaults to U+2028
+        lineSeparator: String = "\u{2028}",
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
         logEntryDecoder: LogEntryDecoding = LogEntryDecoder()
     ) throws {
