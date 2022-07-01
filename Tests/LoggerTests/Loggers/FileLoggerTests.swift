@@ -9,19 +9,12 @@
 import XCTest
 
 class FileLoggerTests: XCTestCase {
-    private var userDefaults: UserDefaults!
-    private var fileManager: FileManager!
     private var fileLogger: FileLogger!
 
     override func setUp() {
         super.setUp()
-
-        userDefaults = UserDefaults(suiteName: "testUserDefaults")!
-        fileManager = FileManager.default
       
         fileLogger = try! FileLogger(
-            fileManager: fileManager,
-            userDefaults: userDefaults,
             externalLogger: { _ in },
             suiteName: nil,
             logDirectoryName: "logs",
@@ -34,25 +27,22 @@ class FileLoggerTests: XCTestCase {
         try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
         fileLogger = nil
 
-        userDefaults.removePersistentDomain(forName: "testUserDefaults")
-        userDefaults = nil
-
-        fileManager = nil
+        UserDefaults.standard.removePersistentDomain(forName: "testUserDefaults")
 
         super.tearDown()
     }
 
     func test_inicialization_of_FileLogger() {
-        XCTAssertTrue(fileManager.directoryExists(at: fileLogger.logDirURL))
-        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 0)
+        XCTAssertTrue(fileLogger.fileManager.directoryExists(at: fileLogger.logDirURL))
+        XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 0)
 
-        let currentLogFileNumber = userDefaults.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int
+        let currentLogFileNumber = fileLogger.userDefaults.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int
         XCTAssertEqual(currentLogFileNumber, 0)
 
-        let dateOfLastLog = userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date
+        let dateOfLastLog = fileLogger.userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date
         XCTAssertNotNil(dateOfLastLog)
 
-        let numberOfLogFiles = userDefaults.object(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) as? Int
+        let numberOfLogFiles = fileLogger.userDefaults.object(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) as? Int
         XCTAssertEqual(numberOfLogFiles, 3)
     }
 
@@ -110,7 +100,7 @@ class FileLoggerTests: XCTestCase {
             fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
         )
 
-        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 3)
+        XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 3)
     }
 
     func test_single_logging_file() {

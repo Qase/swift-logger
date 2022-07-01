@@ -15,12 +15,10 @@ enum FileManagerError: Error {
 extension FileManager {
     func deleteAllFiles(
         at directoryURL: URL,
-        usingSuiteName suiteName: String? = nil,
         withPathExtension pathExtension: String
     ) throws {
         let logFiles = try allFiles(
             at: directoryURL,
-            usingSuiteName: suiteName,
             withPathExtension: pathExtension
         )
 
@@ -29,7 +27,6 @@ extension FileManager {
 
     func allFiles(
         at directoryURL: URL,
-        usingSuiteName suiteName: String? = nil,
         withPathExtension pathExtension: String
     ) throws -> [URL] {
         try contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)

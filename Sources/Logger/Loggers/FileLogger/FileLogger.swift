@@ -17,8 +17,8 @@ public class FileLogger: Logging {
     // MARK: - Stored properties
 
     private let logFilePathExtension: String = "log"
-    private let fileManager: FileManager
-    private let userDefaults: UserDefaults
+    let fileManager: FileManager
+    let userDefaults: UserDefaults
     private let suiteName: String?
     private let dateFormatter: DateFormatter = .monthsDaysTimeFormatter
     private let externalLogger: (String) -> ()
@@ -52,9 +52,7 @@ public class FileLogger: Logging {
     }
 
     var currentLogFileUrl: URL {
-        suiteName == nil ?
-            logDirURL.appendingPathComponent("\(currentLogFileNumber)").appendingPathExtension(logFilePathExtension) :
-            logDirURL.appendingPathComponent("extension-\(currentLogFileNumber)").appendingPathExtension(logFilePathExtension)
+        logDirURL.appendingPathComponent("\(currentLogFileNumber)").appendingPathExtension(logFilePathExtension)
     }
 
     public var levels: [Level] = [.info]
@@ -62,8 +60,6 @@ public class FileLogger: Logging {
     // MARK: - Initializers
 
     public init(
-        fileManager: FileManager = .default,
-        userDefaults: UserDefaults = .standard,
         externalLogger: @escaping (String) -> () = { print($0) },
         suiteName: String? = nil,
         logDirectoryName: String = "logs",
@@ -73,8 +69,8 @@ public class FileLogger: Logging {
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
         logEntryDecoder: LogEntryDecoding = LogEntryDecoder()
     ) throws {
-        self.fileManager = fileManager
-        self.userDefaults = userDefaults
+        self.fileManager = .default
+        self.userDefaults = suiteName.flatMap(UserDefaults.init(suiteName:)) ?? .standard
         self.externalLogger = externalLogger
         self.fileHeaderContent = fileHeaderContent
         self.suiteName = suiteName
@@ -122,7 +118,7 @@ public class FileLogger: Logging {
 
     private func perFileLogs<LogFormat>(_ logGetter: (URL) throws -> LogFormat) -> [URL: LogFormat]? {
         do {
-            return try fileManager.allFiles(at: logDirURL, usingSuiteName: suiteName, withPathExtension: logFilePathExtension)
+            return try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
                 .reduce([URL: LogFormat]()) { result, nextFile in
                     var newResult = result
                     newResult[nextFile] = try logGetter(nextFile)
@@ -136,7 +132,7 @@ public class FileLogger: Logging {
     }
 
     public func deleteAllLogFiles() throws {
-        try fileManager.deleteAllFiles(at: logDirURL, usingSuiteName: suiteName, withPathExtension: logFilePathExtension)
+        try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
     }
 
     public func archiveWithLogFiles(withFileName archiveFileName: String? = nil) throws -> URL? {
