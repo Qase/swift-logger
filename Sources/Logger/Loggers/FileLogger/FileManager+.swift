@@ -29,22 +29,34 @@ extension FileManager {
         at directoryURL: URL,
         withPathExtension pathExtension: String
     ) throws -> [URL] {
-        try contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == pathExtension }
+        try contentsOfDirectory(
+            at: directoryURL,
+            includingPropertiesForKeys: nil
+        )
+        .filter { $0.pathExtension == pathExtension }
     }
 
-    func documentDirectoryURL(withName name: String, usingSuiteName suiteName: String? = nil) throws -> URL {
-        (
-            try suiteName.flatMap(containerURL(forSecurityApplicationGroupIdentifier:))
-                ?? url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        )
+    func documentDirectoryURL(
+        withName name: String,
+        usingAppGroupID appGroupID: String? = nil
+    ) throws -> URL {
+        (try appGroupID.flatMap(containerURL(forSecurityApplicationGroupIdentifier:)) ?? url(
+            for: .documentDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ))
         .appendingPathComponent(name)
     }
 
     func createDirectoryIfNotExists(at url: URL) throws {
         if fileExists(atPath: url.path) { return }
 
-        try createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+        try createDirectory(
+            at: url,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
     }
 
     func deleteFileIfExists(at url: URL) throws {
@@ -53,12 +65,19 @@ extension FileManager {
         try removeItem(at: url)
     }
 
-    func createFileIfNotExists(at url: URL, withInitialContent initialContent: String = "") throws {
+    func createFileIfNotExists(
+        at url: URL,
+        withInitialContent initialContent: String = ""
+    ) throws {
         guard !fileExists(atPath: url.path) else { return }
 
         let initialContent = initialContent.count > 0 ? "\(initialContent)\n\n" : initialContent
 
-        try initialContent.write(toFile: url.path, atomically: false, encoding: .utf8)
+        try initialContent.write(
+            toFile: url.path,
+            atomically: false,
+            encoding: .utf8
+        )
     }
 
     func contents(fromFileIfExists url: URL) throws -> String {
@@ -66,6 +85,9 @@ extension FileManager {
             throw FileManagerError.fileNotFound
         }
 
-        return try String(contentsOf: url, encoding: .utf8)
+        return try String(
+            contentsOf: url,
+            encoding: .utf8
+        )
     }
 }

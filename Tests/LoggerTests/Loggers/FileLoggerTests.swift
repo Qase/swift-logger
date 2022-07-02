@@ -15,8 +15,8 @@ class FileLoggerTests: XCTestCase {
         super.setUp()
       
         fileLogger = try! FileLogger(
+            appGroupID: "testUserDefaults",
             externalLogger: { _ in },
-            suiteName: nil,
             logDirectoryName: "logs",
             fileHeaderContent: "Test file header",
             numberOfLogFiles: 3
