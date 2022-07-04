@@ -32,19 +32,13 @@ public class FileLogger: Logging {
 
     var dateOfLastLog: Date {
         didSet {
-            userDefaults.set(
-                dateOfLastLog,
-                forKey: Constants.UserDefaultsKeys.dateOfLastLog
-            )
+            userDefaults.set(dateOfLastLog, forKey: Constants.UserDefaultsKeys.dateOfLastLog)
         }
     }
 
     var currentLogFileNumber: Int {
         didSet {
-            userDefaults.set(
-                currentLogFileNumber,
-                forKey: Constants.UserDefaultsKeys.currentLogFileNumber
-            )
+            userDefaults.set(currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
         }
     }
 
@@ -63,11 +57,11 @@ public class FileLogger: Logging {
             return logDirURL
                 .appendingPathComponent("\(appName)-\(currentLogFileNumber)")
                 .appendingPathExtension(logFilePathExtension)
-        } else {
-            return logDirURL
-                .appendingPathComponent("\(currentLogFileNumber)")
-                .appendingPathExtension(logFilePathExtension)
         }
+
+        return logDirURL
+            .appendingPathComponent("\(currentLogFileNumber)")
+            .appendingPathExtension(logFilePathExtension)
     }
 
     public var levels: [Level] = [.info]
@@ -107,7 +101,7 @@ public class FileLogger: Logging {
         self.logEntryDecoder = logEntryDecoder
         self.logDirURL = try fileManager.documentDirectoryURL(
             withName: logDirectoryName,
-            usingAppGroupID: logFilePathExtension
+            usingAppGroupID: appGroupID
         )
 
         // Create log directory
@@ -117,29 +111,17 @@ public class FileLogger: Logging {
         // Otherwise, there would be unused files in the log directory.
         // It is important to notice that when changing numOfLogFiles parameter some logs might be lost!
         if numberOfLogFiles < userDefaults.integer(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) {
-            try fileManager.deleteAllFiles(
-                at: logDirURL,
-                withPathExtension: logFilePathExtension
-            )
+            try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
         }
 
         self.numberOfLogFiles = numberOfLogFiles
-        userDefaults.set(
-            numberOfLogFiles,
-            forKey: Constants.UserDefaultsKeys.numberOfLogFiles
-        )
+        userDefaults.set(self.numberOfLogFiles, forKey: Constants.UserDefaultsKeys.numberOfLogFiles)
 
         self.dateOfLastLog = userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date ?? Date()
-        userDefaults.set(
-            self.dateOfLastLog,
-            forKey: Constants.UserDefaultsKeys.dateOfLastLog
-        )
+        userDefaults.set(self.dateOfLastLog, forKey: Constants.UserDefaultsKeys.dateOfLastLog)
 
         self.currentLogFileNumber = userDefaults.integer(forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
-        userDefaults.set(
-            self.currentLogFileNumber,
-            forKey: Constants.UserDefaultsKeys.currentLogFileNumber
-        )
+        userDefaults.set(self.currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
     }
 
     // MARK: - Computed properties & methods
@@ -161,16 +143,13 @@ public class FileLogger: Logging {
 
     private func perFileLogs<LogFormat>(_ logGetter: (URL) throws -> LogFormat) -> [URL: LogFormat]? {
         do {
-            return try fileManager.allFiles(
-                at: logDirURL,
-                withPathExtension: logFilePathExtension
-            )
-            .reduce([URL: LogFormat]()) { result, nextFile in
-                var newResult = result
-                newResult[nextFile] = try logGetter(nextFile)
+            return try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
+                .reduce([URL: LogFormat]()) { result, nextFile in
+                    var newResult = result
+                    newResult[nextFile] = try logGetter(nextFile)
 
-                return newResult
-            }
+                    return newResult
+                }
         } catch let error {
             externalLogger("Failed to retrieve an array of LogFileRecord with error: \(error).")
             return nil
@@ -178,22 +157,13 @@ public class FileLogger: Logging {
     }
 
     public func deleteAllLogFiles() throws {
-        try fileManager.deleteAllFiles(
-            at: logDirURL,
-            withPathExtension: logFilePathExtension
-        )
+        try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
     }
 
     public func archiveWithLogFiles(withFileName archiveFileName: String? = nil) throws -> URL? {
-        let logFiles = try fileManager.allFiles(
-            at: logDirURL,
-            withPathExtension: logFilePathExtension
-        )
+        let logFiles = try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
 
-        return try Zip.quickZipFiles(
-            logFiles,
-            fileName: archiveFileName ?? "log_files_archive.zip"
-        )
+        return try Zip.quickZipFiles(logFiles, fileName: archiveFileName ?? "log_files_archive.zip")
     }
 
     /// Method to write a log message into the current log file.
@@ -218,6 +188,7 @@ public class FileLogger: Logging {
 
             let contentToAppend = logEntryEncoder.encode(logEntry) + lineSeparator
             let fileHandle = try unwrapped(currentWritableFileHandle)
+
             fileHandle.seekToEndOfFile()
             fileHandle.write(try utf8Data(contentToAppend))
         } catch let error {
@@ -229,10 +200,7 @@ public class FileLogger: Logging {
     /// It is called at the beginning of `writeToLogFile(_, _)` method.
     private func refreshCurrentLogFileStatus() throws {
         let fileHandle: (FileManager, URL) throws -> FileHandle = { fileManager, url in
-            try fileManager.createFileIfNotExists(
-                at: url,
-                withInitialContent: self.fileHeaderContent
-            )
+            try fileManager.createFileIfNotExists(at: url, withInitialContent: self.fileHeaderContent)
 
             return try FileHandle(forWritingTo: url)
         }
@@ -244,10 +212,7 @@ public class FileLogger: Logging {
         let isSameDay = dateString(currentDate) == dateString(dateOfLastLog)
 
         if isSameDay, currentWritableFileHandle == nil {
-            currentWritableFileHandle = try fileHandle(
-                fileManager,
-                currentLogFileUrl
-            )
+            currentWritableFileHandle = try fileHandle(fileManager, currentLogFileUrl)
 
             return
         }
@@ -256,10 +221,7 @@ public class FileLogger: Logging {
 
         currentLogFileNumber = (currentLogFileNumber + 1) % numberOfLogFiles
         dateOfLastLog = currentDate
-        currentWritableFileHandle = try fileHandle(
-            fileManager,
-            currentLogFileUrl
-        )
+        currentWritableFileHandle = try fileHandle(fileManager, currentLogFileUrl)
     }
 
     /// Method that parses a log file content into an array of LogFileRecord instances
