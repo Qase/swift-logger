@@ -70,15 +70,16 @@ public class FileLogger: Logging {
 
     /// This is public constructor for FileLogger.
     /// - Parameters:
-    ///   - appName: Name of the App used for appendingPathComponent of logDirURL.
-    ///   - appGroupID: Distinguishes log files according to the app environment (main app, extension 1, extension 2, etc...).
-    ///   - externalLogger: logger for error handling
-    ///   - logDirectoryName: value for appendingPathComponent in fileManager
-    ///   - fileHeaderContent: initialContent value for creating log files
-    ///   - numberOfLogFiles: Total count of logfiles (value 4 means four days of each file persistence).
-    ///   - lineSeparator: Type of row separation.
-    ///   - logEntryEncoder: LogEntry properties encoder to string.
-    ///   - logEntryDecoder: String decoder to LogEntry object.
+    ///   - appName: String identifying an application instance (either the main application or one of its extensions).
+    ///              The identifier is used to separate logging files since each application instance has its dedicated log files.
+    ///   - appGroupID: The identifier for an application group. The storage of log files is shared between the application and its                              extensions, if the attribute is set. The storage of log files is not shared if the attribute is nil.
+    ///   - externalLogger: Logging possibility for error handling happening within the logger.
+    ///   - logDirectoryName: Name of the directory where log files are available.
+    ///   - fileHeaderContent: Custom header content of each logging file.
+    ///   - numberOfLogFiles: Maximum number of log files per application instance.
+    ///   - lineSeparator: Separation style applied between individual log entries.
+    ///   - logEntryEncoder: Custom log entry encoder.
+    ///   - logEntryDecoder: Custom log entry decoder.
     public init(
         appName: String? = nil,
         appGroupID: String? = nil,
