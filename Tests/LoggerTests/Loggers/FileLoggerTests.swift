@@ -11,28 +11,26 @@ import XCTest
 class FileLoggerTests: XCTestCase {
     private var fileLogger: FileLogger!
 
-    override func setUp() {
-        super.setUp()
-      
-        fileLogger = try! FileLogger(
-            appGroupID: "testUserDefaults",
-            externalLogger: { _ in },
-            logDirectoryName: "logs",
-            fileHeaderContent: "Test file header",
-            numberOfLogFiles: 3
-        )
-    }
+    func clearUserDefaults(appGroupID: String? = nil) {
+        guard let appGroupID = appGroupID else {
+            if let domain = Bundle.main.bundleIdentifier {
+                UserDefaults.standard.removePersistentDomain(forName: domain)
+                UserDefaults.standard.synchronize()
+            } else {
+                print("UserDefaults standard does not exist.")
+            }
+            return
+        }
 
-    override func tearDown() {
-        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
-        fileLogger = nil
-
-        UserDefaults.standard.removePersistentDomain(forName: "testUserDefaults")
-
-        super.tearDown()
+        UserDefaults.standard.removePersistentDomain(forName: appGroupID)
     }
 
     func test_inicialization_of_FileLogger() {
+        fileLogger = try! FileLogger(
+            appGroupID: "testUserDefaults",
+            numberOfLogFiles: 3
+        )
+
         XCTAssertTrue(fileLogger.fileManager.directoryExists(at: fileLogger.logDirURL))
         XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 0)
 
@@ -44,9 +42,14 @@ class FileLoggerTests: XCTestCase {
 
         let numberOfLogFiles = fileLogger.userDefaults.object(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) as? Int
         XCTAssertEqual(numberOfLogFiles, 3)
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults(appGroupID: "testUserDefaults")
     }
 
     func test_archive_availability() {
+        fileLogger = try! FileLogger()
+
         fileLogger.log(.mock("Error message"))
         fileLogger.log(.mock("Warning message"))
 
@@ -55,9 +58,54 @@ class FileLoggerTests: XCTestCase {
         XCTAssertNotNil(archiveUrl)
         XCTAssertTrue(try! archiveUrl!.checkResourceIsReachable())
         try! FileManager.default.removeItem(at: archiveUrl!)
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults()
+    }
+
+    func test_file_identification() {
+        fileLogger = try! FileLogger(appName: nil)
+        XCTAssertEqual(
+            fileLogger.currentLogFileUrl,
+            fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+        )
+
+        fileLogger = try! FileLogger(appName: "MainApp")
+        XCTAssertEqual(
+            fileLogger.currentLogFileUrl,
+            fileLogger.logDirURL.appendingPathComponent("MainApp-0").appendingPathExtension("log")
+        )
+
+        fileLogger = try! FileLogger(appName: "Extension")
+        XCTAssertEqual(
+            fileLogger.currentLogFileUrl,
+            fileLogger.logDirURL.appendingPathComponent("Extension-0").appendingPathExtension("log")
+        )
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults()
+    }
+
+    func test_appGroup_storage_reachability() {
+        fileLogger = try! FileLogger(appGroupID: nil)
+        XCTAssertFalse(fileLogger.logDirURL.absoluteString.contains("Shared"))
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults()
+
+        fileLogger = try! FileLogger(appGroupID: "shared")
+        XCTAssertTrue(fileLogger.logDirURL.absoluteString.contains("Shared/AppGroup"))
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults(appGroupID: "shared")
     }
 
     func test_file_rotation() {
+        fileLogger = try! FileLogger(
+            appGroupID: "testUserDefaults",
+            numberOfLogFiles: 3
+        )
+
         // Day 1 == File 0
         fileLogger.log(.mock("Warning message"))
 
@@ -101,9 +149,14 @@ class FileLoggerTests: XCTestCase {
         )
 
         XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 3)
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults(appGroupID: "testUserDefaults")
     }
 
     func test_single_logging_file() {
+        fileLogger = try! FileLogger()
+
         fileLogger.levels = [.error, .warn]
 
         let date = Date(timeIntervalSince1970: 0)
@@ -141,10 +194,14 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogs.last?.location.function, "function2")
         XCTAssertEqual(fileLogs.last?.location.line, 20)
         XCTAssertEqual(fileLogs.last?.message.description, "Warning message\nThis is test!")
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults()
     }
 
     func test_encoding_and_decoding_codable() throws {
-        let fileLogger = try FileLogger()
+        fileLogger = try! FileLogger()
+
         fileLogger.levels = [.error, .warn]
 
         let codable = MockedCodable(
@@ -181,10 +238,14 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogs.first?.location.function, "Function")
         XCTAssertEqual(fileLogs.first?.location.line, 1)
         XCTAssertEqual(fileLogs.first?.message.description, encodedCodableString)
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults()
     }
 
     func test_encoding_and_decoding_several_logs() throws {
-        let fileLogger = try FileLogger()
+        fileLogger = try! FileLogger()
+
         fileLogger.levels = [.error, .warn]
 
         let codable = MockedCodable(
@@ -263,6 +324,9 @@ class FileLoggerTests: XCTestCase {
         )
         XCTAssertEqual(fileLogs[3].message.description, "[🚗] Some message")
         XCTAssertEqual(fileLogs[4].message.description, encodedCodableString)
+
+        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
+        clearUserDefaults()
     }
 }
 
