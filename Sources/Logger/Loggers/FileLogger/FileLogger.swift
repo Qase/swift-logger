@@ -15,8 +15,14 @@ enum FileLoggerError: Error {
 }
 
 public enum SharingConfiguration {
+    // Sharing resources between the application and its extension.
+    // The user is required to set an App Group with assigned identifier.
+    // All shared resources (UserDefaults and FileManager) are then available for all applications within the group.
     case shared(appGroupID: String)
+    // Resources are not shared between the application and its extension.
+    // The suiteName parameter is used for initialization of UserDefaults.
     case nonShared(suiteName: String)
+    // Resources are not shared between the application and its extension. UserDefaults.standard instance is used.
     case defaultNonShared
 }
 
@@ -78,9 +84,7 @@ public class FileLogger: Logging {
     /// - Parameters:
     ///   - appName: String identifying an application instance (either the main application or one of its extensions).
     ///              The identifier is used to separate logging files since each application instance has its dedicated log files.
-    ///   - sharingConfiguration: Configures if the storage of log files is shared between the application and its extensions,
-    ///                           using the appGroupID parameter.
-    ///                           In the case the configuration is non shared, parameter suiteName can be used to create specific UserDefaults.
+    ///   - sharingConfiguration: Enables to setup possible source sharing between the application and its extensions.
     ///   - externalLogger: Logging possibility for error handling happening within the logger.
     ///   - logDirectoryName: Name of the directory where log files are available.
     ///   - fileHeaderContent: Custom header content of each logging file.
