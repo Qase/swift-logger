@@ -11,6 +11,13 @@ import Zip
 enum FileLoggerError: Error {
     case missingWritableFileHandle
     case stringToDataConversionFailure
+    case userDefaultsInitFailure
+}
+
+public enum SharingConfiguration {
+    case shared(appGroupID: String)
+    case nonShared(suiteName: String)
+    case defaultNonShared
 }
 
 public class FileLogger: Logging {
@@ -20,7 +27,6 @@ public class FileLogger: Logging {
     let fileManager: FileManager
     let userDefaults: UserDefaults
     private let appName: String?
-    private let appGroupID: String?
     private let dateFormatter: DateFormatter = .monthsDaysTimeFormatter
     private let externalLogger: (String) -> ()
     private let fileHeaderContent: String
@@ -83,7 +89,7 @@ public class FileLogger: Logging {
     ///   - logEntryDecoder: Custom log entry decoder.
     public init(
         appName: String? = nil,
-        appGroupID: String? = nil,
+        sharingConfiguration: SharingConfiguration = .defaultNonShared,
         externalLogger: @escaping (String) -> () = { print($0) },
         logDirectoryName: String = "logs",
         fileHeaderContent: String = "",
@@ -93,18 +99,37 @@ public class FileLogger: Logging {
         logEntryDecoder: LogEntryDecoding = LogEntryDecoder()
     ) throws {
         self.appName = appName
-        self.appGroupID = appGroupID
         self.fileManager = .default
-        self.userDefaults = appGroupID.flatMap(UserDefaults.init(suiteName:)) ?? .standard
         self.externalLogger = externalLogger
         self.fileHeaderContent = fileHeaderContent
         self.lineSeparator = lineSeparator
         self.logEntryEncoder = logEntryEncoder
         self.logEntryDecoder = logEntryDecoder
-        self.logDirURL = try fileManager.documentDirectoryURL(
-            withName: logDirectoryName,
-            usingAppGroupID: appGroupID
-        )
+
+        switch sharingConfiguration {
+        case .shared(let appGroupID):
+            guard let userDefaults = UserDefaults(suiteName: appGroupID) else {
+                throw FileLoggerError.userDefaultsInitFailure
+            }
+
+            self.userDefaults = userDefaults
+            self.logDirURL = try fileManager.documentDirectoryURL(
+                withName: logDirectoryName,
+                usingAppGroupID: appGroupID
+            )
+
+        case .nonShared(let suiteName):
+            guard let userDefaults = UserDefaults(suiteName: suiteName) else {
+                throw FileLoggerError.userDefaultsInitFailure
+            }
+
+            self.userDefaults = userDefaults
+            self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingAppGroupID: nil)
+
+        case .defaultNonShared:
+            self.userDefaults = .standard
+            self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingAppGroupID: nil)
+        }
 
         // Create log directory
         try fileManager.createDirectoryIfNotExists(at: logDirURL)
