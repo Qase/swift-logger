@@ -78,8 +78,9 @@ public class FileLogger: Logging {
     /// - Parameters:
     ///   - appName: String identifying an application instance (either the main application or one of its extensions).
     ///              The identifier is used to separate logging files since each application instance has its dedicated log files.
-    ///   - appGroupID: The identifier for an application group. The storage of log files is shared between the application and its
-    ///                 extensions, if the attribute is set. The storage of log files is not shared if the attribute is nil.
+    ///   - sharingConfiguration: Configures if the storage of log files is shared between the application and its extensions,
+    ///                           using the appGroupID parameter.
+    ///                           In the case the configuration is non shared, parameter suiteName can be used to create specific UserDefaults.
     ///   - externalLogger: Logging possibility for error handling happening within the logger.
     ///   - logDirectoryName: Name of the directory where log files are available.
     ///   - fileHeaderContent: Custom header content of each logging file.

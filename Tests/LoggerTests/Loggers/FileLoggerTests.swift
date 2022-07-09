@@ -14,14 +14,14 @@ class FileLoggerTests: XCTestCase {
     private let suiteName = "test-suiteName"
 
     override func tearDown() {
-        super.tearDown()
-
         UserDefaults.standard.removePersistentDomain(forName: appGroupID)
         UserDefaults.standard.removePersistentDomain(forName: suiteName)
 
         try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
 
         fileLogger = nil
+
+        super.tearDown()
     }
 
     func test_inicialization_of_FileLogger() {
