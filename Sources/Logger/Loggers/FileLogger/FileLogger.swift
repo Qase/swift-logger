@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Zip
 
 enum FileLoggerError: Error {
     case missingWritableFileHandle
@@ -192,10 +191,12 @@ public class FileLogger: Logging {
         try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
     }
 
-    public func archiveWithLogFiles(withFileName archiveFileName: String? = nil) throws -> URL? {
-        let logFiles = try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
-
-        return try Zip.quickZipFiles(logFiles, fileName: archiveFileName ?? "log_files_archive.zip")
+    public var logFiles: [URL] {
+        get throws {
+            let a = try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
+            print("logFilesVar \(a)")
+            return a
+        }
     }
 
     /// Method to write a log message into the current log file.

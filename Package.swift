@@ -15,15 +15,11 @@ let package = Package(
             targets: ["Logger"]
         ),
     ],
-    dependencies: [
-        .package(url: "https://github.com/CognitiveDisson/Zip.git", .branch("fix-xcode13"))
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "Logger",
-            dependencies: [
-                "Zip"
-            ]
+            dependencies: []
         ),
         .testTarget(
             name: "LoggerTests",

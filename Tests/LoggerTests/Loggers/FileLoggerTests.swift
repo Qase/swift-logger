@@ -25,10 +25,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_inicialization_of_FileLogger() {
-        fileLogger = try! FileLogger(
-            sharingConfiguration: .nonShared(suiteName: suiteName),
-            numberOfLogFiles: 3
-        )
+        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName),numberOfLogFiles: 3)
 
         XCTAssertTrue(fileLogger.fileManager.directoryExists(at: fileLogger.logDirURL))
         XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 0)
@@ -47,20 +44,38 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(numberOfLogFiles, 3)
     }
 
-    func test_archive_availability() {
-        fileLogger = try! FileLogger()
+    func test_log_files_availability() {
+        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName), numberOfLogFiles: 3)
 
-        fileLogger.log(.mock("Error message"))
+        // Day 1 == File 0
         fileLogger.log(.mock("Warning message"))
 
-        // Archived log files check
-        let archiveUrl = try! fileLogger.archiveWithLogFiles(withFileName: "logs")
-        XCTAssertNotNil(archiveUrl)
-        XCTAssertTrue(try! archiveUrl!.checkResourceIsReachable())
+        // Day 2 == File 1
+        fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
+
+        fileLogger.log(.mock("Warning message"))
+
+        // Day 3 == File 2
+        fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
+
+        fileLogger.log(.mock("Warning message"))
+
+        let logFiles = try! fileLogger.logFiles
+
+        XCTAssertEqual(logFiles.count, 3)
+        logFiles.enumerated().forEach { index, item in
+            if item.absoluteString.filter({ "0"..."9" ~= $0 }) == "\(index)" {
+                XCTAssertEqual(
+                    item,
+                    fileLogger.logDirURL.appendingPathComponent("\(index)").appendingPathExtension("log")
+                )
+            }
+        }
     }
 
     func test_fileName_without_explicit_appName() {
-        fileLogger = try! FileLogger(appName: nil)
+        fileLogger = try! FileLogger(appName: nil, sharingConfiguration: .nonShared(suiteName: suiteName))
+
         XCTAssertEqual(
             fileLogger.currentLogFileUrl,
             fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
@@ -68,7 +83,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_fileName_with_explicit_appName() {
-        fileLogger = try! FileLogger(appName: "MainApp")
+        fileLogger = try! FileLogger(appName: "MainApp", sharingConfiguration: .nonShared(suiteName: suiteName))
         XCTAssertEqual(
             fileLogger.currentLogFileUrl,
             fileLogger.logDirURL.appendingPathComponent("MainApp-0").appendingPathExtension("log")
@@ -105,7 +120,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_file_rotation() {
-        fileLogger = try! FileLogger(numberOfLogFiles: 3)
+        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName), numberOfLogFiles: 3)
 
         // Day 1 == File 0
         fileLogger.log(.mock("Warning message"))
@@ -153,7 +168,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_single_logging_file() {
-        fileLogger = try! FileLogger()
+        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName))
 
         fileLogger.levels = [.error, .warn]
 
@@ -195,7 +210,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_encoding_and_decoding_codable() throws {
-        fileLogger = try! FileLogger()
+        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName))
 
         fileLogger.levels = [.error, .warn]
 
@@ -236,7 +251,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_encoding_and_decoding_several_logs() throws {
-        fileLogger = try! FileLogger()
+        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName))
 
         fileLogger.levels = [.error, .warn]
 
