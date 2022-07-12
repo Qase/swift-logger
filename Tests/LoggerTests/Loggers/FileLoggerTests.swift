@@ -25,7 +25,7 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_inicialization_of_FileLogger() {
-        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName),numberOfLogFiles: 3)
+        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName), numberOfLogFiles: 3)
 
         XCTAssertTrue(fileLogger.fileManager.directoryExists(at: fileLogger.logDirURL))
         XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 0)
