@@ -13,34 +13,24 @@ enum FileManagerError: Error {
 }
 
 extension FileManager {
-    func deleteAllFiles(
-        at directoryURL: URL,
-        usingSuiteName suiteName: String? = nil,
-        withPathExtension pathExtension: String
-    ) throws {
-        let logFiles = try allFiles(
-            at: directoryURL,
-            usingSuiteName: suiteName,
-            withPathExtension: pathExtension
-        )
+    func deleteAllFiles(at directoryURL: URL, withPathExtension pathExtension: String) throws {
+        let logFiles = try allFiles(at: directoryURL, withPathExtension: pathExtension)
 
         try logFiles.forEach { try deleteFileIfExists(at: $0) }
     }
 
-    func allFiles(
-        at directoryURL: URL,
-        usingSuiteName suiteName: String? = nil,
-        withPathExtension pathExtension: String
-    ) throws -> [URL] {
+    func allFiles(at directoryURL: URL, withPathExtension pathExtension: String) throws -> [URL] {
         try contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == pathExtension }
     }
 
-    func documentDirectoryURL(withName name: String, usingSuiteName suiteName: String? = nil) throws -> URL {
-        (
-            try suiteName.flatMap(containerURL(forSecurityApplicationGroupIdentifier:))
-                ?? url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        )
+    func documentDirectoryURL(withName name: String, usingAppGroupID appGroupID: String? = nil) throws -> URL {
+        (try appGroupID.flatMap(containerURL(forSecurityApplicationGroupIdentifier:)) ?? url(
+            for: .documentDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ))
         .appendingPathComponent(name)
     }
 
