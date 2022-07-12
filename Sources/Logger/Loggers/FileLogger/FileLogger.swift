@@ -193,9 +193,7 @@ public class FileLogger: Logging {
 
     public var logFiles: [URL] {
         get throws {
-            let a = try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
-            print("logFilesVar \(a)")
-            return a
+            try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
         }
     }
 

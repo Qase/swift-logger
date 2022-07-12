@@ -60,16 +60,15 @@ class FileLoggerTests: XCTestCase {
 
         fileLogger.log(.mock("Warning message"))
 
-        let logFiles = try! fileLogger.logFiles
+        let sortedLogFiles = try! fileLogger.logFiles.sorted(by: { $0.absoluteString < $1.absoluteString })
 
-        XCTAssertEqual(logFiles.count, 3)
-        logFiles.enumerated().forEach { index, item in
-            if item.absoluteString.filter({ "0"..."9" ~= $0 }) == "\(index)" {
-                XCTAssertEqual(
-                    item,
-                    fileLogger.logDirURL.appendingPathComponent("\(index)").appendingPathExtension("log")
-                )
-            }
+        XCTAssertEqual(sortedLogFiles.count, 3)
+
+        sortedLogFiles.enumerated().forEach { index, item in
+            XCTAssertEqual(
+                item,
+                fileLogger.logDirURL.appendingPathComponent("\(index)").appendingPathExtension("log")
+            )
         }
     }
 

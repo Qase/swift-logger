@@ -20,10 +20,8 @@ extension FileManager {
     }
 
     func allFiles(at directoryURL: URL, withPathExtension pathExtension: String) throws -> [URL] {
-        let a = try contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)
+        try contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == pathExtension }
-        print("logFilesVar allFiles \(try contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)) logDirUrl is:\(directoryURL)")
-        return a
     }
 
     func documentDirectoryURL(withName name: String, usingAppGroupID appGroupID: String? = nil) throws -> URL {
