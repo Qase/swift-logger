@@ -7,53 +7,65 @@
 
 import Foundation
 
+// MARK: - FileLoggerError
+
 enum FileLoggerError: Error {
     case missingWritableFileHandle
     case stringToDataConversionFailure
     case userDefaultsInitFailure
 }
 
+// MARK: - SharingConfiguration
+
 public enum SharingConfiguration {
     // Sharing resources between the application and its extension.
     // The user is required to set an App Group with assigned identifier.
     // All shared resources (UserDefaults and FileManager) are then available for all applications within the group.
-    case shared(appGroupID: String)
-    // Resources are not shared between the application and its extension.
-    // The suiteName parameter is used for initialization of UserDefaults.
-    case nonShared(suiteName: String)
+    case shared(appGroupID: String, maxNumberOfFiles: Int, appName: String)
     // Resources are not shared between the application and its extension. UserDefaults.standard instance is used.
-    case defaultNonShared
+    case nonShared(maxNumberOfFiles: Int)
 }
+
+public extension SharingConfiguration {
+    static func shared(appGroupID: String, appName: String) -> Self {
+        SharingConfiguration.shared(appGroupID: appGroupID, maxNumberOfFiles: 4, appName: appName)
+    }
+
+    static var nonShared: Self {
+        SharingConfiguration.nonShared(maxNumberOfFiles: 4)
+    }
+}
+
+// MARK: - FileLogger
 
 public class FileLogger: Logging {
     // MARK: - Stored properties
 
     private let logFilePathExtension: String = "log"
-    let fileManager: FileManager
-    let userDefaults: UserDefaults
     private let appName: String?
-    private let dateFormatter: DateFormatter = .monthsDaysTimeFormatter
-    private let externalLogger: (String) -> ()
+    private let fileManager: FileManager
+    private let userDefaults: UserDefaults
+    private let logDirURL: URL
+    private let namespace: String?
+    private let numberOfLogFiles: Int
+    private let dateFormatter: DateFormatter
     private let fileHeaderContent: String
     private let lineSeparator: String
     private let logEntryEncoder: LogEntryEncoding
     private let logEntryDecoder: LogEntryDecoding
-
-    let logDirURL: URL
+    private let externalLogger: (String) -> ()
 
     var dateOfLastLog: Date {
         didSet {
-            userDefaults.set(dateOfLastLog, forKey: Constants.UserDefaultsKeys.dateOfLastLog)
+            userDefaults.set(dateOfLastLog, forKey: String(Constants.UserDefaultsKeys.dateOfLastLog, prefixedBy: namespace))
         }
     }
 
     var currentLogFileNumber: Int {
         didSet {
-            userDefaults.set(currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
+            userDefaults.set(currentLogFileNumber, forKey: String(Constants.UserDefaultsKeys.currentLogFileNumber, prefixedBy: namespace))
         }
     }
-
-    private let numberOfLogFiles: Int
 
     private var currentWritableFileHandle: FileHandle? {
         willSet {
@@ -64,14 +76,8 @@ public class FileLogger: Logging {
     }
 
     var currentLogFileUrl: URL {
-        if let appName = appName {
-            return logDirURL
-                .appendingPathComponent("\(appName)-\(currentLogFileNumber)")
-                .appendingPathExtension(logFilePathExtension)
-        }
-
-        return logDirURL
-            .appendingPathComponent("\(currentLogFileNumber)")
+        logDirURL
+            .appendingPathComponent(String(currentLogFileNumber, prefixedBy: appName))
             .appendingPathExtension(logFilePathExtension)
     }
 
@@ -81,59 +87,87 @@ public class FileLogger: Logging {
 
     /// This is public constructor for FileLogger.
     /// - Parameters:
-    ///   - appName: String identifying an application instance (either the main application or one of its extensions).
-    ///              The identifier is used to separate logging files since each application instance has its dedicated log files.
     ///   - sharingConfiguration: Enables to setup possible source sharing between the application and its extensions.
-    ///   - externalLogger: Logging possibility for error handling happening within the logger.
-    ///   - logDirectoryName: Name of the directory where log files are available.
+    ///   - namespace: A namespace dedicated to a single instance of `FileLogger`. Used to name the directory with files and for prefixing `UserDefaults` keys.
     ///   - fileHeaderContent: Custom header content of each logging file.
-    ///   - numberOfLogFiles: Maximum number of log files per application instance.
     ///   - lineSeparator: Separation style applied between individual log entries.
     ///   - logEntryEncoder: Custom log entry encoder.
     ///   - logEntryDecoder: Custom log entry decoder.
-    public init(
-        appName: String? = nil,
-        sharingConfiguration: SharingConfiguration = .defaultNonShared,
-        externalLogger: @escaping (String) -> () = { print($0) },
-        logDirectoryName: String = "logs",
+    ///   - loggerForInternalErrors: Logging possibility for error handling happening within the logger.
+    public convenience init(
+        sharingConfiguration: SharingConfiguration = .nonShared,
+        namespace: String = "logs",
         fileHeaderContent: String = "",
-        numberOfLogFiles: Int = 4,
         lineSeparator: String = "\u{2028}",
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
-        logEntryDecoder: LogEntryDecoding = LogEntryDecoder()
+        logEntryDecoder: LogEntryDecoding = LogEntryDecoder(),
+        loggerForInternalErrors: @escaping (String) -> () = { print($0) }
     ) throws {
-        self.appName = appName
-        self.fileManager = .default
-        self.externalLogger = externalLogger
-        self.fileHeaderContent = fileHeaderContent
-        self.lineSeparator = lineSeparator
-        self.logEntryEncoder = logEntryEncoder
-        self.logEntryDecoder = logEntryDecoder
+        let fileManager = FileManager.default
 
         switch sharingConfiguration {
-        case .shared(let appGroupID):
+        case let .nonShared(maxNumOfFiles):
+            try self.init(
+                appName: nil,
+                fileManager: fileManager,
+                userDefaults: .standard,
+                logDirURL: fileManager.documentDirectoryURL(withName: namespace),
+                namespace: namespace,
+                numberOfLogFiles: maxNumOfFiles,
+                fileHeaderContent: fileHeaderContent,
+                lineSeparator: lineSeparator,
+                logEntryEncoder: logEntryEncoder,
+                logEntryDecoder: logEntryDecoder,
+                externalLogger: loggerForInternalErrors
+            )
+
+        case let .shared(appGroupID, maxNumberOfFiles, appName):
             guard let userDefaults = UserDefaults(suiteName: appGroupID) else {
                 throw FileLoggerError.userDefaultsInitFailure
             }
 
-            self.userDefaults = userDefaults
-            self.logDirURL = try fileManager.documentDirectoryURL(
-                withName: logDirectoryName,
-                usingAppGroupID: appGroupID
+            try self.init(
+                appName: appName,
+                fileManager: fileManager,
+                userDefaults: userDefaults,
+                logDirURL: fileManager.documentDirectoryURL(withName: namespace, usingAppGroupID: appGroupID),
+                namespace: namespace,
+                numberOfLogFiles: maxNumberOfFiles,
+                fileHeaderContent: fileHeaderContent,
+                lineSeparator: lineSeparator,
+                logEntryEncoder: logEntryEncoder,
+                logEntryDecoder: logEntryDecoder,
+                externalLogger: loggerForInternalErrors
             )
-
-        case .nonShared(let suiteName):
-            guard let userDefaults = UserDefaults(suiteName: suiteName) else {
-                throw FileLoggerError.userDefaultsInitFailure
-            }
-
-            self.userDefaults = userDefaults
-            self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingAppGroupID: nil)
-
-        case .defaultNonShared:
-            self.userDefaults = .standard
-            self.logDirURL = try fileManager.documentDirectoryURL(withName: logDirectoryName, usingAppGroupID: nil)
         }
+    }
+
+    init(
+        appName: String?,
+        fileManager: FileManager,
+        userDefaults: UserDefaults,
+        logDirURL: URL,
+        namespace: String?,
+        numberOfLogFiles: Int,
+        dateFormatter: DateFormatter = .monthsDaysTimeFormatter,
+        fileHeaderContent: String,
+        lineSeparator: String,
+        logEntryEncoder: LogEntryEncoding,
+        logEntryDecoder: LogEntryDecoding,
+        externalLogger: @escaping (String) -> ()
+    ) throws {
+        self.appName = appName
+        self.fileManager = fileManager
+        self.userDefaults = userDefaults
+        self.logDirURL = logDirURL
+        self.namespace = namespace
+        self.numberOfLogFiles = numberOfLogFiles
+        self.dateFormatter = dateFormatter
+        self.fileHeaderContent = fileHeaderContent
+        self.lineSeparator = lineSeparator
+        self.logEntryEncoder = logEntryEncoder
+        self.logEntryDecoder = logEntryDecoder
+        self.externalLogger = externalLogger
 
         // Create log directory
         try fileManager.createDirectoryIfNotExists(at: logDirURL)
@@ -141,18 +175,21 @@ public class FileLogger: Logging {
         // If the number of logFiles got decreased -> delete all existing log files.
         // Otherwise, there would be unused files in the log directory.
         // It is important to notice that when changing numOfLogFiles parameter some logs might be lost!
-        if numberOfLogFiles < userDefaults.integer(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) {
+        if numberOfLogFiles < userDefaults.integer(forKey: String(Constants.UserDefaultsKeys.numberOfLogFiles, prefixedBy: namespace)) {
             try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
         }
 
-        self.numberOfLogFiles = numberOfLogFiles
-        userDefaults.set(self.numberOfLogFiles, forKey: Constants.UserDefaultsKeys.numberOfLogFiles)
+        userDefaults.set(self.numberOfLogFiles, forKey: String(Constants.UserDefaultsKeys.numberOfLogFiles, prefixedBy: namespace))
 
-        self.dateOfLastLog = userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date ?? Date()
-        userDefaults.set(self.dateOfLastLog, forKey: Constants.UserDefaultsKeys.dateOfLastLog)
+        self.dateOfLastLog = userDefaults.object(
+            forKey: String(Constants.UserDefaultsKeys.dateOfLastLog, prefixedBy: namespace)
+        ) as? Date ?? Date()
+        userDefaults.set(self.dateOfLastLog, forKey: String(Constants.UserDefaultsKeys.dateOfLastLog, prefixedBy: namespace))
 
-        self.currentLogFileNumber = userDefaults.integer(forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
-        userDefaults.set(self.currentLogFileNumber, forKey: Constants.UserDefaultsKeys.currentLogFileNumber)
+        self.currentLogFileNumber = userDefaults.integer(
+            forKey: String(Constants.UserDefaultsKeys.currentLogFileNumber, prefixedBy: namespace)
+        )
+        userDefaults.set(self.currentLogFileNumber, forKey: String(Constants.UserDefaultsKeys.currentLogFileNumber, prefixedBy: namespace))
     }
 
     // MARK: - Computed properties & methods
@@ -266,3 +303,10 @@ public class FileLogger: Logging {
     }
 }
 
+// MARK: - String + prefixedBy
+
+private extension String {
+    init<Value: CustomStringConvertible, Prefix: CustomStringConvertible>(_ value: Value, prefixedBy prefix: Prefix?) {
+        self = "\(prefix.map { "\(String(describing: $0))-" } ?? "")\(String(describing: value))"
+    }
+}

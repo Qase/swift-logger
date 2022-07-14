@@ -9,43 +9,160 @@
 import XCTest
 
 class FileLoggerTests: XCTestCase {
-    private var fileLogger: FileLogger!
-    private let appGroupID = "test-appGroupID"
-    private let suiteName = "test-suiteName"
+    private var fileManager: FileManager!
+    private var userDefaults: UserDefaults!
+    private var logDirURL: URL!
+    private let suiteName = "test-user-defaults"
+
+    override func setUp() {
+        super.setUp()
+
+        self.fileManager = FileManager.default
+        self.userDefaults = UserDefaults(suiteName: suiteName)!
+
+        self.logDirURL = try! fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+            .appendingPathComponent("test-directory")
+
+        if fileManager.directoryExists(at: logDirURL) {
+            try! fileManager.removeItem(atPath: logDirURL.path)
+        }
+
+        UserDefaults.standard.removePersistentDomain(forName: suiteName)
+    }
 
     override func tearDown() {
-        UserDefaults.standard.removePersistentDomain(forName: appGroupID)
         UserDefaults.standard.removePersistentDomain(forName: suiteName)
 
-        try! FileManager.default.removeItem(atPath: fileLogger.logDirURL.path)
-
-        fileLogger = nil
+        if fileManager.directoryExists(at: logDirURL) {
+            try! fileManager.removeItem(atPath: logDirURL.path)
+        }
 
         super.tearDown()
     }
 
-    func test_inicialization_of_FileLogger() {
-        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName), numberOfLogFiles: 3)
+    func test_inicialization_of_FileLogger_with_specified_namespace() throws {
+        let namespace = "test-namespace"
 
-        XCTAssertTrue(fileLogger.fileManager.directoryExists(at: fileLogger.logDirURL))
-        XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 0)
+        _ = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: namespace,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
 
-        let currentLogFileNumber = fileLogger.userDefaults.object(
-            forKey: Constants.UserDefaultsKeys.currentLogFileNumber
+        XCTAssertTrue(fileManager.directoryExists(at: logDirURL))
+        XCTAssertEqual(try fileManager.numberOfFiles(inDirectory: logDirURL), 0)
+
+        let currentLogFileNumber = userDefaults.object(
+            forKey: "test-namespace-\(Constants.UserDefaultsKeys.currentLogFileNumber)"
         ) as? Int
         XCTAssertEqual(currentLogFileNumber, 0)
 
-        let dateOfLastLog = fileLogger.userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date
+        let dateOfLastLog = userDefaults.object(forKey: "\(namespace)-\(Constants.UserDefaultsKeys.dateOfLastLog)") as? Date
         XCTAssertNotNil(dateOfLastLog)
 
-        let numberOfLogFiles = fileLogger.userDefaults.object(
-            forKey: Constants.UserDefaultsKeys.numberOfLogFiles
-        ) as? Int
+        let numberOfLogFiles = userDefaults.object(forKey: "\(namespace)-\(Constants.UserDefaultsKeys.numberOfLogFiles)") as? Int
         XCTAssertEqual(numberOfLogFiles, 3)
     }
 
-    func test_log_files_availability() {
-        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName), numberOfLogFiles: 3)
+    func test_inicialization_of_FileLogger_without_specified_namespace() throws {
+        _ = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
+
+        XCTAssertTrue(fileManager.directoryExists(at: logDirURL))
+        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: logDirURL), 0)
+
+        let currentLogFileNumber = userDefaults.object(forKey: Constants.UserDefaultsKeys.currentLogFileNumber) as? Int
+        XCTAssertEqual(currentLogFileNumber, 0)
+
+        let dateOfLastLog = userDefaults.object(forKey: Constants.UserDefaultsKeys.dateOfLastLog) as? Date
+        XCTAssertNotNil(dateOfLastLog)
+
+        let numberOfLogFiles = userDefaults.object(forKey: Constants.UserDefaultsKeys.numberOfLogFiles) as? Int
+        XCTAssertEqual(numberOfLogFiles, 3)
+    }
+
+    func test_log_file_with_specified_appName() throws {
+        let appName = "test-app-name"
+
+        let fileLogger = try FileLogger(
+            appName: appName,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
+
+        XCTAssertEqual(
+            fileLogger.currentLogFileUrl,
+            logDirURL.appendingPathComponent("\(appName)-0").appendingPathExtension("log")
+        )
+    }
+
+    func test_log_file_without_specified_appName() throws {
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
+
+        XCTAssertEqual(
+            fileLogger.currentLogFileUrl,
+            logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+        )
+    }
+
+    func test_log_files_availability() throws {
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
 
         // Day 1 == File 0
         fileLogger.log(.mock("Warning message"))
@@ -55,71 +172,33 @@ class FileLoggerTests: XCTestCase {
 
         fileLogger.log(.mock("Warning message"))
 
-        // Day 3 == File 2
-        fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
+        let sortedLogFiles = try fileLogger.logFiles.sorted(by: { $0.absoluteString < $1.absoluteString })
 
-        fileLogger.log(.mock("Warning message"))
-
-        let sortedLogFiles = try! fileLogger.logFiles.sorted(by: { $0.absoluteString < $1.absoluteString })
-
-        XCTAssertEqual(sortedLogFiles.count, 3)
+        XCTAssertEqual(sortedLogFiles.count, 2)
 
         sortedLogFiles.enumerated().forEach { index, item in
             XCTAssertEqual(
                 item,
-                fileLogger.logDirURL.appendingPathComponent("\(index)").appendingPathExtension("log")
+                logDirURL.appendingPathComponent("\(index)").appendingPathExtension("log")
             )
         }
     }
 
-    func test_fileName_without_explicit_appName() {
-        fileLogger = try! FileLogger(appName: nil, sharingConfiguration: .nonShared(suiteName: suiteName))
-
-        XCTAssertEqual(
-            fileLogger.currentLogFileUrl,
-            fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+    func test_file_rotation() throws {
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
         )
-    }
-
-    func test_fileName_with_explicit_appName() {
-        fileLogger = try! FileLogger(appName: "MainApp", sharingConfiguration: .nonShared(suiteName: suiteName))
-        XCTAssertEqual(
-            fileLogger.currentLogFileUrl,
-            fileLogger.logDirURL.appendingPathComponent("MainApp-0").appendingPathExtension("log")
-        )
-    }
-
-    func test_log_directory_not_shared_when_nonShared_configuration_set() {
-        fileLogger = try! FileLogger(
-            sharingConfiguration: .nonShared(suiteName: suiteName),
-            logDirectoryName: "test-logs"
-        )
-
-        let expectedURL = try? FileManager.default.url(
-            for: .documentDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-            .appendingPathComponent("test-logs", isDirectory: false)
-
-        XCTAssertEqual(expectedURL, fileLogger.logDirURL)
-    }
-
-    func test_log_directory_shared_when_shared_configuration_set() {
-        fileLogger = try! FileLogger(
-            sharingConfiguration: .shared(appGroupID: appGroupID),
-            logDirectoryName: "test-logs"
-        )
-
-        let expectedURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
-            .appendingPathComponent("test-logs", isDirectory: false)
-
-        XCTAssertEqual(expectedURL, fileLogger.logDirURL)
-    }
-
-    func test_file_rotation() {
-        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName), numberOfLogFiles: 3)
 
         // Day 1 == File 0
         fileLogger.log(.mock("Warning message"))
@@ -127,7 +206,7 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogger.currentLogFileNumber, 0)
         XCTAssertEqual(
           fileLogger.currentLogFileUrl,
-          fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+          logDirURL.appendingPathComponent("0").appendingPathExtension("log")
         )
 
         // Day 2 == File 1
@@ -138,7 +217,7 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogger.currentLogFileNumber, 1)
         XCTAssertEqual(
             fileLogger.currentLogFileUrl,
-            fileLogger.logDirURL.appendingPathComponent("1").appendingPathExtension("log")
+            logDirURL.appendingPathComponent("1").appendingPathExtension("log")
         )
 
         // Day 3 == File 2
@@ -149,7 +228,7 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogger.currentLogFileNumber, 2)
         XCTAssertEqual(
             fileLogger.currentLogFileUrl,
-            fileLogger.logDirURL.appendingPathComponent("2").appendingPathExtension("log")
+            logDirURL.appendingPathComponent("2").appendingPathExtension("log")
         )
 
        // Day 4 == File 0
@@ -160,14 +239,27 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogger.currentLogFileNumber, 0)
         XCTAssertEqual(
             fileLogger.currentLogFileUrl,
-            fileLogger.logDirURL.appendingPathComponent("0").appendingPathExtension("log")
+            logDirURL.appendingPathComponent("0").appendingPathExtension("log")
         )
 
-        XCTAssertEqual(try! fileLogger.fileManager.numberOfFiles(inDirectory: fileLogger.logDirURL), 3)
+        XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: logDirURL), 3)
     }
 
-    func test_single_logging_file() {
-        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName))
+    func test_single_logging_file() throws {
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
 
         fileLogger.levels = [.error, .warn]
 
@@ -209,7 +301,20 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_encoding_and_decoding_codable() throws {
-        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName))
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
 
         fileLogger.levels = [.error, .warn]
 
@@ -250,7 +355,20 @@ class FileLoggerTests: XCTestCase {
     }
 
     func test_encoding_and_decoding_several_logs() throws {
-        fileLogger = try! FileLogger(sharingConfiguration: .nonShared(suiteName: suiteName))
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
 
         fileLogger.levels = [.error, .warn]
 
