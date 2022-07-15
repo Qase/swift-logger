@@ -453,17 +453,6 @@ class FileLoggerTests: XCTestCase {
 
 // MARK: - FileManager + helper functions
 
-private extension FileManager {
-    func directoryExists(at url: URL) -> Bool {
-        var isDirectory: ObjCBool = false
-        return fileExists(atPath: url.path, isDirectory: &isDirectory)
-    }
-
-    func numberOfFiles(inDirectory url: URL) throws -> Int {
-        try contentsOfDirectory(atPath: url.path).count
-    }
-}
-
 private extension FileLoggerTests {
     struct MockedCodable: Codable {
         var int: Int
