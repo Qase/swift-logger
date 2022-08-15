@@ -29,12 +29,15 @@ public class SystemLogger: Logging {
 
     public func log(_ logEntry: LogEntry) {
         os_log(
-            "%{public}@:%{public}@",
+            "%@",
             log: logger,
             type: logEntry.header.level.logType,
-            self.prefix,
-            logEntryEncoder.encode(logEntry)
+            createMessageWithPrefix(logEntry)
         )
+    }
+
+    public func createMessageWithPrefix(_ logEntry: LogEntry) -> String {
+        "\(prefix):\(logEntryEncoder.encode(logEntry))"
     }
 }
 
