@@ -32,6 +32,7 @@ public class SystemLogger: Logging {
             "%{public}@:%{public}@",
             log: logger,
             type: logEntry.header.level.logType,
+            self.prefix,
             logEntryEncoder.encode(logEntry)
         )
     }
