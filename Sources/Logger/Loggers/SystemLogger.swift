@@ -6,38 +6,32 @@
 //
 
 import Foundation
-import os
+import OSLog
 
 /// Pre-built logger that wraps system os_logger
 public class SystemLogger: Logging {
     private let logEntryEncoder: LogEntryEncoding
     private let prefix: String
-    private var logger: OSLog
+    private let systemLogger: (OSLogType, String) -> Void
 
     public init(
         subsystem: String,
         category: String,
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
-        prefix: String = ""
+        prefix: String = "",
+        systemLogger: ((OSLogType, String) -> Void)? = nil
     ) {
         self.logEntryEncoder = logEntryEncoder
-        self.logger = OSLog(subsystem: subsystem, category: category)
         self.prefix = prefix
+
+        let logger = OSLog(subsystem: subsystem, category: category)
+        self.systemLogger = systemLogger ?? { os_log("%@", log: logger, type: $0, $1) }
     }
 
     public var levels: [Level] = [.info]
 
     public func log(_ logEntry: LogEntry) {
-        os_log(
-            "%@",
-            log: logger,
-            type: logEntry.header.level.logType,
-            createMessageWithPrefix(logEntry)
-        )
-    }
-
-    public func createMessageWithPrefix(_ logEntry: LogEntry) -> String {
-        "\(prefix):\(logEntryEncoder.encode(logEntry))"
+        systemLogger(logEntry.header.level.logType, "\(prefix):\(logEntryEncoder.encode(logEntry))")
     }
 }
 
