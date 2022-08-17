@@ -14,18 +14,28 @@ public class SystemLogger: Logging {
     private let prefix: String
     private let systemLogger: (OSLogType, String) -> Void
 
-    public init(
+    convenience public init(
         subsystem: String,
         category: String,
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
-        prefix: String = "",
-        systemLogger: ((OSLogType, String) -> Void)? = nil
+        prefix: String = ""
+    ) {
+        let logger = OSLog(subsystem: subsystem, category: category)
+        self.init(
+            systemLogger: { os_log("%{public}@", log: logger, type: $0, $1) },
+            logEntryEncoder: logEntryEncoder,
+            prefix: prefix
+        )
+    }
+
+    public init(
+        systemLogger: @escaping ((OSLogType, String) -> Void),
+        logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
+        prefix: String = ""
     ) {
         self.logEntryEncoder = logEntryEncoder
         self.prefix = prefix
-
-        let logger = OSLog(subsystem: subsystem, category: category)
-        self.systemLogger = systemLogger ?? { os_log("%@", log: logger, type: $0, $1) }
+        self.systemLogger = systemLogger
     }
 
     public var levels: [Level] = [.info]
@@ -36,6 +46,7 @@ public class SystemLogger: Logging {
 }
 
 private extension Level {
+
     var logType: OSLogType {
         switch self {
         case .info:

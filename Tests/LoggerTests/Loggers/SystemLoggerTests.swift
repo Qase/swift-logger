@@ -35,10 +35,8 @@ class SystemLoggerTests: XCTestCase {
         }
 
         let logger = SystemLogger(
-            subsystem: "test",
-            category: "testLogging",
-            prefix: prefix,
-            systemLogger: systemLogger
+            systemLogger: systemLogger,
+            prefix: prefix
         )
 
         logger.log(logEntry)
