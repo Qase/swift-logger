@@ -6,30 +6,47 @@
 //
 
 import Foundation
-import os
+import OSLog
 
 /// Pre-built logger that wraps system os_logger
 public class SystemLogger: Logging {
     private let logEntryEncoder: LogEntryEncoding
-    private var logger: OSLog
+    private let prefix: String
+    private let systemLogger: (OSLogType, String) -> Void
 
-    public init(
+    public convenience init(
         subsystem: String,
         category: String,
-        logEntryEncoder: LogEntryEncoding = LogEntryEncoder()
+        logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
+        prefix: String = ""
+    ) {
+        let logger = OSLog(subsystem: subsystem, category: category)
+        self.init(
+            systemLogger: { os_log("%{public}@", log: logger, type: $0, $1) },
+            logEntryEncoder: logEntryEncoder,
+            prefix: prefix
+        )
+    }
+
+    init(
+        systemLogger: @escaping ((OSLogType, String) -> Void),
+        logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
+        prefix: String = ""
     ) {
         self.logEntryEncoder = logEntryEncoder
-        self.logger = OSLog(subsystem: subsystem, category: category)
+        self.prefix = prefix
+        self.systemLogger = systemLogger
     }
 
     public var levels: [Level] = [.info]
 
     public func log(_ logEntry: LogEntry) {
-        os_log("%@", log: logger, type: logEntry.header.level.logType, logEntryEncoder.encode(logEntry))
+        systemLogger(logEntry.header.level.logType, "\(prefix):\(logEntryEncoder.encode(logEntry))")
     }
 }
 
 private extension Level {
+
     var logType: OSLogType {
         switch self {
         case .info:
