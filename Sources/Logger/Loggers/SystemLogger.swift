@@ -14,7 +14,7 @@ public class SystemLogger: Logging {
     private let prefix: String
     private let systemLogger: (OSLogType, String) -> Void
 
-    convenience public init(
+    public convenience init(
         subsystem: String,
         category: String,
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
@@ -28,7 +28,7 @@ public class SystemLogger: Logging {
         )
     }
 
-    public init(
+    init(
         systemLogger: @escaping ((OSLogType, String) -> Void),
         logEntryEncoder: LogEntryEncoding = LogEntryEncoder(),
         prefix: String = ""
