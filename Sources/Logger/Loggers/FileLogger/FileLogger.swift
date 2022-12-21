@@ -226,6 +226,8 @@ public class FileLogger: Logging {
 
     public func deleteAllLogFiles() throws {
         try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
+        currentWritableFileHandle = nil
+        currentLogFileNumber = 0
     }
 
     public var logFiles: [URL] {
