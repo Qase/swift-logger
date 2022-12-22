@@ -450,7 +450,7 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogs[4].message.description, encodedCodableString)
     }
     
-    func test_delete_log_files() throws {
+    func test_deleting_log_files_resets_the_logger_configuration() throws {
         let fileLogger = try FileLogger(
             appName: nil,
             fileManager: fileManager,
