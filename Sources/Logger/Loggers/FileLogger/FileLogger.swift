@@ -291,6 +291,7 @@ public class FileLogger: Logging {
 
         currentLogFileNumber = (currentLogFileNumber + 1) % numberOfLogFiles
         dateOfLastLog = currentDate
+        try fileManager.deleteFileIfExists(at: currentLogFileUrl)
         currentWritableFileHandle = try fileHandle(fileManager, currentLogFileUrl)
     }
 
