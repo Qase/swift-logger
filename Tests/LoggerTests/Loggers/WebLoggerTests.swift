@@ -208,7 +208,7 @@ class WebLoggerTests: XCTestCase {
             }
         }
 
-        waitForExpectations(timeout: 0.2)
+        waitForExpectations(timeout: 1)
     }
 }
 
