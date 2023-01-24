@@ -194,7 +194,7 @@ class FileLoggerTests: XCTestCase {
             numberOfLogFiles: 3,
             dateFormatter: DateFormatter.dateFormatter,
             fileHeaderContent: "",
-            lineSeparator: "<-->",
+            lineSeparator: "\n",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
             externalLogger: { _ in }
@@ -209,6 +209,9 @@ class FileLoggerTests: XCTestCase {
           logDirURL.appendingPathComponent("0").appendingPathExtension("log")
         )
 
+        var fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+        XCTAssertEqual(fileLogs.count, 1)
+
         // Day 2 == File 1
         fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
 
@@ -219,6 +222,9 @@ class FileLoggerTests: XCTestCase {
             fileLogger.currentLogFileUrl,
             logDirURL.appendingPathComponent("1").appendingPathExtension("log")
         )
+
+        fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+        XCTAssertEqual(fileLogs.count, 1)
 
         // Day 3 == File 2
         fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
@@ -231,6 +237,9 @@ class FileLoggerTests: XCTestCase {
             logDirURL.appendingPathComponent("2").appendingPathExtension("log")
         )
 
+        fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+        XCTAssertEqual(fileLogs.count, 1)
+
        // Day 4 == File 0
         fileLogger.dateOfLastLog = Calendar.current.date(byAdding: .day, value: 1, to: fileLogger.dateOfLastLog)!
 
@@ -241,6 +250,9 @@ class FileLoggerTests: XCTestCase {
             fileLogger.currentLogFileUrl,
             logDirURL.appendingPathComponent("0").appendingPathExtension("log")
         )
+
+        fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+        XCTAssertEqual(fileLogs.count, 1)
 
         XCTAssertEqual(try! fileManager.numberOfFiles(inDirectory: logDirURL), 3)
     }
