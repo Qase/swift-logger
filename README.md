@@ -185,25 +185,13 @@ Log("This is the message to be logged.", onLevel: .info)
 
 ### Concurrency modes
 
-`LoggerManager` supports 3 different concurrency modes at the moment. By using `loggingConcurrencyMode` parameter when initializing `LoggerManager`, a user can set specific concurrency mode. Default value is `asyncSerial`.
-
-#### `syncSerial`
-
-Logging task is dispatched synchronously on a custom serial queue, where all loggers perform their tasks serially one by one.
-
-![syncserial](https://user-images.githubusercontent.com/2511209/33495947-a2f21ca2-d6c8-11e7-9082-f841ef074012.png)
+`LoggerManager` supports now only one concurrency mode at the moment. By using `loggingConcurrencyMode` parameter when initializing `LoggerManager`, a user can set the `asyncSerial` mode, which is also a default value.
 
 #### `asyncSerial`
 
 Logging task is dispatched asynchronously on a custom serial queue, where all loggers perform their tasks serially one by one.
 
 ![asyncserial](https://user-images.githubusercontent.com/2511209/33495945-a2732168-d6c8-11e7-9a77-519204be448a.png)
-
-#### `syncConcurrent`
-
-Logging task is dispatched synchronously on a custom serial queue, where all loggers perform their tasks concurrently.
-
-![syncconcurrent](https://user-images.githubusercontent.com/2511209/33495946-a297c2fc-d6c8-11e7-8610-8b995c8fb6b3.png)
 
 ### Sending file logs via mail
 

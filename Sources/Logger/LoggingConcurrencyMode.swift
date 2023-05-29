@@ -7,22 +7,15 @@
 
 import Foundation
 
-/// Logging concurrency types
+/// Logging concurrency
 ///
-/// - syncSerial: logging executed synchronously towards the main thread. All loggers log serially one by one within a dedicated queue
 /// - asyncSerial: logging executed asynchronously towards the main thread. All loggers log serially one by one within a dedicated queue
-/// - syncConcurrent: logging executed synchronously towards the main thread. All loggers log concurrently within a dedicated queue
 public enum LoggingConcurrencyMode {
-    case syncSerial(DispatchQueue)
     case asyncSerial(DispatchQueue)
-    case syncConcurrent(serialQueue: DispatchQueue, concurrentQueue: DispatchQueue)
-
+   
     var serialQueue: DispatchQueue {
         switch self {
-        case let .syncSerial(queue),
-            let .asyncSerial(queue):
-            return queue
-        case let .syncConcurrent(serialQueue: queue, _):
+        case let .asyncSerial(queue):
             return queue
         }
     }
@@ -42,24 +35,9 @@ extension LoggingConcurrencyMode {
         let availableLoggers = loggers.availableLoggers(forLevel: log.header.level)
 
         switch self {
-        case let .syncSerial(serialQueue):
-            serialQueue.sync {
-                availableLoggers.forEach { $0.log(log) }
-            }
-
         case let .asyncSerial(serialQueue):
             serialQueue.async {
                 availableLoggers.forEach { $0.log(log) }
-            }
-
-        case let .syncConcurrent(serialQueue: serialQueue, concurrentQueue: concurrentQueue):
-            serialQueue.sync {
-                availableLoggers
-                    .forEach { logger in
-                        concurrentQueue.async {
-                            logger.log(log)
-                        }
-                    }
             }
         }
     }
