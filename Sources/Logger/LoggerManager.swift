@@ -78,4 +78,16 @@ public class LoggerManager {
 
         loggingConcurrencyMode.log(toLoggers: self.loggers, log: log)
     }
+  
+  public func deleteAllLogFiles() {
+    DispatchQueue.defaultSerialLoggingQueue.async {
+      dispatchPrecondition(condition: .onQueue(.defaultSerialLoggingQueue))
+      do {
+        try self.loggers.compactMap { $0 as? FileLogger }
+          .forEach { try $0.deleteAllLogFiles() }
+      } catch {
+        print("\(error) in deletingAllLogFiles")
+      }
+    }
+  }
 }
