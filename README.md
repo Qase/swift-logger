@@ -187,6 +187,8 @@ Log("This is the message to be logged.", onLevel: .info)
 
 `LoggerManager` handles execution of logging tasks in an asynchronous serial manner. Each logging task is dispatched asynchronously on a custom serial background queue, where all loggers perform their tasks serially one by one.
 
+![asyncserial](https://user-images.githubusercontent.com/2511209/33495945-a2732168-d6c8-11e7-9a77-519204be448a.png)
+
 ### Sending file logs via mail
 
 The framework provides `SendMailView` that has a pre-configured SwiftUI `View` that, when presented, will offer the option to send all log files via mail.
