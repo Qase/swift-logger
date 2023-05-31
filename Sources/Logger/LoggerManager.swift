@@ -81,6 +81,6 @@ public class LoggerManager {
 
 // MARK: - DispatchQueue + default queue
 
-public extension DispatchQueue {
+private extension DispatchQueue {
     static let defaultSerialLoggingQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background)
 }
