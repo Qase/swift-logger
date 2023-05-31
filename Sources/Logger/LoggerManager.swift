@@ -16,7 +16,8 @@ public typealias MetaInformationBundle = (types: [MetaInformationType], bundle: 
 /// based on levels they are set to acccept.
 public class LoggerManager {
     // Configuration of logging mode
-    let loggingConcurrencyMode: LoggingConcurrencyMode
+    // SerialQueue: special DispatchQueue that is on background and uses serial configuration, that means logs will go one after each other
+    let serialQueue: DispatchQueue = .defaultSerialLoggingQueue
     // Registered loggers
     private let loggers: [Logging]
 
@@ -24,20 +25,16 @@ public class LoggerManager {
 
     /// `LoggerManager` initialization
     /// - Parameters:
-    ///   - loggingConcurrencyMode: concurrency mode in which the manager logs via its registered loggers.
     ///   - loggers: registered loggers.
     ///   - applicationCallbackLoggerBundle: application lifecycle callbacks that are to be logged by the manager.
     ///   - metaInformationLoggerBundle: meta information to be logged by the manager.
     public init(
-        loggingConcurrencyMode: LoggingConcurrencyMode = .asyncSerial(.defaultSerialLoggingQueue),
         loggers: [Logging],
         applicationCallbackLoggerBundle: ApplicationCallbackBundle? = (callbacks: ApplicationCallbackType.allCases, level: Level.debug),
         metaInformationLoggerBundle: MetaInformationBundle? = (types: MetaInformationType.allCases, bundle: Bundle.main, level: Level.debug)
     ) {
         loggers.forEach { $0.configure() }
         self.loggers = loggers
-
-        self.loggingConcurrencyMode = loggingConcurrencyMode
 
         if let applicationCallbackLoggerBundle = applicationCallbackLoggerBundle {
             let applicationCallbackLogger = ApplicationCallbackLogger(
@@ -73,9 +70,17 @@ public class LoggerManager {
     ) {
         let logHeader = LogHeader(date: Date(), level: level, dateFormatter: DateFormatter.monthsDaysTimeFormatter)
         let logLocation = LogLocation(fileName: (file as NSString).lastPathComponent, function: function, line: line)
-
         let log = LogEntry(header: logHeader, location: logLocation, message: message)
-
-        loggingConcurrencyMode.log(toLoggers: self.loggers, log: log)
+        let availableLoggers = loggers.availableLoggers(forLevel: log.header.level)
+        
+        serialQueue.async {
+            availableLoggers.forEach { $0.log(log) }
+        }
     }
+}
+
+// MARK: - DispatchQueue + default queue
+
+private extension DispatchQueue {
+    static let defaultSerialLoggingQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background)
 }
