@@ -183,9 +183,9 @@ Example of how to log:
 Log("This is the message to be logged.", onLevel: .info)
 ```
 
-### Concurrency modes
+### Logging execution
 
-`LoggerManager` supports now only one concurrency mode at the moment. By using `loggingConcurrencyMode` parameter when initializing `LoggerManager`, a user can set the `asyncSerial` mode, which is also a default value.
+`LoggerManager` has its own style of executing tasks. It's done in form of `asyncSerial` mode, that works on background thread without disrupting the main thread.
 
 #### `asyncSerial`
 
