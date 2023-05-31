@@ -185,13 +185,7 @@ Log("This is the message to be logged.", onLevel: .info)
 
 ### Logging execution
 
-`LoggerManager` has its own style of executing tasks. It's done in the form of `asyncSerial` style, that works on the background thread without disrupting the main thread.
-Also, the logging itself is done serially, that means the logs will execute consecutively, one after each other. 
-#### `asyncSerial`
-
-Logging task is dispatched asynchronously on a custom serial queue, where all loggers perform their tasks serially one by one.
-
-![asyncserial](https://user-images.githubusercontent.com/2511209/33495945-a2732168-d6c8-11e7-9a77-519204be448a.png)
+`LoggerManager` handles execution of logging tasks in an asynchronous serial manner. Each logging task is dispatched asynchronously on a custom serial background queue, where all loggers perform their tasks serially one by one.
 
 ### Sending file logs via mail
 
