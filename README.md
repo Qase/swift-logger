@@ -185,7 +185,7 @@ Log("This is the message to be logged.", onLevel: .info)
 
 ### Logging execution
 
-`LoggerManager` has its own style of executing tasks. It's done in form of `asyncSerial` mode, that works on background thread without disrupting the main thread.
+`LoggerManager` has its own style of executing tasks. It's done in form of `asyncSerial` style, that works on background thread without disrupting the main thread.
 
 #### `asyncSerial`
 
