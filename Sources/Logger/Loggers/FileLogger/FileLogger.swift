@@ -54,6 +54,7 @@ public class FileLogger: Logging {
     private let logEntryEncoder: LogEntryEncoding
     private let logEntryDecoder: LogEntryDecoding
     private let externalLogger: (String) -> ()
+    private let fileAccessQueue: DispatchQueue
 
     var dateOfLastLog: Date {
         didSet {
@@ -67,6 +68,18 @@ public class FileLogger: Logging {
         }
     }
 
+//    var currentLogFileNumber: Int {
+//        didSet {
+//            setCurrentLogFileNumber(currentLogFileNumber)
+//        }
+//    }
+//
+//    private func setCurrentLogFileNumber(_ number: Int) {
+//        fileAccessQueue.async {
+//            self.userDefaults.set(number, forKey: String(Constants.UserDefaultsKeys.currentLogFileNumber, prefixedBy: self.namespace))
+//        }
+//    }
+    
     private var currentWritableFileHandle: FileHandle? {
         willSet {
             if currentWritableFileHandle != newValue {
@@ -154,7 +167,8 @@ public class FileLogger: Logging {
         lineSeparator: String,
         logEntryEncoder: LogEntryEncoding,
         logEntryDecoder: LogEntryDecoding,
-        externalLogger: @escaping (String) -> ()
+        externalLogger: @escaping (String) -> (),
+        fileAccessQueue: DispatchQueue = .defaultSerialFileManagerQueue
     ) throws {
         self.appName = appName
         self.fileManager = fileManager
@@ -168,6 +182,7 @@ public class FileLogger: Logging {
         self.logEntryEncoder = logEntryEncoder
         self.logEntryDecoder = logEntryDecoder
         self.externalLogger = externalLogger
+        self.fileAccessQueue = fileAccessQueue
 
         // Create log directory
         try fileManager.createDirectoryIfNotExists(at: logDirURL)
@@ -225,15 +240,44 @@ public class FileLogger: Logging {
     }
 
     public func deleteAllLogFiles() throws {
-        try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
-        currentWritableFileHandle = nil
-        currentLogFileNumber = 0
+        fileAccessQueue.async {
+            do {
+                try self.fileManager.deleteAllFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)
+                self.currentWritableFileHandle = nil
+                self.currentLogFileNumber = 0
+            } catch {
+                self.externalLogger("Failed to delete all log files with error: \(error)!")
+            }
+        }
     }
 
+//    public var logFiles: [URL] {
+//        get throws {
+//            try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
+//        }
+//    }
     public var logFiles: [URL] {
-        get throws {
-            try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
+        var result: [URL] = []
+        var getError: Error?
+
+        let semaphore = DispatchSemaphore(value: 0)
+
+        fileAccessQueue.async {
+            do {
+                result = try self.fileManager.allFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)
+            } catch {
+                getError = error
+            }
+            semaphore.signal()
         }
+
+        semaphore.wait()
+
+        if let error = getError {
+            print("Failed to get log files: \(error)")
+        }
+
+        return result
     }
 
     /// Method to write a log message into the current log file.
@@ -252,17 +296,19 @@ public class FileLogger: Logging {
 
             return data
         }
-
-        do {
-            try refreshCurrentLogFileStatus()
-
-            let contentToAppend = logEntryEncoder.encode(logEntry) + lineSeparator
-            let fileHandle = try unwrapped(currentWritableFileHandle)
-
-            fileHandle.seekToEndOfFile()
-            fileHandle.write(try utf8Data(contentToAppend))
-        } catch let error {
-            externalLogger("Failed to write to a log file with error: \(error)!")
+        
+        fileAccessQueue.async {
+            do {
+                try self.refreshCurrentLogFileStatus()
+                
+                let contentToAppend = self.logEntryEncoder.encode(logEntry) + self.lineSeparator
+                let fileHandle = try unwrapped(self.currentWritableFileHandle)
+                
+                fileHandle.seekToEndOfFile()
+                fileHandle.write(try utf8Data(contentToAppend))
+            } catch let error {
+                self.externalLogger("Failed to write to a log file with error: \(error)!")
+            }
         }
     }
 
@@ -299,10 +345,35 @@ public class FileLogger: Logging {
     ///
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
+//    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogEntry] {
+//        try fileManager.contents(fromFileIfExists: fileUrlToRead)
+//            .components(separatedBy: lineSeparator)
+//            .compactMap(logEntryDecoder.decode)
+//    }
     func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogEntry] {
-        try fileManager.contents(fromFileIfExists: fileUrlToRead)
-            .components(separatedBy: lineSeparator)
-            .compactMap(logEntryDecoder.decode)
+        var logEntries: [LogEntry] = []
+        var fileReadError: Error?
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        fileAccessQueue.async {
+            do {
+                logEntries = try self.fileManager.contents(fromFileIfExists: fileUrlToRead)
+                    .components(separatedBy: self.lineSeparator)
+                    .compactMap(self.logEntryDecoder.decode)
+            } catch {
+                fileReadError = error
+            }
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        if let error = fileReadError {
+            throw error
+        }
+        
+        return logEntries
     }
 }
 
@@ -312,4 +383,10 @@ private extension String {
     init<Value: CustomStringConvertible, Prefix: CustomStringConvertible>(_ value: Value, prefixedBy prefix: Prefix?) {
         self = "\(prefix.map { "\(String(describing: $0))-" } ?? "")\(String(describing: value))"
     }
+}
+
+// MARK: - DispatchQueue + default fileManager queue
+
+private extension DispatchQueue {
+    static let defaultSerialFileManagerQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background)
 }

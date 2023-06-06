@@ -7,6 +7,7 @@
 
 @testable import Logger
 import XCTest
+import Combine
 
 class FileLoggerTests: XCTestCase {
     private var fileManager: FileManager!
@@ -172,7 +173,7 @@ class FileLoggerTests: XCTestCase {
 
         fileLogger.log(.mock("Warning message"))
 
-        let sortedLogFiles = try fileLogger.logFiles.sorted(by: { $0.absoluteString < $1.absoluteString })
+        let sortedLogFiles = fileLogger.logFiles.sorted(by: { $0.absoluteString < $1.absoluteString })
 
         XCTAssertEqual(sortedLogFiles.count, 2)
 
@@ -514,6 +515,79 @@ class FileLoggerTests: XCTestCase {
         
         XCTAssertEqual(fileLogsAfterDelete.count, 1)
         XCTAssertEqual(fileLogsAfterDelete[0].message.description, "Previous logs were deleted.")
+    }
+    
+    func test_loggerManager_multithreading_delete_and_log_simultaneously() throws {
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 100,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
+        
+        var cancellables = Set<AnyCancellable>()
+        let expectation = self.expectation(description: "")
+        var logCount = 0
+        var deleteCount = 0
+        
+        //Simple mutex by using semaphore with value 1
+        let semaphore = DispatchSemaphore(value: 1)
+        
+        (1...100).publisher
+            .flatMap { _ in
+                Just(())
+                    .subscribe(on: DispatchQueue.global())
+                    .handleEvents(
+                        receiveOutput: {
+                            fileLogger.log(
+                                .init(
+                                    header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                                    location: .init(fileName: "File", function: "function", line: 1),
+                                    message: "Error message"
+                                )
+                            )
+                            semaphore.wait()
+                            logCount += 1
+                            semaphore.signal()
+                        }
+                    )
+            }
+            .collect(2)
+            .map { _ in }
+            .flatMap {
+                Just(())
+                    .subscribe(on: DispatchQueue.global())
+                    .handleEvents(
+                        receiveOutput: {
+                            try? fileLogger.deleteAllLogFiles()
+                            semaphore.wait()
+                            deleteCount += 1
+                            semaphore.signal()
+                        }
+                    )
+            }
+            .sink(
+                receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        expectation.fulfill()
+                    }
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
+        
+        waitForExpectations(timeout: 0.1)
+        XCTAssertEqual(logCount, 100)
+        XCTAssertEqual(deleteCount, 50)
     }
 }
 

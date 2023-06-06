@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  LoggerManagerTests.swift
 //  
 //
 //  Created by Martin Ficek on 29.05.2023.
@@ -10,76 +10,56 @@ import XCTest
 import Combine
 
 class LoggerManagerTests: XCTestCase {
-// MARK: Commented code is used for testing failure of the previous FileManager, should be deleted before merge
-//  private let appGroupID = "test-app-group-id"
-//  private let namespace = "test-namespace"
-//  private var fileManager: FileManager!
-//  private var userDefaults: UserDefaults!
-//  private var logDirURL: URL!
-//
-//  override func setUp() {
-//      super.setUp()
-//
-//      self.fileManager = FileManager.default
-//      self.userDefaults = UserDefaults(suiteName: appGroupID)!
-//
-//      self.logDirURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupID)!
-//          .appendingPathComponent(namespace)
-//  }
-  
-  func test_loggerManager_multithreading_delete_and_log_simultaneously() throws {
-//    let fileLogger = try FileLogger(
-//      appName: nil,
-//      fileManager: fileManager,
-//      userDefaults: userDefaults,
-//      logDirURL: logDirURL,
-//      namespace: nil,
-//      numberOfLogFiles: 100,
-//      dateFormatter: DateFormatter.dateFormatter,
-//      fileHeaderContent: "",
-//      lineSeparator: "<-->",
-//      logEntryEncoder: LogEntryEncoder(),
-//      logEntryDecoder: LogEntryDecoder(),
-//      externalLogger: { _ in }
-//    )
-    
-    let loggerManager = LoggerManager(loggers: .init())
-    var cancellables = Set<AnyCancellable>()
-    
-    (1...100).publisher
-      .flatMap { _ in
-        Just(())
-          .subscribe(on: DispatchQueue.global())
-          .handleEvents(
-            receiveOutput: {
-              //              fileLogger.log(
-              //               .init(
-              //                header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-              //                 location: .init(fileName: "File", function: "function", line: 1),
-              //                 message: "Error message"
-              //               )
-              //              )
-              loggerManager.log("1", onLevel: Level(rawValue: "1"))
-              print("log")
+    func test_loggerManager_multithreading_delete_and_log_simultaneously() throws {
+        let loggerManager = LoggerManager(loggers: .init())
+        var cancellables = Set<AnyCancellable>()
+        let expectation = self.expectation(description: "")
+        var logCount = 0
+        var deleteCount = 0
+        
+        //Simple mutex by using semaphore with value 1
+        let semaphore = DispatchSemaphore(value: 1)
+        
+        (1...100).publisher
+            .flatMap { _ in
+                Just(())
+                    .subscribe(on: DispatchQueue.global())
+                    .handleEvents(
+                        receiveOutput: {
+                            loggerManager.log("1", onLevel: Level(rawValue: "1"))
+                            semaphore.wait()
+                            logCount += 1
+                            semaphore.signal()
+                        }
+                    )
             }
-          )
-      }
-      .collect(2)
-      .map { _ in }
-      .flatMap {
-        Just(())
-          .subscribe(on: DispatchQueue.global())
-          .handleEvents(
-            receiveOutput: {
-              //              try? fileLogger.deleteAllLogFiles()
-              loggerManager.deleteAllLogFiles()
-              print("delete")
+            .collect(2)
+            .map { _ in }
+            .flatMap {
+                Just(())
+                    .subscribe(on: DispatchQueue.global())
+                    .handleEvents(
+                        receiveOutput: {
+                            loggerManager.deleteAllLogFiles()
+                            semaphore.wait()
+                            deleteCount += 1
+                            semaphore.signal()
+                        }
+                    )
             }
-          )
-      }
-      .sink { result in
-        XCTAssertNotNil(result)
-      }
-      .store(in: &cancellables)
-  }
+            .sink(
+                receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        expectation.fulfill()
+                    }
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
+        
+        waitForExpectations(timeout: 0.6)
+        XCTAssertEqual(logCount, 100)
+        XCTAssertEqual(deleteCount, 50)
+    }
 }

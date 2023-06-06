@@ -78,17 +78,14 @@ public class LoggerManager {
         }
     }
   
-  public func deleteAllLogFiles() {
-    DispatchQueue.defaultSerialLoggingQueue.async {
-      dispatchPrecondition(condition: .onQueue(.defaultSerialLoggingQueue))
-      do {
-        try self.loggers.compactMap { $0 as? FileLogger }
-          .forEach { try $0.deleteAllLogFiles() }
-      } catch {
-        print("\(error) in deletingAllLogFiles")
-      }
+    public func deleteAllLogFiles() {
+        do {
+            try self.loggers.compactMap { $0 as? FileLogger }
+                .forEach { try $0.deleteAllLogFiles() }
+        } catch {
+            print("\(error) in deletingAllLogFiles")
+        }
     }
-  }
 }
 
 // MARK: - DispatchQueue + default queue
