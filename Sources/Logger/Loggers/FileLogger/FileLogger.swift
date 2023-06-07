@@ -85,18 +85,6 @@ public class FileLogger: Logging {
             userDefaults.set(currentLogFileNumber, forKey: String(Constants.UserDefaultsKeys.currentLogFileNumber, prefixedBy: namespace))
         }
     }
-
-//    var currentLogFileNumber: Int {
-//        didSet {
-//            setCurrentLogFileNumber(currentLogFileNumber)
-//        }
-//    }
-//
-//    private func setCurrentLogFileNumber(_ number: Int) {
-//        fileAccessQueue.async {
-//            self.userDefaults.set(number, forKey: String(Constants.UserDefaultsKeys.currentLogFileNumber, prefixedBy: self.namespace))
-//        }
-//    }
     
     private var currentWritableFileHandle: FileHandle? {
         willSet {
@@ -269,33 +257,10 @@ public class FileLogger: Logging {
         }
     }
 
-//    public var logFiles: [URL] {
-//        get throws {
-//            try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
-//        }
-//    }
     public var logFiles: [URL] {
-        var result: [URL] = []
-        var getError: Error?
-
-//        let semaphore = DispatchSemaphore(value: 0)
-
-        fileAccessQueue.execute {
-            do {
-                result = try self.fileManager.allFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)
-            } catch {
-                getError = error
-            }
-//            semaphore.signal()
+        get throws {
+            try fileManager.allFiles(at: logDirURL, withPathExtension: logFilePathExtension)
         }
-
-//        semaphore.wait()
-
-        if let error = getError {
-            print("Failed to get log files: \(error)")
-        }
-
-        return result
     }
 
     /// Method to write a log message into the current log file.
@@ -363,35 +328,10 @@ public class FileLogger: Logging {
     ///
     /// - Parameter fileUrlToRead: fileName of a log file to parse
     /// - Returns: array of LogFileRecord instances
-//    func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogEntry] {
-//        try fileManager.contents(fromFileIfExists: fileUrlToRead)
-//            .components(separatedBy: lineSeparator)
-//            .compactMap(logEntryDecoder.decode)
-//    }
     func gettingRecordsFromLogFile(at fileUrlToRead: URL) throws -> [LogEntry] {
-        var logEntries: [LogEntry] = []
-        var fileReadError: Error?
-        
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        fileAccessQueue.execute {
-            do {
-                logEntries = try self.fileManager.contents(fromFileIfExists: fileUrlToRead)
-                    .components(separatedBy: self.lineSeparator)
-                    .compactMap(self.logEntryDecoder.decode)
-            } catch {
-                fileReadError = error
-            }
-            semaphore.signal()
-        }
-        
-        semaphore.wait()
-        
-        if let error = fileReadError {
-            throw error
-        }
-        
-        return logEntries
+        try fileManager.contents(fromFileIfExists: fileUrlToRead)
+            .components(separatedBy: lineSeparator)
+            .compactMap(logEntryDecoder.decode)
     }
 }
 

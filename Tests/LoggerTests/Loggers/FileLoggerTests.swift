@@ -174,7 +174,7 @@ class FileLoggerTests: XCTestCase {
 
         fileLogger.log(.mock("Warning message"))
 
-        let sortedLogFiles = fileLogger.logFiles.sorted(by: { $0.absoluteString < $1.absoluteString })
+        let sortedLogFiles = try fileLogger.logFiles.sorted(by: { $0.absoluteString < $1.absoluteString })
 
         XCTAssertEqual(sortedLogFiles.count, 2)
 
@@ -273,7 +273,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         fileLogger.levels = [.error, .warn]
@@ -328,7 +329,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         fileLogger.levels = [.error, .warn]
@@ -382,7 +384,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         fileLogger.levels = [.error, .warn]
@@ -478,7 +481,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         let date = Date(timeIntervalSince1970: 0)
