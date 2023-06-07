@@ -36,6 +36,24 @@ public extension SharingConfiguration {
     }
 }
 
+// MARK: - FileAccessExecutor
+
+struct FileAccessExecutor {
+    var execute: (@escaping () -> Void) -> ()
+}
+
+extension FileAccessExecutor {
+    static func live(queue: DispatchQueue) -> Self {
+        .init(execute: { queue.async(execute: $0) })
+    }
+}
+
+extension FileAccessExecutor {
+    static var syncMock: Self {
+        .init { $0() }
+    }
+}
+
 // MARK: - FileLogger
 
 public class FileLogger: Logging {
@@ -54,7 +72,7 @@ public class FileLogger: Logging {
     private let logEntryEncoder: LogEntryEncoding
     private let logEntryDecoder: LogEntryDecoding
     private let externalLogger: (String) -> ()
-    private let fileAccessQueue: DispatchQueue
+    private let fileAccessQueue: FileAccessExecutor
 
     var dateOfLastLog: Date {
         didSet {
@@ -168,7 +186,7 @@ public class FileLogger: Logging {
         logEntryEncoder: LogEntryEncoding,
         logEntryDecoder: LogEntryDecoding,
         externalLogger: @escaping (String) -> (),
-        fileAccessQueue: DispatchQueue = .defaultSerialFileManagerQueue
+        fileAccessQueue: FileAccessExecutor = .live(queue: .defaultSerialFileManagerQueue)
     ) throws {
         self.appName = appName
         self.fileManager = fileManager
@@ -240,7 +258,7 @@ public class FileLogger: Logging {
     }
 
     public func deleteAllLogFiles() throws {
-        fileAccessQueue.async {
+        fileAccessQueue.execute {
             do {
                 try self.fileManager.deleteAllFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)
                 self.currentWritableFileHandle = nil
@@ -260,18 +278,18 @@ public class FileLogger: Logging {
         var result: [URL] = []
         var getError: Error?
 
-        let semaphore = DispatchSemaphore(value: 0)
+//        let semaphore = DispatchSemaphore(value: 0)
 
-        fileAccessQueue.async {
+        fileAccessQueue.execute {
             do {
                 result = try self.fileManager.allFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)
             } catch {
                 getError = error
             }
-            semaphore.signal()
+//            semaphore.signal()
         }
 
-        semaphore.wait()
+//        semaphore.wait()
 
         if let error = getError {
             print("Failed to get log files: \(error)")
@@ -297,7 +315,7 @@ public class FileLogger: Logging {
             return data
         }
         
-        fileAccessQueue.async {
+        fileAccessQueue.execute {
             do {
                 try self.refreshCurrentLogFileStatus()
                 
@@ -356,7 +374,7 @@ public class FileLogger: Logging {
         
         let semaphore = DispatchSemaphore(value: 0)
         
-        fileAccessQueue.async {
+        fileAccessQueue.execute {
             do {
                 logEntries = try self.fileManager.contents(fromFileIfExists: fileUrlToRead)
                     .components(separatedBy: self.lineSeparator)

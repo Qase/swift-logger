@@ -162,7 +162,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         // Day 1 == File 0
@@ -198,7 +199,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "\n",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         // Day 1 == File 0
