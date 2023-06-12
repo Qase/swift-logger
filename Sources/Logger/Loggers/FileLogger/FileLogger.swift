@@ -37,6 +37,9 @@ public extension SharingConfiguration {
 }
 
 // MARK: - FileAccessExecutor
+// FileLogger uses fileAccessQueue to do Logging and Deleting on the same thread, so it doesnt collide
+// Queue can be created while initing FileLogger, but it has default value on background thread, that works synchronously.
+// Injected queue should also be synchronous
 
 struct FileAccessExecutor {
     var execute: (@escaping () -> Void) -> ()
@@ -48,6 +51,7 @@ extension FileAccessExecutor {
     }
 }
 
+// SyncMock is for for tests to work properly
 extension FileAccessExecutor {
     static var syncMock: Self {
         .init { $0() }
