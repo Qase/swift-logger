@@ -227,7 +227,7 @@ public class FileLogger: Logging {
         }
     }
 
-    public func deleteAllLogFiles() throws {
+    public func deleteAllLogFiles() {
         fileAccessExecutor {
             do {
                 try self.fileManager.deleteAllFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)

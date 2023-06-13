@@ -62,7 +62,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         XCTAssertTrue(fileManager.directoryExists(at: logDirURL))
@@ -513,7 +514,7 @@ class FileLoggerTests: XCTestCase {
 
         XCTAssertEqual(fileLogs.count, 2)
         
-        try fileLogger.deleteAllLogFiles()
+        fileLogger.deleteAllLogFiles()
         
         fileLogger.log(
             .init(
@@ -529,7 +530,7 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(fileLogsAfterDelete[0].message.description, "Previous logs were deleted.")
     }
     
-    func test_loggerManager_multithreading_delete_and_log_simultaneously() throws {
+    func test_fileLogger_multithreading_delete_and_log_simultaneously() throws {
         let fileLogger = try FileLogger(
             appName: nil,
             fileManager: fileManager,
@@ -579,7 +580,7 @@ class FileLoggerTests: XCTestCase {
                     .subscribe(on: DispatchQueue.global())
                     .handleEvents(
                         receiveOutput: {
-                            try? fileLogger.deleteAllLogFiles()
+                            fileLogger.deleteAllLogFiles()
                             semaphore.wait()
                             deleteCount += 1
                             semaphore.signal()

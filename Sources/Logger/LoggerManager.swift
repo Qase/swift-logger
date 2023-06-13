@@ -79,12 +79,8 @@ public class LoggerManager {
     }
   
     public func deleteAllLogFiles() {
-        do {
-            try self.loggers.compactMap { $0 as? FileLogger }
-                .forEach { try $0.deleteAllLogFiles() }
-        } catch {
-            print("\(error) in deletingAllLogFiles")
-        }
+        self.loggers.compactMap { $0 as? FileLogger }
+            .forEach { $0.deleteAllLogFiles() }
     }
 }
 
