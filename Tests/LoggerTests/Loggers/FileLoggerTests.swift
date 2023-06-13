@@ -9,6 +9,12 @@
 import XCTest
 import Combine
 
+private extension FileAccessExecutor {
+    static var syncMock: Self {
+        .init { $0() }
+    }
+}
+
 class FileLoggerTests: XCTestCase {
     private var fileManager: FileManager!
     private var userDefaults: UserDefaults!

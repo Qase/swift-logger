@@ -36,28 +36,6 @@ public extension SharingConfiguration {
     }
 }
 
-// MARK: - FileAccessExecutor
-// FileLogger uses fileAccessQueue to do Logging and Deleting on the same thread, so it doesnt collide
-// Queue can be created while initing FileLogger, but it has default value on background thread, that works synchronously.
-// Injected queue should also be synchronous
-
-struct FileAccessExecutor {
-    var execute: (@escaping () -> Void) -> ()
-}
-
-extension FileAccessExecutor {
-    static func live(queue: DispatchQueue) -> Self {
-        .init(execute: { queue.async(execute: $0) })
-    }
-}
-
-// SyncMock is for for tests to work properly
-extension FileAccessExecutor {
-    static var syncMock: Self {
-        .init { $0() }
-    }
-}
-
 // MARK: - FileLogger
 
 public class FileLogger: Logging {
@@ -76,7 +54,7 @@ public class FileLogger: Logging {
     private let logEntryEncoder: LogEntryEncoding
     private let logEntryDecoder: LogEntryDecoding
     private let externalLogger: (String) -> ()
-    private let fileAccessQueue: FileAccessExecutor
+    private let fileAccessExecutor: FileAccessExecutor
 
     var dateOfLastLog: Date {
         didSet {
@@ -178,7 +156,7 @@ public class FileLogger: Logging {
         logEntryEncoder: LogEntryEncoding,
         logEntryDecoder: LogEntryDecoding,
         externalLogger: @escaping (String) -> (),
-        fileAccessQueue: FileAccessExecutor = .live(queue: .defaultSerialFileManagerQueue)
+        fileAccessQueue: FileAccessExecutor = .live(queue: DispatchQueue(label: Constants.Queues.serial, qos: .background))
     ) throws {
         self.appName = appName
         self.fileManager = fileManager
@@ -192,7 +170,7 @@ public class FileLogger: Logging {
         self.logEntryEncoder = logEntryEncoder
         self.logEntryDecoder = logEntryDecoder
         self.externalLogger = externalLogger
-        self.fileAccessQueue = fileAccessQueue
+        self.fileAccessExecutor = fileAccessQueue
 
         // Create log directory
         try fileManager.createDirectoryIfNotExists(at: logDirURL)
@@ -250,7 +228,7 @@ public class FileLogger: Logging {
     }
 
     public func deleteAllLogFiles() throws {
-        fileAccessQueue.execute {
+        fileAccessExecutor {
             do {
                 try self.fileManager.deleteAllFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)
                 self.currentWritableFileHandle = nil
@@ -284,7 +262,7 @@ public class FileLogger: Logging {
             return data
         }
         
-        fileAccessQueue.execute {
+        fileAccessExecutor {
             do {
                 try self.refreshCurrentLogFileStatus()
                 
@@ -345,10 +323,4 @@ private extension String {
     init<Value: CustomStringConvertible, Prefix: CustomStringConvertible>(_ value: Value, prefixedBy prefix: Prefix?) {
         self = "\(prefix.map { "\(String(describing: $0))-" } ?? "")\(String(describing: value))"
     }
-}
-
-// MARK: - DispatchQueue + default fileManager queue
-
-private extension DispatchQueue {
-    static let defaultSerialFileManagerQueue = DispatchQueue(label: Constants.Queues.serial, qos: .background)
 }
