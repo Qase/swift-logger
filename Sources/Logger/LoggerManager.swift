@@ -77,6 +77,11 @@ public class LoggerManager {
             availableLoggers.forEach { $0.log(log) }
         }
     }
+  
+    public func deleteAllLogFiles() {
+        self.loggers.compactMap { $0 as? FileLogger }
+            .forEach { $0.deleteAllLogFiles() }
+    }
 }
 
 // MARK: - DispatchQueue + default queue

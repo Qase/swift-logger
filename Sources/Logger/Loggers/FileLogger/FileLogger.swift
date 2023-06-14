@@ -54,6 +54,7 @@ public class FileLogger: Logging {
     private let logEntryEncoder: LogEntryEncoding
     private let logEntryDecoder: LogEntryDecoding
     private let externalLogger: (String) -> ()
+    private let fileAccessExecutor: FileAccessExecutor
 
     var dateOfLastLog: Date {
         didSet {
@@ -66,7 +67,7 @@ public class FileLogger: Logging {
             userDefaults.set(currentLogFileNumber, forKey: String(Constants.UserDefaultsKeys.currentLogFileNumber, prefixedBy: namespace))
         }
     }
-
+    
     private var currentWritableFileHandle: FileHandle? {
         willSet {
             if currentWritableFileHandle != newValue {
@@ -154,7 +155,8 @@ public class FileLogger: Logging {
         lineSeparator: String,
         logEntryEncoder: LogEntryEncoding,
         logEntryDecoder: LogEntryDecoding,
-        externalLogger: @escaping (String) -> ()
+        externalLogger: @escaping (String) -> (),
+        fileAccessQueue: FileAccessExecutor = .live(queue: DispatchQueue(label: Constants.Queues.serial, qos: .background))
     ) throws {
         self.appName = appName
         self.fileManager = fileManager
@@ -168,6 +170,7 @@ public class FileLogger: Logging {
         self.logEntryEncoder = logEntryEncoder
         self.logEntryDecoder = logEntryDecoder
         self.externalLogger = externalLogger
+        self.fileAccessExecutor = fileAccessQueue
 
         // Create log directory
         try fileManager.createDirectoryIfNotExists(at: logDirURL)
@@ -224,10 +227,16 @@ public class FileLogger: Logging {
         }
     }
 
-    public func deleteAllLogFiles() throws {
-        try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: logFilePathExtension)
-        currentWritableFileHandle = nil
-        currentLogFileNumber = 0
+    public func deleteAllLogFiles() {
+        fileAccessExecutor {
+            do {
+                try self.fileManager.deleteAllFiles(at: self.logDirURL, withPathExtension: self.logFilePathExtension)
+                self.currentWritableFileHandle = nil
+                self.currentLogFileNumber = 0
+            } catch {
+                self.externalLogger("Failed to delete all log files with error: \(error)!")
+            }
+        }
     }
 
     public var logFiles: [URL] {
@@ -252,17 +261,19 @@ public class FileLogger: Logging {
 
             return data
         }
-
-        do {
-            try refreshCurrentLogFileStatus()
-
-            let contentToAppend = logEntryEncoder.encode(logEntry) + lineSeparator
-            let fileHandle = try unwrapped(currentWritableFileHandle)
-
-            fileHandle.seekToEndOfFile()
-            fileHandle.write(try utf8Data(contentToAppend))
-        } catch let error {
-            externalLogger("Failed to write to a log file with error: \(error)!")
+        
+        fileAccessExecutor {
+            do {
+                try self.refreshCurrentLogFileStatus()
+                
+                let contentToAppend = self.logEntryEncoder.encode(logEntry) + self.lineSeparator
+                let fileHandle = try unwrapped(self.currentWritableFileHandle)
+                
+                fileHandle.seekToEndOfFile()
+                fileHandle.write(try utf8Data(contentToAppend))
+            } catch let error {
+                self.externalLogger("Failed to write to a log file with error: \(error)!")
+            }
         }
     }
 

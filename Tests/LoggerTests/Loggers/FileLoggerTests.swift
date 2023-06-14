@@ -7,6 +7,13 @@
 
 @testable import Logger
 import XCTest
+import Combine
+
+private extension FileAccessExecutor {
+    static var syncMock: Self {
+        .init { $0() }
+    }
+}
 
 class FileLoggerTests: XCTestCase {
     private var fileManager: FileManager!
@@ -55,7 +62,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         XCTAssertTrue(fileManager.directoryExists(at: logDirURL))
@@ -161,7 +169,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         // Day 1 == File 0
@@ -197,7 +206,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "\n",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         // Day 1 == File 0
@@ -270,7 +280,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         fileLogger.levels = [.error, .warn]
@@ -325,7 +336,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         fileLogger.levels = [.error, .warn]
@@ -379,7 +391,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         fileLogger.levels = [.error, .warn]
@@ -475,7 +488,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         let date = Date(timeIntervalSince1970: 0)
@@ -500,7 +514,7 @@ class FileLoggerTests: XCTestCase {
 
         XCTAssertEqual(fileLogs.count, 2)
         
-        try fileLogger.deleteAllLogFiles()
+        fileLogger.deleteAllLogFiles()
         
         fileLogger.log(
             .init(
@@ -514,6 +528,79 @@ class FileLoggerTests: XCTestCase {
         
         XCTAssertEqual(fileLogsAfterDelete.count, 1)
         XCTAssertEqual(fileLogsAfterDelete[0].message.description, "Previous logs were deleted.")
+    }
+    
+    func test_fileLogger_multithreading_delete_and_log_simultaneously() throws {
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 100,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in }
+        )
+        
+        var cancellables = Set<AnyCancellable>()
+        let expectation = self.expectation(description: "")
+        var logCount = 0
+        var deleteCount = 0
+        
+        //Simple mutex by using semaphore with value 1
+        let semaphore = DispatchSemaphore(value: 1)
+        
+        (1...100).publisher
+            .flatMap { _ in
+                Just(())
+                    .subscribe(on: DispatchQueue.global())
+                    .handleEvents(
+                        receiveOutput: {
+                            fileLogger.log(
+                                .init(
+                                    header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                                    location: .init(fileName: "File", function: "function", line: 1),
+                                    message: "Error message"
+                                )
+                            )
+                            semaphore.wait()
+                            logCount += 1
+                            semaphore.signal()
+                        }
+                    )
+            }
+            .collect(2)
+            .map { _ in }
+            .flatMap {
+                Just(())
+                    .subscribe(on: DispatchQueue.global())
+                    .handleEvents(
+                        receiveOutput: {
+                            fileLogger.deleteAllLogFiles()
+                            semaphore.wait()
+                            deleteCount += 1
+                            semaphore.signal()
+                        }
+                    )
+            }
+            .sink(
+                receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        expectation.fulfill()
+                    }
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
+        
+        waitForExpectations(timeout: 0.1)
+        XCTAssertEqual(logCount, 100)
+        XCTAssertEqual(deleteCount, 50)
     }
 }
 
