@@ -19,16 +19,18 @@ class FileLoggerTests: XCTestCase {
     private var fileManager: FileManager!
     private var userDefaults: UserDefaults!
     private var logDirURL: URL!
-    private let suiteName = "test-user-defaults"
+    private var suiteName: String!
 
     override func setUp() {
         super.setUp()
-
+        
+        suiteName = UUID().uuidString
+        
         self.fileManager = FileManager.default
         self.userDefaults = UserDefaults(suiteName: suiteName)!
 
         self.logDirURL = try! fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            .appendingPathComponent("test-directory")
+            .appendingPathComponent(UUID().uuidString)
 
         if fileManager.directoryExists(at: logDirURL) {
             try! fileManager.removeItem(atPath: logDirURL.path)
