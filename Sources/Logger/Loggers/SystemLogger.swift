@@ -41,24 +41,6 @@ public class SystemLogger: Logging {
     public var levels: [Level] = [.info]
 
     public func log(_ logEntry: LogEntry) {
-        systemLogger(logEntry.header.level.logType, "\(prefix):\(logEntryEncoder.encode(logEntry))")
-    }
-}
-
-private extension Level {
-
-    var logType: OSLogType {
-        switch self {
-        case .info:
-            return .info
-        case .debug:
-            return .debug
-        case .verbose, .warn, .error, .custom:
-            return .default
-        case .system:
-            return .fault
-        case .process:
-            return .error
-        }
+        systemLogger(logEntry.header.level.osLogType, "\(prefix):\(logEntryEncoder.encode(logEntry))")
     }
 }

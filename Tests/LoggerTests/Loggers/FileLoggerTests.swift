@@ -286,7 +286,7 @@ class FileLoggerTests: XCTestCase {
             fileAccessQueue: .syncMock
         )
 
-        fileLogger.levels = [.error, .warn]
+        fileLogger.levels = [.error]
 
         let date = Date(timeIntervalSince1970: 0)
 
@@ -342,7 +342,7 @@ class FileLoggerTests: XCTestCase {
             fileAccessQueue: .syncMock
         )
 
-        fileLogger.levels = [.error, .warn]
+        fileLogger.levels = [.error]
 
         let codable = MockedCodable(
             int: 42,
@@ -397,7 +397,7 @@ class FileLoggerTests: XCTestCase {
             fileAccessQueue: .syncMock
         )
 
-        fileLogger.levels = [.error, .warn]
+        fileLogger.levels = [.error]
 
         let codable = MockedCodable(
             int: 42,

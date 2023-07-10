@@ -33,14 +33,7 @@ extension WebLog: Encodable {
     }
 
     private func serverLevelName(for level: Level) -> String {
-        switch level {
-        case .warn:
-            return "WARNING"
-        case .system, .process:
-            return "INFO"
-        default:
-            return level.rawValue.uppercased()
-        }
+        level.rawValue.uppercased()
     }
 }
 
