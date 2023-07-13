@@ -45,15 +45,15 @@ public enum Level: CaseIterable {
     public var rawValue: String {
         switch self {
         case .debug:
-            return "DEBUG"
+            return "debug"
         case .info:
-            return "INFO"
+            return "info"
         case .default:
-            return "DEFAULT"
+            return "default"
         case .error:
-            return "ERROR"
+            return "error"
         case .fault:
-            return "FAULT"
+            return "fault"
         case let .custom(level):
             return level.description
         }
