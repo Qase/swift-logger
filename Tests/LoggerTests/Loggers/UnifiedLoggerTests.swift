@@ -4,7 +4,7 @@ import XCTest
 
 class UnifiedLoggerTests: XCTestCase {
 
-    func test_UnifiedLogger_message() {
+    func test_message() {
         let message = "Testing log"
         let logEntry = LogEntry.mock(message)
 
