@@ -15,7 +15,7 @@ public enum Level: CaseIterable {
     case `default`
     case error // warning
     case fault // critical
-    case custom(CustomStringConvertible)
+    case undefined(CustomStringConvertible)
 
     public static var allCases: [Level] {
         [
@@ -33,7 +33,7 @@ public enum Level: CaseIterable {
             return .debug
         case .info:
             return .info
-        case .default, .custom:
+        case .default, .undefined:
             return .default
         case .error:
             return .error
@@ -54,7 +54,7 @@ public enum Level: CaseIterable {
             return "error"
         case .fault:
             return "fault"
-        case let .custom(level):
+        case let .undefined(level):
             return level.description
         }
     }
@@ -73,7 +73,7 @@ public enum Level: CaseIterable {
             self = .fault
         default:
             // NOTE: Every unknown level is converted to Level.custom
-            self = .custom(rawValue)
+            self = .undefined(rawValue)
         }
     }
 }
