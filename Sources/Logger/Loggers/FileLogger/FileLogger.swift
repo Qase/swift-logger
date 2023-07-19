@@ -266,7 +266,7 @@ public class FileLogger: Logging {
             do {
                 try self.refreshCurrentLogFileStatus()
                 
-                let contentToAppend = self.logEntryEncoder.encode(logEntry) + self.lineSeparator
+                let contentToAppend = self.logEntryEncoder.encode(logEntry, verbose: true) + self.lineSeparator
                 let fileHandle = try unwrapped(self.currentWritableFileHandle)
                 
                 fileHandle.seekToEndOfFile()

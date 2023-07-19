@@ -8,14 +8,14 @@
 import Foundation
 import OSLog
 
-/// Enum representing different possible levels for log messages.
+/// Enum representing different possible levels for log messages. Basically mapped object from the native OSLogEntryLog.Level
 public enum Level: CaseIterable {
     case debug // trace
     case info
     case `default`
     case error // warning
     case fault // critical
-    case undefined(CustomStringConvertible)
+    case custom(CustomStringConvertible)
 
     public static var allCases: [Level] {
         [
@@ -33,12 +33,29 @@ public enum Level: CaseIterable {
             return .debug
         case .info:
             return .info
-        case .default, .undefined:
+        case .default, .custom:
             return .default
         case .error:
             return .error
         case .fault:
             return .fault
+        }
+    }
+
+    public var description: String {
+        switch self {
+        case .debug:
+            return "🟤"
+        case .info:
+            return "⚪️"
+        case .default:
+            return "  "
+        case .error:
+            return "🟡"
+        case .fault:
+            return "🔴"
+        case let .custom(level):
+            return "🟣(\(level))"
         }
     }
 
@@ -54,7 +71,7 @@ public enum Level: CaseIterable {
             return "error"
         case .fault:
             return "fault"
-        case let .undefined(level):
+        case let .custom(level):
             return level.description
         }
     }
@@ -72,8 +89,7 @@ public enum Level: CaseIterable {
         case Level.fault.rawValue:
             self = .fault
         default:
-            // NOTE: Every unknown level is converted to Level.custom
-            self = .undefined(rawValue)
+            self = .custom(rawValue)
         }
     }
 }

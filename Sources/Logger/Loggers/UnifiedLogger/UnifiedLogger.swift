@@ -34,6 +34,6 @@ public class UnifiedLogger: Logging {
     }
 
     public func log(_ logEntry: LogEntry) {
-        unifiedLogger(logEntry.header.level.osLogType, "\(self.logEntryEncoder.encode(logEntry))")
+        unifiedLogger(logEntry.header.level.osLogType, "\(self.logEntryEncoder.encode(logEntry, verbose: false))")
     }
 }

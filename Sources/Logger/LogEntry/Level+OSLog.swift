@@ -15,9 +15,9 @@ extension Level {
         case .fault:
             self = .fault
         case .undefined:
-            self = .undefined("Undefined case from OSLogEntryLog.Level")
+            self = .custom("Undefined case from OSLogEntryLog.Level")
         @unknown default:
-            self = .undefined("Unknown default")
+            self = .custom("Unknown default")
         }
     }
 }
