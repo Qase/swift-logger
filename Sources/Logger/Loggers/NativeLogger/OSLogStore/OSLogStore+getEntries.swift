@@ -11,7 +11,7 @@ extension OSLogStore {
             // https://developer.apple.com/forums/thread/733262
             return try OSLogStore(scope: .currentProcessIdentifier)
         } catch {
-            throw UnifiedLoggerError.logStoreInitFailed(error)
+            throw NativeLoggerError.logStoreInitFailed(error)
         }
     }
 
@@ -25,7 +25,7 @@ extension OSLogStore {
                     .filter { $0.subsystem == bundleIdentifier }
                 continuation.resume(with: .success(logs))
             } catch {
-                continuation.resume(throwing: UnifiedLoggerError.gettingEntriesFailed(error))
+                continuation.resume(throwing: NativeLoggerError.gettingEntriesFailed(error))
             }
         }
     }

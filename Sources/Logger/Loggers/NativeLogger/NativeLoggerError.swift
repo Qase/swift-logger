@@ -1,4 +1,4 @@
-enum UnifiedLoggerError: Error {
+enum NativeLoggerError: Error {
     case logStoreInitFailed(Error)
     case gettingEntriesFailed(Error)
 }

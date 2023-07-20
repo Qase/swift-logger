@@ -17,7 +17,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         // Loggers setup
-        let unifiedLogger = UnifiedLogger(
+        let nativeLogger = NativeLogger(
             bundleIdentifier: "cz.qase.swift-logger",
             category: "SwiftLoggerSampleApp"
         )
@@ -25,7 +25,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         fileLogger = try? FileLogger()
         fileLogger?.levels = [.error, .warn, .info]
 
-        let loggers: [Logging?] = [unifiedLogger, fileLogger]
+        let loggers: [Logging?] = [nativeLogger, fileLogger]
 
         appLogger = LoggerManager(
             loggers: loggers.compactMap { $0 },

@@ -3,7 +3,7 @@ import OSLog
 import XCTest
 
 @available(iOS 15.0, *)
-class UnifiedLogger_OSLogStoreTests: XCTestCase {
+class NativeLogger_OSLogStoreTests: XCTestCase {
 
     struct LogEntryEncoderTest: LogEntryEncoding {
         func encode(_ logEntry: LogEntry, verbose: Bool) -> String {
@@ -16,9 +16,9 @@ class UnifiedLogger_OSLogStoreTests: XCTestCase {
     }
 
     func test_empty_logstore() async throws {
-        let logger = UnifiedLogger(
+        let logger = NativeLogger(
             bundleIdentifier: "cz.qase.swift-logger-tests",
-            category: "UnifiedLogger_OSLogStoreTests",
+            category: "NativeLogger_OSLogStoreTests",
             logEntryEncoder: LogEntryEncoderTest()
         )
 
@@ -28,9 +28,9 @@ class UnifiedLogger_OSLogStoreTests: XCTestCase {
     }
 
     func test_get_entries() async throws {
-        let logger = UnifiedLogger(
+        let logger = NativeLogger(
             bundleIdentifier: "cz.qase.swift-logger-tests",
-            category: "UnifiedLogger_OSLogStoreTests",
+            category: "NativeLogger_OSLogStoreTests",
             logEntryEncoder: LogEntryEncoderTest()
         )
 

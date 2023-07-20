@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 
 @available(iOS 15.0, *)
-extension UnifiedLogger {
+extension NativeLogger {
     public func exportLogs(
         fromDate: Date,
         getOsLogStore: () throws -> OSLogStore = OSLogStore.getOsLogStore
