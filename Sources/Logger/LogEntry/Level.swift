@@ -10,11 +10,11 @@ import OSLog
 
 /// Enum representing different possible levels for log messages. Basically mapped object from the native OSLogEntryLog.Level
 public enum Level: CaseIterable {
-    case debug // trace
+    case debug      // trace
     case info
     case `default`
-    case error // warning
-    case fault // critical
+    case warning    // error
+    case critical   // fault
     case custom(CustomStringConvertible)
 
     public static var allCases: [Level] {
@@ -22,8 +22,8 @@ public enum Level: CaseIterable {
             .debug,
             .info,
             .default,
-            .error,
-            .fault
+            .warning,
+            .critical
         ]
     }
 
@@ -35,9 +35,9 @@ public enum Level: CaseIterable {
             return .info
         case .default, .custom:
             return .default
-        case .error:
+        case .warning:
             return .error
-        case .fault:
+        case .critical:
             return .fault
         }
     }
@@ -50,9 +50,9 @@ public enum Level: CaseIterable {
             return "⚪️"
         case .default:
             return "  "
-        case .error:
+        case .warning:
             return "🟡"
-        case .fault:
+        case .critical:
             return "🔴"
         case let .custom(level):
             return "🟣(\(level))"
@@ -67,9 +67,9 @@ public enum Level: CaseIterable {
             return "info"
         case .default:
             return "default"
-        case .error:
+        case .warning:
             return "error"
-        case .fault:
+        case .critical:
             return "fault"
         case let .custom(level):
             return level.description
@@ -84,10 +84,10 @@ public enum Level: CaseIterable {
             self = .info
         case Level.`default`.rawValue:
             self = .`default`
-        case Level.error.rawValue:
-            self = .error
-        case Level.fault.rawValue:
-            self = .fault
+        case Level.warning.rawValue:
+            self = .warning
+        case Level.critical.rawValue:
+            self = .critical
         default:
             self = .custom(rawValue)
         }

@@ -11,9 +11,9 @@ extension Level {
         case .notice:
             self = .default
         case .error:
-            self = .error
+            self = .warning
         case .fault:
-            self = .fault
+            self = .critical
         case .undefined:
             self = .custom("Undefined case from OSLogEntryLog.Level")
         @unknown default:
