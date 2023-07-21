@@ -23,7 +23,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         )
 
         fileLogger = try? FileLogger()
-        fileLogger?.levels = [.error, .warn, .info]
+        fileLogger?.levels = Level.allCases
 
         let loggers: [Logging?] = [nativeLogger, fileLogger]
 
