@@ -2,7 +2,7 @@
 import OSLog
 import XCTest
 
-@available(iOS 15.0, *)
+@available(iOS 15.0, macOS 12, *)
 class NativeLogger_OSLogStoreTests: XCTestCase {
 
     struct LogEntryEncoderTest: LogEntryEncoding {

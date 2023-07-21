@@ -1,7 +1,6 @@
 import Foundation
 import OSLog
 
-@available(iOS 15.0, *)
 public struct OSEntryLog: Equatable {
     /// activity identifier
     let activityIdentifier: Int

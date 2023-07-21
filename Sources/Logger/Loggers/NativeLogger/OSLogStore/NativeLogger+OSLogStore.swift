@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-@available(iOS 15.0, *)
+@available(iOS 15.0, macOS 12, *)
 extension NativeLogger {
     public func exportLogs(
         fromDate: Date,
