@@ -43,10 +43,10 @@ public struct SendMailView: UIViewControllerRepresentable {
         public func mailComposeController(
             _ controller: MFMailComposeViewController,
             didFinishWith result: MFMailComposeResult,
-            error: Error?
+            error warning: Error?
         ) {
-            if let error = error {
-                callback?(.failure(error))
+            if let warning = warning {
+                callback?(.failure(warning))
             } else {
                 callback?(.success(result))
             }

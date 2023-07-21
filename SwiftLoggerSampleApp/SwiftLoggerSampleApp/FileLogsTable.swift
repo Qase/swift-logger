@@ -16,7 +16,7 @@ struct FileLogsTable: View {
                 let logEntryEncoder = LogEntryEncoder()
 
                 ForEach(Array(zip(logRecords.indices, logRecords)), id: \.0) { _, logEntry in
-                    Text(logEntryEncoder.encode(logEntry))
+                    Text(logEntryEncoder.encode(logEntry, verbose: false))
                 }
             }
             .padding()

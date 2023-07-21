@@ -16,7 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		55DA81FD2727FC7E007EC0B7 /* swift-logger */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-logger"; path = ..; sourceTree = "<group>"; };
+		16D18F8C2A6AD156002D906C /* swift-logger */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "swift-logger"; path = ..; sourceTree = "<group>"; };
 		6CC0A0A5270348AC00D311ED /* SwiftLoggerSampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftLoggerSampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CC0A0A8270348AC00D311ED /* SwiftLoggerSampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftLoggerSampleApp.swift; sourceTree = "<group>"; };
 		6CC0A0AA270348AC00D311ED /* FileLogsTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLogsTable.swift; sourceTree = "<group>"; };
@@ -78,7 +78,7 @@
 		6CC0A0B6270348C900D311ED /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				55DA81FD2727FC7E007EC0B7 /* swift-logger */,
+				16D18F8C2A6AD156002D906C /* swift-logger */,
 			);
 			name = Packages;
 			sourceTree = "<group>";

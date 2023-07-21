@@ -12,5 +12,5 @@ public protocol LogEntryEncoding {
     ///
     /// - Parameter logEntry: An instance of `LogEntry` to be encoded
     /// - Returns: Encoded `LogEntry` instance
-    func encode(_ logEntry: LogEntry) -> String
+    func encode(_ logEntry: LogEntry, verbose: Bool) -> String
 }
