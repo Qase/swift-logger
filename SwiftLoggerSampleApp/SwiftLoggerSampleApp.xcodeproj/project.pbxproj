@@ -7,8 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		162DEDFB2A794DE400C7F338 /* AppFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DEDFA2A794DE400C7F338 /* AppFeature.swift */; };
+		162DEDFD2A794E6400C7F338 /* ActionsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DEDFC2A794E6400C7F338 /* ActionsFeature.swift */; };
+		162DEDFF2A794ED400C7F338 /* LogsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DEDFE2A794ED400C7F338 /* LogsFeature.swift */; };
+		162DEE032A79506900C7F338 /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DEE022A79506900C7F338 /* Level.swift */; };
+		162DEE052A7950FB00C7F338 /* Loadable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DEE042A7950FB00C7F338 /* Loadable.swift */; };
+		162DEE072A79513700C7F338 /* OSEntryLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DEE062A79513700C7F338 /* OSEntryLog.swift */; };
+		162DEE092A79552700C7F338 /* DemoLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DEE082A79552700C7F338 /* DemoLogger.swift */; };
+		1656D08F2A98C8EE00DD8CDB /* CellFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1656D08E2A98C8EE00DD8CDB /* CellFeature.swift */; };
+		165C20752A7AC75200DBB186 /* OSLogStore+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165C20742A7AC75200DBB186 /* OSLogStore+.swift */; };
+		165C20772A7AC76E00DBB186 /* OSLogError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165C20762A7AC76E00DBB186 /* OSLogError.swift */; };
+		165C20792A7AC79800DBB186 /* LogType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165C20782A7AC79800DBB186 /* LogType.swift */; };
+		165C207B2A7AC82600DBB186 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165C207A2A7AC82600DBB186 /* AppError.swift */; };
+		165C207D2A7B932700DBB186 /* SettingsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165C207C2A7B932700DBB186 /* SettingsFeature.swift */; };
 		6CC0A0A9270348AC00D311ED /* SwiftLoggerSampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CC0A0A8270348AC00D311ED /* SwiftLoggerSampleApp.swift */; };
-		6CC0A0AB270348AC00D311ED /* FileLogsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CC0A0AA270348AC00D311ED /* FileLogsTable.swift */; };
 		6CC0A0AD270348AD00D311ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6CC0A0AC270348AD00D311ED /* Assets.xcassets */; };
 		6CC0A0B0270348AD00D311ED /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6CC0A0AF270348AD00D311ED /* Preview Assets.xcassets */; };
 		6CC0A0BA2703492000D311ED /* Logger in Frameworks */ = {isa = PBXBuildFile; productRef = 6CC0A0B92703492000D311ED /* Logger */; };
@@ -16,10 +28,22 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		162DEDFA2A794DE400C7F338 /* AppFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeature.swift; sourceTree = "<group>"; };
+		162DEDFC2A794E6400C7F338 /* ActionsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionsFeature.swift; sourceTree = "<group>"; };
+		162DEDFE2A794ED400C7F338 /* LogsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogsFeature.swift; sourceTree = "<group>"; };
+		162DEE022A79506900C7F338 /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
+		162DEE042A7950FB00C7F338 /* Loadable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Loadable.swift; sourceTree = "<group>"; };
+		162DEE062A79513700C7F338 /* OSEntryLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSEntryLog.swift; sourceTree = "<group>"; };
+		162DEE082A79552700C7F338 /* DemoLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoLogger.swift; sourceTree = "<group>"; };
+		1656D08E2A98C8EE00DD8CDB /* CellFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellFeature.swift; sourceTree = "<group>"; };
+		165C20742A7AC75200DBB186 /* OSLogStore+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OSLogStore+.swift"; sourceTree = "<group>"; };
+		165C20762A7AC76E00DBB186 /* OSLogError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSLogError.swift; sourceTree = "<group>"; };
+		165C20782A7AC79800DBB186 /* LogType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogType.swift; sourceTree = "<group>"; };
+		165C207A2A7AC82600DBB186 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
+		165C207C2A7B932700DBB186 /* SettingsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeature.swift; sourceTree = "<group>"; };
 		16D18F8C2A6AD156002D906C /* swift-logger */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "swift-logger"; path = ..; sourceTree = "<group>"; };
 		6CC0A0A5270348AC00D311ED /* SwiftLoggerSampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftLoggerSampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CC0A0A8270348AC00D311ED /* SwiftLoggerSampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftLoggerSampleApp.swift; sourceTree = "<group>"; };
-		6CC0A0AA270348AC00D311ED /* FileLogsTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLogsTable.swift; sourceTree = "<group>"; };
 		6CC0A0AC270348AD00D311ED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6CC0A0AF270348AD00D311ED /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		6CC0A0BB27034E5C00D311ED /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -37,6 +61,40 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		16BB3FF32A82C98100F3FE22 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				162DEDFC2A794E6400C7F338 /* ActionsFeature.swift */,
+				162DEDFA2A794DE400C7F338 /* AppFeature.swift */,
+				1656D08E2A98C8EE00DD8CDB /* CellFeature.swift */,
+				162DEDFE2A794ED400C7F338 /* LogsFeature.swift */,
+				165C207C2A7B932700DBB186 /* SettingsFeature.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		16BB3FF42A82C9A800F3FE22 /* Infastructure */ = {
+			isa = PBXGroup;
+			children = (
+				162DEE082A79552700C7F338 /* DemoLogger.swift */,
+				162DEE042A7950FB00C7F338 /* Loadable.swift */,
+				165C20742A7AC75200DBB186 /* OSLogStore+.swift */,
+			);
+			path = Infastructure;
+			sourceTree = "<group>";
+		};
+		16BB3FF52A82C9CF00F3FE22 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				165C207A2A7AC82600DBB186 /* AppError.swift */,
+				162DEE022A79506900C7F338 /* Level.swift */,
+				165C20782A7AC79800DBB186 /* LogType.swift */,
+				162DEE062A79513700C7F338 /* OSEntryLog.swift */,
+				165C20762A7AC76E00DBB186 /* OSLogError.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
 		6CC0A09C270348AC00D311ED = {
 			isa = PBXGroup;
 			children = (
@@ -58,11 +116,13 @@
 		6CC0A0A7270348AC00D311ED /* SwiftLoggerSampleApp */ = {
 			isa = PBXGroup;
 			children = (
-				6CC0A0A8270348AC00D311ED /* SwiftLoggerSampleApp.swift */,
-				6CC0A0AA270348AC00D311ED /* FileLogsTable.swift */,
-				6CC0A0AC270348AD00D311ED /* Assets.xcassets */,
-				6CC0A0AE270348AD00D311ED /* Preview Content */,
 				6CC0A0BB27034E5C00D311ED /* AppDelegate.swift */,
+				6CC0A0A8270348AC00D311ED /* SwiftLoggerSampleApp.swift */,
+				6CC0A0AC270348AD00D311ED /* Assets.xcassets */,
+				16BB3FF32A82C98100F3FE22 /* Features */,
+				16BB3FF52A82C9CF00F3FE22 /* Domain */,
+				16BB3FF42A82C9A800F3FE22 /* Infastructure */,
+				6CC0A0AE270348AD00D311ED /* Preview Content */,
 			);
 			path = SwiftLoggerSampleApp;
 			sourceTree = "<group>";
@@ -100,7 +160,7 @@
 				6CC0A0A1270348AC00D311ED /* Sources */,
 				6CC0A0A2270348AC00D311ED /* Frameworks */,
 				6CC0A0A3270348AC00D311ED /* Resources */,
-				6CC0A0BD27034E8F00D311ED /* Linting */,
+				6CC0A0BD27034E8F00D311ED /* Swiftlint */,
 			);
 			buildRules = (
 			);
@@ -160,8 +220,9 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		6CC0A0BD27034E8F00D311ED /* Linting */ = {
+		6CC0A0BD27034E8F00D311ED /* Swiftlint */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -169,14 +230,14 @@
 			);
 			inputPaths = (
 			);
-			name = Linting;
+			name = Swiftlint;
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif which swiftlint >/dev/null; then\n    swiftlint\nelse\n    echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = "# That is because Homebrew on Apple Silicon installs the binaries into the /opt/homebrew/bin folder by default. To instruct\n# Xcode where to find SwiftLint, you can either add /opt/homebrew/bin to the PATH environment variable in your build phase\nif [[ \"$(uname -m)\" == arm64 ]]; then\n    export PATH=\"/opt/homebrew/bin:$PATH\"\nfi\n\nif [\"$CONFIGURATION\" != \"Debug\"]; then\n    echo \"Skipping swiftlint\"\nelif which swiftlint > /dev/null; then\n    swiftlint\nelse\n    echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -185,8 +246,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				162DEDFD2A794E6400C7F338 /* ActionsFeature.swift in Sources */,
+				162DEE072A79513700C7F338 /* OSEntryLog.swift in Sources */,
+				162DEDFB2A794DE400C7F338 /* AppFeature.swift in Sources */,
+				162DEE052A7950FB00C7F338 /* Loadable.swift in Sources */,
+				165C20792A7AC79800DBB186 /* LogType.swift in Sources */,
+				165C20752A7AC75200DBB186 /* OSLogStore+.swift in Sources */,
+				165C207B2A7AC82600DBB186 /* AppError.swift in Sources */,
 				6CC0A0BC27034E5C00D311ED /* AppDelegate.swift in Sources */,
-				6CC0A0AB270348AC00D311ED /* FileLogsTable.swift in Sources */,
+				1656D08F2A98C8EE00DD8CDB /* CellFeature.swift in Sources */,
+				165C207D2A7B932700DBB186 /* SettingsFeature.swift in Sources */,
+				165C20772A7AC76E00DBB186 /* OSLogError.swift in Sources */,
+				162DEE092A79552700C7F338 /* DemoLogger.swift in Sources */,
+				162DEDFF2A794ED400C7F338 /* LogsFeature.swift in Sources */,
+				162DEE032A79506900C7F338 /* Level.swift in Sources */,
 				6CC0A0A9270348AC00D311ED /* SwiftLoggerSampleApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -327,7 +400,6 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -359,7 +431,6 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
