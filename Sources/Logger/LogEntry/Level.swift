@@ -68,9 +68,9 @@ public enum Level: CaseIterable {
         case .default:
             return "default"
         case .warning:
-            return "error"
+            return "warning"
         case .critical:
-            return "fault"
+            return "critical"
         case let .custom(level):
             return level.description
         }
