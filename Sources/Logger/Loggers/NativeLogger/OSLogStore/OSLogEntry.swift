@@ -32,14 +32,12 @@ public struct OSEntryLog: Equatable {
     }
 }
 
-@available(iOS 15.0, *)
 extension OSLogEntry: Identifiable {
     public var id: String {
         UUID().uuidString
     }
 }
 
-@available(iOS 15.0, *)
 extension OSEntryLog {
     init(log: OSLogEntryLog) {
         self.activityIdentifier = Int(log.activityIdentifier)

@@ -1,7 +1,6 @@
 import Foundation
 import OSLog
 
-@available(iOS 15.0, macOS 12, *)
 extension OSLogStore {
     public static func getOsLogStore() throws -> OSLogStore {
         do {
