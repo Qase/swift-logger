@@ -5,9 +5,9 @@ Logger is a super lightweight logging library for iOS development in Swift. It p
 ## Requirements
 
 - Swift 5.0+
-- Xcode 10+
-- iOS 14.0+ 
-- MacOS 11.0+
+- Xcode 14.0+
+- iOS 15.0+ 
+- MacOS 12.0+
 
 ## Usage
 
@@ -15,25 +15,19 @@ Logger is a super lightweight logging library for iOS development in Swift. It p
 
 It is possible to log on different levels. Each logger can support different levels, meaning that it records only log messages on such levels. For example multiple loggers of the same type can be set to support different levels and thus separate logging on such level. Another use case is to further filter messages of specific type declared by its level. 
 
-Although it is definitely up to the developer in which way the levels will be used, there is a recommended way how to use them since each of them serves a different purpose.
+Levels are inspired by [Apple Logger](https://developer.apple.com/documentation/os/logger).
 
-
-- `info` for mostly UI related user actions
+- `info` for mostly UI related user actions (also called trace)
 - `debug` for debugging purposes
-- `verbose` for extended debug purposes, especially when there is a need for very specific messages
-- `warn` for warnings
-- `error` for errors
-- `system` (for native os_log only) matches to os_log_fault -> sends a fault-level message to the logging system
-- `process` (for native os_log only) matches to os_log_error -> sends an error-level message to the logging system
+- `default`
+- `warning` for warnings (also called errors)
+- `critical` for critical stuffs such as faults (also called fault)
 - `custom(CustomStringConvertible)` available for other level customization if necessary
 
 ### Pre-build loggers
 
-#### `ConsoleLogger`
-The simplest logger. Wraps `print(_:separator:terminator:)` function from Swift Standard Library.
-
-#### `SystemLogger`
-Wraps the native ```OSLog``` to log messages on the system level.
+#### `NativeLogger`
+Wraps the native ```Logger``` to log messages both in the Xcode console and the Console app. It includes a 'retrieve logs' feature thanks to ``LogStore``, this feature is only available from iOS version 15 and later.
 
 #### `FileLogger`
 
@@ -136,20 +130,24 @@ class CrashLyticsLogger: Logger.Logging {
 
 Logging initialization is done through `LoggerManager` instance. The LoggerManager holds an array of all configured loggers and then manages the logging.
 
-Here is an example of how to initialize the logger to use `FileLogger`, `ConsoleLogger` and previously created custom `CrashLyticsLogger`:
+Here is an example of how to initialize the logger to use `FileLogger`, `NativeLogger` and previously created custom `CrashLyticsLogger`:
 
 ```
 
 let fileLogger = FileLogger()
 fileLogger.levels = [.warn, .error]
 
-let systemLogger = ConsoleLogger()
-systemLogger.levels = [.verbose, .info, .debug, .warn, .error]
+let nativeLogger = NativeLogger(
+    bundleIdentifier: Bundle.main.bundleIdentifier ?? "---",
+    category: "swift-logger"
+)
 
 let crashlyticsLogger = CrashLyticsLogger()
 
-let loggerManager = LoggerManager(loggers: [fileLogger, systemLogger, crashlyticsLogger])
+let loggerManager = LoggerManager(loggers: [fileLogger, nativeLogger, crashlyticsLogger])
 ```
+
+for further info see the sample app
 
 #### Global function
 

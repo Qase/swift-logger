@@ -1,6 +1,5 @@
 import OSLog
 
-@available(iOS 15.0, *)
 extension Level {
     public init(osLevel: OSLogEntryLog.Level) {
         switch osLevel {

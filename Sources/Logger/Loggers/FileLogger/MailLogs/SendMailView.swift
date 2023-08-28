@@ -11,7 +11,6 @@ import SwiftUI
 
 public typealias MailViewCallback = ((Result<MFMailComposeResult, Error>) -> Void)?
 
-@available(iOS 13.0, *)
 public struct SendMailView: UIViewControllerRepresentable {
     @Environment(\.presentationMode) var presentation
     let data: MailData
