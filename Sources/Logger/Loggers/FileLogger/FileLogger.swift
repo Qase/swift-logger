@@ -286,6 +286,11 @@ public class FileLogger: Logging {
             return try FileHandle(forWritingTo: url)
         }
 
+        if currentWritableFileHandle != nil && !fileManager.fileExists(atPath: currentLogFileUrl.path) {
+            currentWritableFileHandle = nil
+            currentLogFileNumber = 0
+        }
+
         let dateString = DateFormatter.dateFormatter.string(from:)
 
         let currentDate = Date()
