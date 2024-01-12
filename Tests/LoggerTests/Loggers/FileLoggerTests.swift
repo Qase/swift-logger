@@ -604,6 +604,61 @@ class FileLoggerTests: XCTestCase {
         XCTAssertEqual(logCount, 100)
         XCTAssertEqual(deleteCount, 50)
     }
+
+    func test_deleting_log_files_from_outside() throws {
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "<-->",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
+        )
+
+        let date = Date(timeIntervalSince1970: 0)
+
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "file", function: "function", line: 1),
+                message: "Error message"
+            )
+        )
+
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "file2", function: "function2", line: 20),
+                message: "Warning message\nThis is test!"
+            )
+        )
+
+        let fileLogs = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+
+        XCTAssertEqual(fileLogs.count, 2)
+
+        try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: "log")
+
+        fileLogger.log(
+            .init(
+                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
+                location: .init(fileName: "file3", function: "function3", line: 30),
+                message: "Previous logs were deleted."
+            )
+        )
+
+        let fileLogsAfterDelete = try! fileLogger.gettingRecordsFromLogFile(at: fileLogger.currentLogFileUrl)
+
+        XCTAssertEqual(fileLogsAfterDelete.count, 1)
+        XCTAssertEqual(fileLogsAfterDelete[0].message.description, "Previous logs were deleted.")
+    }
 }
 
 // MARK: - FileManager + helper functions
