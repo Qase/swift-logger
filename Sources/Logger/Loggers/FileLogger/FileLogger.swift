@@ -83,6 +83,7 @@ public class FileLogger: Logging {
     }
 
     public var levels: [Level] = [.info]
+    public let isAsynchronous: Bool = true
 
     // MARK: - Initializers
 

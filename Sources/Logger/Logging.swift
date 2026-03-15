@@ -9,6 +9,7 @@ import Foundation
 
 public protocol Logging {
     var levels: [Level] { get set }
+    var isAsynchronous: Bool { get }
 
     func configure()
     func log(_: LogEntry)
@@ -16,6 +17,7 @@ public protocol Logging {
 
 extension Logging {
     public func configure() {}
+    public var isAsynchronous: Bool { false }
 
     func doesLog(forLevel level: Level) -> Bool {
         levels.contains(level)

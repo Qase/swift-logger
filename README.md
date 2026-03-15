@@ -183,7 +183,7 @@ Log("This is the message to be logged.", onLevel: .info)
 
 ### Logging execution
 
-`LoggerManager` handles execution of logging tasks in an asynchronous serial manner. Each logging task is dispatched asynchronously on a custom serial background queue, where all loggers perform their tasks serially one by one.
+Each logger can choose whether it runs asynchronously via `isAsynchronous`. `LoggerManager` invokes synchronous loggers immediately on the caller's thread, which makes console output visible right away when debugging with breakpoints or when the app terminates unexpectedly. Asynchronous loggers are dispatched on a shared serial background queue. `FileLogger` uses asynchronous execution by default, while the built-in non-file loggers stay synchronous by default.
 
 ![asyncserial](https://user-images.githubusercontent.com/2511209/33495945-a2732168-d6c8-11e7-9a77-519204be448a.png)
 
@@ -199,4 +199,3 @@ The `View` is available within `SwiftLoggerSampleApp`.
 ## License
 
 `Logger` is released under the [MIT License](LICENSE).
-

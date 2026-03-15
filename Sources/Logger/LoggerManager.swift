@@ -15,8 +15,7 @@ public typealias MetaInformationBundle = (types: [MetaInformationType], bundle: 
 /// Each of these logger classes must be subclassed from BaseLogger. The class handles logging to registered loggers
 /// based on levels they are set to acccept.
 public class LoggerManager {
-    // Configuration of logging mode
-    // SerialQueue: special DispatchQueue that is on background and uses serial configuration, that means logs will go one after each other
+    // Async loggers are processed serially on a background queue.
     let serialQueue: DispatchQueue = .defaultSerialLoggingQueue
     // Registered loggers
     private let loggers: [Logging]
@@ -78,8 +77,14 @@ public class LoggerManager {
             logMetaInformation()
         }
 
+        let synchronousLoggers = availableLoggers.filter { !$0.isAsynchronous }
+        synchronousLoggers.forEach { $0.log(log) }
+
+        let asynchronousLoggers = availableLoggers.filter(\.isAsynchronous)
+        guard !asynchronousLoggers.isEmpty else { return }
+
         serialQueue.async {
-            availableLoggers.forEach { $0.log(log) }
+            asynchronousLoggers.forEach { $0.log(log) }
         }
     }
 
