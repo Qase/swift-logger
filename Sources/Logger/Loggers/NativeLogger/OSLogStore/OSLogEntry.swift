@@ -32,7 +32,7 @@ public struct OSEntryLog: Equatable {
     }
 }
 
-extension OSLogEntry: Identifiable {
+extension OSLogEntry: @retroactive Identifiable {
     public var id: String {
         UUID().uuidString
     }
