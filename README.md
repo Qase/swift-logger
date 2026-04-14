@@ -33,37 +33,6 @@ Wraps the native ```Logger``` to log messages both in the Xcode console and the 
 
 Enables logging to a file. Each log file relates to a single day data. Another day, another log file is used. `numberOfLogFiles` specifies the number of log files that are stored. In other words, how many days back (log files) should be kept. If the last log file is filled, the first one gets overriden using the simplest Round-robin strategy.
 
-#### `WebLogger`
-
-Enables logging via REST API to a target server. To reduce the traffic, logs are grouped into so-called batches when sent. A user can set the max size of such batches and also a max time interval between individual batches being sent. 
-
-
-The integrator is responsible for the creation of `URLRequest` with the log batches & firing the request.
-Target server that receives logs is independent on the `WebLogger`. Thus the integrator is responsible for the implementation of a target server. The target server is to receive / parse / display the incoming log batches. If the does not wish to implement a customized server, we also provide [a simple server solution](https://github.com/Qase/LoggingServer/) written in Node.js.
-
-Here is an example of log batch in JSON:
-```
-[
- {"severity": "VERBOSE",
-  "sessionName": "E598B4C1-2B08-4563-81C0-2A77E5CE0C3C",
-  "message":"/some/path/LoggerTests.swift - testWebLogger() - line 165: Test verbose",
-  "timestamp": 1529668897318.845},
- {"severity": "INFO",
-  "sessionName":"E598B4C1-2B08-4563-81C0-2A77E5CE0C3C",
-  "message": "/some/path/LoggerTests.swift - testWebLogger() - line 166: Test system",
-  "timestamp":1529668897319.6549},
- {"severity":"INFO",
-  "sessionName":"E598B4C1-2B08-4563-81C0-2A77E5CE0C3C",
-  "message":"/some/path/LoggerTests.swift - testWebLogger() - line 167: Test process",
-  "timestamp":1529668897319.6959}
-]
-```
-
-
-Here is the set of properties a user can customize:
-  - `sessionID` which can be used on a server to filter logs for a specific application instance
-  - `batchConfiguration` max batch size & time interval of batches
-
 #### `ApplicationCallbackLogger`
 
 A special type of logger, that automatically logs all received UIApplication<callback> notifications, further called application callbacks. Here is a complete list of supported application callbacks:
