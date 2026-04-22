@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct LogLocation {
+public struct LogLocation: Sendable {
     public let fileName: String
     public let function: String
     public let line: Int

@@ -7,15 +7,13 @@
 
 import Foundation
 
-public struct LogHeader {
+public struct LogHeader: Sendable {
     public let date: Date
     public let level: Level
-    public let dateFormatter: DateFormatter
 
-    public init(date: Date, level: Level, dateFormatter: DateFormatter) {
+    public init(date: Date, level: Level) {
         self.date = date
         self.level = level
-        self.dateFormatter = dateFormatter
     }
 }
 

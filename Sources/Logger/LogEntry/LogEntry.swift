@@ -7,14 +7,14 @@
 
 import Foundation
 
-public struct LogEntry {
+public struct LogEntry: Sendable {
     public let header: LogHeader
     public let location: LogLocation
-    public let message: CustomStringConvertible
+    public let message: String
 
     public init(header: LogHeader, location: LogLocation, message: CustomStringConvertible) {
         self.header = header
         self.location = location
-        self.message = message
+        self.message = message.description
     }
 }

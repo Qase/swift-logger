@@ -15,17 +15,14 @@ extension OSLogStore {
     }
 
     func getEntries(bundleIdentifier: String, position: OSLogPosition) async throws -> [OSEntryLog] {
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                let logs = try self
-                    .getEntries(at: position)
-                    .compactMap { $0 as? OSLogEntryLog }
-                    .map(OSEntryLog.init)
-                    .filter { $0.subsystem == bundleIdentifier }
-                continuation.resume(with: .success(logs))
-            } catch {
-                continuation.resume(throwing: NativeLoggerError.gettingEntriesFailed(error))
-            }
+        do {
+            return try self
+                .getEntries(at: position)
+                .compactMap { $0 as? OSLogEntryLog }
+                .map(OSEntryLog.init)
+                .filter { $0.subsystem == bundleIdentifier }
+        } catch {
+            throw NativeLoggerError.gettingEntriesFailed(error)
         }
     }
 }

@@ -5,7 +5,6 @@
 //  Created by Martin Troup on 24.09.2021.
 //
 
-import Combine
 import Foundation
 #if canImport(WatchKit)
 import WatchKit
@@ -135,23 +134,22 @@ public enum ApplicationCallbackType: String, CaseIterable {
 }
 #endif
 
-protocol ApplicationCallbackLoggerDelegate: AnyObject {
-    func logApplicationCallback(_ message: String, onLevel level: Level)
-}
-
 public class ApplicationCallbackLogger {
-    private let messageSubject = PassthroughSubject<(level: Level, message: String), Never>()
-    var messagePublisher: AnyPublisher<(level: Level, message: String), Never> { messageSubject.eraseToAnyPublisher() }
-
     private let level: Level
+    private let logMessage: (Level, String) -> Void
 
-    init(callbacks: [ApplicationCallbackType] = ApplicationCallbackType.allCases, level: Level = .debug) {
+    init(
+        callbacks: [ApplicationCallbackType] = ApplicationCallbackType.allCases,
+        level: Level = .debug,
+        logMessage: @escaping (Level, String) -> Void
+    ) {
         self.level = level
+        self.logMessage = logMessage
         
         callbacks.forEach { callback in
             #if canImport(UIKit) || canImport(WatchKit)
             let selector = Selector(callback.rawValue)
-            #elseif os(OSX)
+            #elseif os(macOS)
             let selector = #selector(logNotification(_:))
             #endif
             NotificationCenter.default.addObserver(self, selector: selector, name: callback.notificationName, object: nil)
@@ -163,7 +161,7 @@ public class ApplicationCallbackLogger {
 
 extension ApplicationCallbackLogger {
     private func log(_ message: String, onLevel level: Level) {
-        messageSubject.send((level: level, message: message))
+        logMessage(level, message)
     }
 
     #if canImport(UIKit) || canImport(WatchKit)
@@ -247,7 +245,7 @@ extension ApplicationCallbackLogger {
         log("\(#function)", onLevel: level)
     }
 
-    #elseif os(OSX)
+    #elseif os(macOS)
     @objc
     fileprivate func logNotification(_ notification: NSNotification) {
 

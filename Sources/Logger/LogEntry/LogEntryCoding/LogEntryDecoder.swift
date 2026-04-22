@@ -15,7 +15,7 @@ public struct LogEntryDecoder: LogEntryDecoding {
     private let logEntryConfig: LogEntryConfig
 
     public init(
-        logEntryConfig: LogEntryConfig = .init()
+        logEntryConfig: LogEntryConfig = LogEntryConfig()
     ) {
         self.logEntryConfig = logEntryConfig
     }
@@ -57,12 +57,11 @@ public struct LogEntryDecoder: LogEntryDecoding {
                 }
 
                 return LogEntry(
-                    header: .init(
+                    header: LogHeader(
                         date: date,
-                        level: Level(rawValue: levelRawValue),
-                        dateFormatter: logEntryConfig.dateFormatter
+                        level: Level(rawValue: levelRawValue)
                     ),
-                    location: .init(
+                    location: LogLocation(
                         fileName: fileName,
                         function: functionName,
                         line: line

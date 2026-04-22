@@ -8,6 +8,6 @@ struct FileAccessExecutor {
 
 extension FileAccessExecutor {
     static func live(queue: DispatchQueue) -> Self {
-        .init(execute: { queue.async(execute: $0) })
+        FileAccessExecutor(execute: { queue.async(execute: DispatchWorkItem(block: $0)) })
     }
 }

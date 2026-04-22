@@ -6,7 +6,7 @@ class NativeLogger_OSLogStoreTests: XCTestCase {
 
     struct LogEntryEncoderTest: LogEntryEncoding {
         func encode(_ logEntry: LogEntry, verbose: Bool) -> String {
-            logEntry.message as! String
+            logEntry.message
         }
     }
 
