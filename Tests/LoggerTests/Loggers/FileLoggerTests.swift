@@ -7,7 +7,6 @@
 
 @testable import Logger
 import XCTest
-import Combine
 
 private extension FileAccessExecutor {
     static var syncMock: Self {
@@ -96,7 +95,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         XCTAssertTrue(fileManager.directoryExists(at: logDirURL))
@@ -127,7 +127,8 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: .syncMock
         )
 
         XCTAssertEqual(
@@ -291,17 +292,17 @@ class FileLoggerTests: XCTestCase {
         let date = Date(timeIntervalSince1970: 0)
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file", function: "function", line: 1),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file", function: "function", line: 1),
                 message: "Error message"
             )
         )
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file2", function: "function2", line: 20),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file2", function: "function2", line: 20),
                 message: "Warning message\nThis is test!"
             )
         )
@@ -361,9 +362,9 @@ class FileLoggerTests: XCTestCase {
         let date = Date(timeIntervalSince1970: 0)
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "File.swift", function: "Function", line: 1),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "File.swift", function: "Function", line: 1),
                 message: encodedCodableString
             )
         )
@@ -416,23 +417,23 @@ class FileLoggerTests: XCTestCase {
         let date = Date(timeIntervalSince1970: 0)
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "File.swift", function: "Function", line: 1),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "File.swift", function: "Function", line: 1),
                 message: encodedCodableString
             )
         )
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "File2.swift", function: "Function2", line: 2),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "File2.swift", function: "Function2", line: 2),
                 message: "Special characters ::[]{}()//"
             )
         )
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "File3.swift", function: "Function3", line: 3),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "File3.swift", function: "Function3", line: 3),
                 message: """
                     line 1
                     line 2
@@ -441,16 +442,16 @@ class FileLoggerTests: XCTestCase {
             )
         )
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "File3.swift", function: "Function3", line: 3),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "File3.swift", function: "Function3", line: 3),
                 message: "[🚗] Some message"
             )
         )
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "File4.swift", function: "Function4", line: 4),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "File4.swift", function: "Function4", line: 4),
                 message: encodedCodableString
             )
         )
@@ -497,17 +498,17 @@ class FileLoggerTests: XCTestCase {
         let date = Date(timeIntervalSince1970: 0)
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file", function: "function", line: 1),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file", function: "function", line: 1),
                 message: "Error message"
             )
         )
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file2", function: "function2", line: 20),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file2", function: "function2", line: 20),
                 message: "Warning message\nThis is test!"
             )
         )
@@ -519,9 +520,9 @@ class FileLoggerTests: XCTestCase {
         fileLogger.deleteAllLogFiles()
         
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file3", function: "function3", line: 30),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file3", function: "function3", line: 30),
                 message: "Previous logs were deleted."
             )
         )
@@ -533,6 +534,16 @@ class FileLoggerTests: XCTestCase {
     }
     
     func test_fileLogger_multithreading_delete_and_log_simultaneously() throws {
+        let fileAccessGroup = DispatchGroup()
+        let fileAccessQueue = DispatchQueue(label: "FileLoggerTests.fileAccessQueue")
+        let fileAccessExecutor = FileAccessExecutor { job in
+            fileAccessGroup.enter()
+            fileAccessQueue.async(execute: DispatchWorkItem {
+                defer { fileAccessGroup.leave() }
+                job()
+            })
+        }
+
         let fileLogger = try FileLogger(
             appName: nil,
             fileManager: fileManager,
@@ -545,64 +556,48 @@ class FileLoggerTests: XCTestCase {
             lineSeparator: "<-->",
             logEntryEncoder: LogEntryEncoder(),
             logEntryDecoder: LogEntryDecoder(),
-            externalLogger: { _ in }
+            externalLogger: { _ in },
+            fileAccessQueue: fileAccessExecutor
         )
         
-        var cancellables = Set<AnyCancellable>()
-        let expectation = self.expectation(description: "")
-        var logCount = 0
-        var deleteCount = 0
-        
-        //Simple mutex by using semaphore with value 1
-        let semaphore = DispatchSemaphore(value: 1)
-        
-        (1...100).publisher
-            .flatMap { _ in
-                Just(())
-                    .subscribe(on: DispatchQueue.global())
-                    .handleEvents(
-                        receiveOutput: {
-                            fileLogger.log(
-                                .init(
-                                    header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                                    location: .init(fileName: "File", function: "function", line: 1),
-                                    message: "Error message"
-                                )
-                            )
-                            semaphore.wait()
-                            logCount += 1
-                            semaphore.signal()
-                        }
+        let logCounter = Counter()
+        let deleteCounter = Counter()
+        let dispatchGroup = DispatchGroup()
+
+        for _ in 1...100 {
+            dispatchGroup.enter()
+            DispatchQueue.global().async(execute: DispatchWorkItem {
+                fileLogger.log(
+                    LogEntry(
+                        header: LogHeader(date: Date(), level: .info),
+                        location: LogLocation(fileName: "File", function: "function", line: 1),
+                        message: "Error message"
                     )
-            }
-            .collect(2)
-            .map { _ in }
-            .flatMap {
-                Just(())
-                    .subscribe(on: DispatchQueue.global())
-                    .handleEvents(
-                        receiveOutput: {
-                            fileLogger.deleteAllLogFiles()
-                            semaphore.wait()
-                            deleteCount += 1
-                            semaphore.signal()
-                        }
-                    )
-            }
-            .sink(
-                receiveCompletion: { completion in
-                    switch completion {
-                    case .finished:
-                        expectation.fulfill()
-                    }
-                },
-                receiveValue: { _ in }
-            )
-            .store(in: &cancellables)
-        
-        waitForExpectations(timeout: 0.1)
-        XCTAssertEqual(logCount, 100)
-        XCTAssertEqual(deleteCount, 50)
+                )
+                logCounter.increment()
+                dispatchGroup.leave()
+            })
+        }
+        for _ in 1...50 {
+            dispatchGroup.enter()
+            DispatchQueue.global().async(execute: DispatchWorkItem {
+                fileLogger.deleteAllLogFiles()
+                deleteCounter.increment()
+                dispatchGroup.leave()
+            })
+        }
+
+        let result = dispatchGroup.wait(timeout: .now() + 1.0)
+        XCTAssertEqual(fileAccessGroup.wait(timeout: .now() + 1.0), .success)
+
+        switch result {
+        case .success:
+            XCTAssertEqual(logCounter.value(), 100)
+            XCTAssertEqual(deleteCounter.value(), 50)
+
+        case .timedOut:
+            XCTFail("Timed out waiting for concurrent log and delete operations.")
+        }
     }
 
     func test_deleting_log_files_from_outside() throws {
@@ -625,17 +620,17 @@ class FileLoggerTests: XCTestCase {
         let date = Date(timeIntervalSince1970: 0)
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file", function: "function", line: 1),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file", function: "function", line: 1),
                 message: "Error message"
             )
         )
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file2", function: "function2", line: 20),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file2", function: "function2", line: 20),
                 message: "Warning message\nThis is test!"
             )
         )
@@ -647,9 +642,9 @@ class FileLoggerTests: XCTestCase {
         try fileManager.deleteAllFiles(at: logDirURL, withPathExtension: "log")
 
         fileLogger.log(
-            .init(
-                header: .init(date: date, level: .info, dateFormatter: DateFormatter.dateTimeFormatter),
-                location: .init(fileName: "file3", function: "function3", line: 30),
+            LogEntry(
+                header: LogHeader(date: date, level: .info),
+                location: LogLocation(fileName: "file3", function: "function3", line: 30),
                 message: "Previous logs were deleted."
             )
         )

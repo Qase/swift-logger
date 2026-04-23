@@ -251,27 +251,21 @@ public class FileLogger: Logging {
     /// - Parameters:
     ///   - log: `LogEntry` instance with header, location and log message
     public func log(_ logEntry: LogEntry) {
-        let unwrapped: (FileHandle?) throws -> FileHandle = { fileHandle in
-            guard let fileHandle = fileHandle else { throw FileLoggerError.missingWritableFileHandle }
-
-            return fileHandle
-        }
-
-        let utf8Data: (String) throws -> Data = { string in
-            guard let data = string.data(using: .utf8) else { throw FileLoggerError.stringToDataConversionFailure }
-
-            return data
-        }
-        
         fileAccessExecutor {
             do {
                 try self.refreshCurrentLogFileStatus()
                 
                 let contentToAppend = self.logEntryEncoder.encode(logEntry, verbose: true) + self.lineSeparator
-                let fileHandle = try unwrapped(self.currentWritableFileHandle)
-                
+                guard let fileHandle = self.currentWritableFileHandle else {
+                    throw FileLoggerError.missingWritableFileHandle
+                }
+
+                guard let data = contentToAppend.data(using: .utf8) else {
+                    throw FileLoggerError.stringToDataConversionFailure
+                }
+
                 fileHandle.seekToEndOfFile()
-                fileHandle.write(try utf8Data(contentToAppend))
+                fileHandle.write(data)
             } catch let error {
                 self.externalLogger("Failed to write to a log file with error: \(error)!")
             }

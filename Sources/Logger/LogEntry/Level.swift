@@ -9,13 +9,13 @@ import Foundation
 import OSLog
 
 /// Enum representing different possible levels for log messages. Basically mapped object from the native OSLogEntryLog.Level
-public enum Level: CaseIterable {
+public enum Level: CaseIterable, Sendable {
     case debug      // trace
     case info
     case `default`
     case warning    // error
     case critical   // fault
-    case custom(CustomStringConvertible)
+    case custom(String)
 
     public static var allCases: [Level] {
         [

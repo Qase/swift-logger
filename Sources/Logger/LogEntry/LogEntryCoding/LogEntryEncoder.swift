@@ -11,7 +11,7 @@ public struct LogEntryEncoder: LogEntryEncoding {
     private let logEntryConfig: LogEntryConfig
 
     public init(
-        logEntryConfig: LogEntryConfig = .init()
+        logEntryConfig: LogEntryConfig = LogEntryConfig()
     ) {
         self.logEntryConfig = logEntryConfig
     }

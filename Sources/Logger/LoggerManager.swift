@@ -5,7 +5,6 @@
 //  Created by Martin Troup on 24.09.2021.
 //
 
-import Combine
 import Foundation
 
 public typealias ApplicationCallbackBundle = (callbacks: [ApplicationCallbackType], level: Level)
@@ -23,7 +22,7 @@ public class LoggerManager {
     private let metaInformationBundle: MetaInformationBundle?
     private var dateOfLastLog: Date?
 
-    private var subscriptions = Set<AnyCancellable>()
+    private var applicationCallbackLogger: ApplicationCallbackLogger?
 
     /// `LoggerManager` initialization
     /// - Parameters:
@@ -42,14 +41,12 @@ public class LoggerManager {
         if let applicationCallbackLoggerBundle = applicationCallbackLoggerBundle {
             let applicationCallbackLogger = ApplicationCallbackLogger(
                 callbacks: applicationCallbackLoggerBundle.callbacks,
-                level: applicationCallbackLoggerBundle.level
-            )
-
-            applicationCallbackLogger.messagePublisher
-                .sink { [weak self] level, message in
+                level: applicationCallbackLoggerBundle.level,
+                logMessage: { [weak self] level, message in
                     self?.log(message, onLevel: level)
                 }
-                .store(in: &subscriptions)
+            )
+            self.applicationCallbackLogger = applicationCallbackLogger
         }
     }
 
@@ -67,7 +64,7 @@ public class LoggerManager {
         onLine line: Int = #line
     ) {
         let currentDate = Date()
-        let logHeader = LogHeader(date: currentDate, level: level, dateFormatter: DateFormatter.monthsDaysTimeFormatter)
+        let logHeader = LogHeader(date: currentDate, level: level)
         let logLocation = LogLocation(fileName: (file as NSString).lastPathComponent, function: function, line: line)
         let log = LogEntry(header: logHeader, location: logLocation, message: message)
         let availableLoggers = loggers.availableLoggers(forLevel: log.header.level)
@@ -83,9 +80,9 @@ public class LoggerManager {
         let asynchronousLoggers = availableLoggers.filter(\.isAsynchronous)
         guard !asynchronousLoggers.isEmpty else { return }
 
-        serialQueue.async {
+        serialQueue.async(execute: DispatchWorkItem {
             asynchronousLoggers.forEach { $0.log(log) }
-        }
+        })
     }
 
     public func logMetaInformation() {

@@ -7,7 +7,6 @@
 
 import XCTest
 @testable import Logger
-import Combine
 
 class LoggerManagerTests: XCTestCase {
     func test_log_delivers_to_synchronous_logger_immediately() {
@@ -42,64 +41,45 @@ class LoggerManagerTests: XCTestCase {
         loggerManager.log("message", onLevel: .info)
         shouldFinishLogging.signal()
 
-        waitForExpectations(timeout: 0.5)
+        wait(for: [didLog], timeout: 0.5)
     }
 
     func test_loggerManager_multithreading_delete_and_log_simultaneously() throws {
         let loggerManager = LoggerManager(
-            loggers: .init(),
+            loggers: [],
             applicationCallbackLoggerBundle: nil,
             metaInformationLoggerBundle: nil
         )
-        var cancellables = Set<AnyCancellable>()
-        let expectation = self.expectation(description: "")
-        var logCount = 0
-        var deleteCount = 0
-        
-        //Simple mutex by using semaphore with value 1
-        let semaphore = DispatchSemaphore(value: 1)
-        
-        (1...100).publisher
-            .flatMap { _ in
-                Just(())
-                    .subscribe(on: DispatchQueue.global())
-                    .handleEvents(
-                        receiveOutput: {
-                            loggerManager.log("1", onLevel: Level(rawValue: "1"))
-                            semaphore.wait()
-                            logCount += 1
-                            semaphore.signal()
-                        }
-                    )
-            }
-            .collect(2)
-            .map { _ in }
-            .flatMap {
-                Just(())
-                    .subscribe(on: DispatchQueue.global())
-                    .handleEvents(
-                        receiveOutput: {
-                            loggerManager.deleteAllLogFiles()
-                            semaphore.wait()
-                            deleteCount += 1
-                            semaphore.signal()
-                        }
-                    )
-            }
-            .sink(
-                receiveCompletion: { completion in
-                    switch completion {
-                    case .finished:
-                        expectation.fulfill()
-                    }
-                },
-                receiveValue: { _ in }
-            )
-            .store(in: &cancellables)
-        
-        waitForExpectations(timeout: 0.6)
-        XCTAssertEqual(logCount, 100)
-        XCTAssertEqual(deleteCount, 50)
+
+        let logCounter = Counter()
+        let deleteCounter = Counter()
+        let dispatchGroup = DispatchGroup()
+
+        for _ in 1...100 {
+            dispatchGroup.enter()
+            DispatchQueue.global().async(execute: DispatchWorkItem {
+                loggerManager.log("1", onLevel: Level(rawValue: "1"))
+                logCounter.increment()
+                dispatchGroup.leave()
+            })
+        }
+        for _ in 1...50 {
+            dispatchGroup.enter()
+            DispatchQueue.global().async(execute: DispatchWorkItem {
+                loggerManager.deleteAllLogFiles()
+                deleteCounter.increment()
+                dispatchGroup.leave()
+            })
+        }
+
+        switch dispatchGroup.wait(timeout: .now() + 0.6) {
+        case .success:
+            XCTAssertEqual(logCounter.value(), 100)
+            XCTAssertEqual(deleteCounter.value(), 50)
+
+        case .timedOut:
+            XCTFail("Timed out waiting for concurrent log and delete operations.")
+        }
     }
 }
 

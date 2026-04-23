@@ -10,9 +10,9 @@ import Foundation
 
 extension LogEntry {
     static func mock(_ message: String) -> LogEntry {
-        .init(
-            header: .init(date: Date(), level: .info, dateFormatter: DateFormatter.monthsDaysTimeFormatter),
-            location: .init(fileName: "file", function: "function", line: 1),
+        LogEntry(
+            header: LogHeader(date: Date(), level: .info),
+            location: LogLocation(fileName: "file", function: "function", line: 1),
             message: message
         )
     }
