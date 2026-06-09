@@ -8,6 +8,7 @@ Logger is a super lightweight logging library for iOS development in Swift. It p
 - Xcode 14.0+
 - iOS 15.0+ 
 - MacOS 12.0+
+- WatchOS 9.0+
 
 ## Usage
 
