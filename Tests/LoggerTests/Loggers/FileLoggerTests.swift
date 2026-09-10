@@ -196,6 +196,41 @@ class FileLoggerTests: XCTestCase {
         }
     }
 
+    func test_failed_write_is_reported_instead_of_crashing() throws {
+        var internalErrors: [String] = []
+
+        let fileLogger = try FileLogger(
+            appName: nil,
+            fileManager: fileManager,
+            userDefaults: userDefaults,
+            logDirURL: logDirURL,
+            namespace: nil,
+            numberOfLogFiles: 3,
+            dateFormatter: DateFormatter.dateFormatter,
+            fileHeaderContent: "",
+            lineSeparator: "\n",
+            logEntryEncoder: LogEntryEncoder(),
+            logEntryDecoder: LogEntryDecoder(),
+            externalLogger: { internalErrors.append($0) },
+            fileAccessQueue: .syncMock
+        )
+
+        fileLogger.log(.mock("First message"))
+
+        // Simulate an I/O failure (e.g. "No space left on device") with a handle that cannot be written to.
+        // The legacy `seekToEndOfFile()` / `write(_:)` API raised an uncatchable NSException here and crashed the app.
+        fileLogger.currentWritableFileHandle = try FileHandle(forReadingFrom: fileLogger.currentLogFileUrl)
+
+        fileLogger.log(.mock("Second message"))
+
+        XCTAssertEqual(internalErrors.count, 1)
+        XCTAssertTrue(internalErrors.first?.hasPrefix("Failed to write to a log file") == true, internalErrors.description)
+
+        let content = try String(contentsOf: fileLogger.currentLogFileUrl, encoding: .utf8)
+        XCTAssertTrue(content.contains("First message"), content)
+        XCTAssertFalse(content.contains("Second message"), content)
+    }
+
     func test_file_rotation() throws {
         let fileLogger = try FileLogger(
             appName: nil,

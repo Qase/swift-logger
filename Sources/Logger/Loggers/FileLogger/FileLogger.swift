@@ -68,10 +68,10 @@ public class FileLogger: Logging {
         }
     }
     
-    private var currentWritableFileHandle: FileHandle? {
+    var currentWritableFileHandle: FileHandle? {
         willSet {
             if currentWritableFileHandle != newValue {
-                currentWritableFileHandle?.closeFile()
+                try? currentWritableFileHandle?.close()
             }
         }
     }
@@ -264,8 +264,8 @@ public class FileLogger: Logging {
                     throw FileLoggerError.stringToDataConversionFailure
                 }
 
-                fileHandle.seekToEndOfFile()
-                fileHandle.write(data)
+                try fileHandle.seekToEnd()
+                try fileHandle.write(contentsOf: data)
             } catch let error {
                 self.externalLogger("Failed to write to a log file with error: \(error)!")
             }
